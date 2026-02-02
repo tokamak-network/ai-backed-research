@@ -677,3 +677,101 @@ tbody tr:last-child td {
         padding: 0;
     }
 }
+
+/* ===================================
+   Dark Mode Specific Adjustments
+   =================================== */
+
+/* Breakdown chart in dark mode */
+[data-theme="dark"] .breakdown-chart {
+    background-color: #000000;
+    color: #e2e8f0;
+}
+
+/* Code blocks in dark mode */
+[data-theme="dark"] .code-block {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+[data-theme="dark"] code {
+    background-color: #1e293b;
+}
+
+/* Info boxes in dark mode */
+[data-theme="dark"] .highlight-box {
+    background-color: #1e3a5f;
+    border-color: #3b82f6;
+}
+
+[data-theme="dark"] .info-box {
+    background-color: #1e3544;
+    border-color: #0ea5e9;
+}
+
+[data-theme="dark"] .stats-box {
+    background-color: #1e3a2f;
+    border-color: #10b981;
+}
+
+[data-theme="dark"] .considerations-box {
+    background-color: #3a2e1e;
+    border-color: #f59e0b;
+}
+
+[data-theme="dark"] .recommendations-box,
+[data-theme="dark"] .tokamak-section {
+    background-color: #2a1e3a;
+    border-color: #a855f7;
+}
+
+[data-theme="dark"] .key-takeaways {
+    background: linear-gradient(135deg, #1e3a5f 0%, #1e2a4f 100%);
+    border-color: #3b82f6;
+}
+
+[data-theme="dark"] .insight,
+[data-theme="dark"] .key-insight {
+    background-color: #3a2e1e;
+    border-color: #f59e0b;
+}
+
+[data-theme="dark"] .historical-context {
+    background-color: #334155;
+    color: #94a3b8;
+}
+
+/* Case studies in dark mode */
+[data-theme="dark"] .case-study,
+[data-theme="dark"] .fee-breakdown,
+[data-theme="dark"] .emerging-model,
+[data-theme="dark"] .future-trend {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .case-study .comparison {
+    background-color: #1e3a5f;
+}
+
+/* Theme toggle in article header */
+.header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.header-nav .header-content {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .header-nav {
+        flex-wrap: wrap;
+    }
+    
+    .header-nav .theme-toggle {
+        margin-left: auto;
+    }
+}

@@ -55,6 +55,66 @@
     --transition-fast: 150ms ease;
     --transition: 250ms ease;
     --transition-slow: 350ms ease;
+
+/* Dark Mode Variables */
+[data-theme="dark"] {
+    /* Colors */
+    --primary: #3b82f6;
+    --primary-dark: #60a5fa;
+    --primary-light: #2563eb;
+    --accent: #a78bfa;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --border: #334155;
+    --border-light: #1e293b;
+    --bg-accent: #1e3a5f;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    --gradient-accent: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    --gradient-subtle: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* System preference detection */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        /* Apply dark mode if system prefers it and user hasn't explicitly chosen light */
+        --primary: #3b82f6;
+        --primary-dark: #60a5fa;
+        --primary-light: #2563eb;
+        --accent: #a78bfa;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-tertiary: #94a3b8;
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --border: #334155;
+        --border-light: #1e293b;
+        --bg-accent: #1e3a5f;
+
+        --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        --gradient-accent: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+        --gradient-subtle: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+    }
+}
 }
 
 /* Reset & Base */
@@ -613,4 +673,60 @@ body {
     .hero {
         display: none;
     }
+}
+
+/* ===================================
+   Dark Mode Toggle
+   =================================== */
+
+.theme-toggle {
+    background: transparent;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--spacing-xs);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    transition: all var(--transition);
+    color: var(--text-secondary);
+}
+
+.theme-toggle:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: rotate(180deg);
+}
+
+.theme-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.theme-toggle .sun-icon {
+    display: none;
+}
+
+.theme-toggle .moon-icon {
+    display: block;
+}
+
+[data-theme="dark"] .theme-toggle .sun-icon {
+    display: block;
+}
+
+[data-theme="dark"] .theme-toggle .moon-icon {
+    display: none;
+}
+
+/* Smooth theme transition */
+body {
+    transition: background-color var(--transition), color var(--transition);
+}
+
+* {
+    transition: background-color var(--transition), color var(--transition), border-color var(--transition);
 }
