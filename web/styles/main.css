@@ -1,9 +1,9 @@
 /* ===================================
    AI-Backed Research - Main Styles
-   Modern, minimal design for research blog
+   Modern, minimal design with dark mode
    =================================== */
 
-/* CSS Variables */
+/* CSS Variables - Light Mode */
 :root {
     /* Colors */
     --primary: #2563eb;
@@ -55,14 +55,15 @@
     --transition-fast: 150ms ease;
     --transition: 250ms ease;
     --transition-slow: 350ms ease;
+}
 
 /* Dark Mode Variables */
 [data-theme="dark"] {
     /* Colors */
-    --primary: #3b82f6;
-    --primary-dark: #60a5fa;
-    --primary-light: #2563eb;
-    --accent: #a78bfa;
+    --primary: #60a5fa;
+    --primary-dark: #93c5fd;
+    --primary-light: #3b82f6;
+    --accent: #c4b5fd;
     --text-primary: #f1f5f9;
     --text-secondary: #cbd5e1;
     --text-tertiary: #94a3b8;
@@ -74,26 +75,25 @@
     --bg-accent: #1e3a5f;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    --gradient-accent: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    --gradient-accent: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
     --gradient-subtle: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+    /* Shadows - Darker in dark mode */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -2px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.7);
 }
 
 /* System preference detection */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-        /* Apply dark mode if system prefers it and user hasn't explicitly chosen light */
-        --primary: #3b82f6;
-        --primary-dark: #60a5fa;
-        --primary-light: #2563eb;
-        --accent: #a78bfa;
+        --primary: #60a5fa;
+        --primary-dark: #93c5fd;
+        --primary-light: #3b82f6;
+        --accent: #c4b5fd;
         --text-primary: #f1f5f9;
         --text-secondary: #cbd5e1;
         --text-tertiary: #94a3b8;
@@ -104,17 +104,16 @@
         --border-light: #1e293b;
         --bg-accent: #1e3a5f;
 
-        --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        --gradient-accent: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+        --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        --gradient-accent: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
         --gradient-subtle: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
 
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -2px rgba(0, 0, 0, 0.6);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.7);
     }
-}
 }
 
 /* Reset & Base */
@@ -136,6 +135,7 @@ body {
     line-height: 1.6;
     color: var(--text-primary);
     background-color: var(--bg-secondary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Container */
@@ -157,7 +157,11 @@ body {
     top: 0;
     z-index: 100;
     backdrop-filter: blur(8px);
-    background-color: rgba(255, 255, 255, 0.95);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+[data-theme="dark"] .site-header {
+    background-color: rgba(15, 23, 42, 0.95);
 }
 
 .header-content {
@@ -181,6 +185,7 @@ body {
 .site-nav {
     display: flex;
     gap: var(--spacing-md);
+    align-items: center;
 }
 
 .nav-link {
@@ -197,6 +202,53 @@ body {
 }
 
 /* ===================================
+   Dark Mode Toggle
+   =================================== */
+
+.theme-toggle {
+    background: transparent;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--spacing-xs);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    transition: all var(--transition);
+    color: var(--text-secondary);
+}
+
+.theme-toggle:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: rotate(180deg);
+}
+
+.theme-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.theme-toggle .sun-icon {
+    display: none;
+}
+
+.theme-toggle .moon-icon {
+    display: block;
+}
+
+[data-theme="dark"] .theme-toggle .sun-icon {
+    display: block;
+}
+
+[data-theme="dark"] .theme-toggle .moon-icon {
+    display: none;
+}
+
+/* ===================================
    Hero Section
    =================================== */
 
@@ -205,6 +257,7 @@ body {
     padding: var(--spacing-2xl) 0;
     text-align: center;
     border-bottom: 1px solid var(--border-light);
+    transition: background 0.3s ease;
 }
 
 .hero-title {
@@ -266,7 +319,7 @@ body {
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
     overflow: hidden;
-    transition: all var(--transition);
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -373,6 +426,7 @@ body {
     padding: var(--spacing-sm);
     border-radius: var(--radius);
     text-align: center;
+    transition: background-color 0.3s ease;
 }
 
 .highlight-label {
@@ -406,7 +460,7 @@ body {
     border-radius: 100px;
     font-size: 0.8125rem;
     font-weight: 500;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .tag:hover {
@@ -454,7 +508,7 @@ body {
 
 /* Placeholder Card */
 .placeholder-card {
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 .placeholder-card:hover {
@@ -472,6 +526,7 @@ body {
     padding: var(--spacing-2xl) 0;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
+    transition: background-color 0.3s ease;
 }
 
 .about-content {
@@ -510,6 +565,11 @@ body {
     background: var(--text-primary);
     color: rgba(255, 255, 255, 0.8);
     padding: var(--spacing-2xl) 0 var(--spacing-lg);
+    transition: background-color 0.3s ease;
+}
+
+[data-theme="dark"] .site-footer {
+    background: #000000;
 }
 
 .footer-content {
@@ -673,60 +733,4 @@ body {
     .hero {
         display: none;
     }
-}
-
-/* ===================================
-   Dark Mode Toggle
-   =================================== */
-
-.theme-toggle {
-    background: transparent;
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--spacing-xs);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    transition: all var(--transition);
-    color: var(--text-secondary);
-}
-
-.theme-toggle:hover {
-    background: var(--bg-secondary);
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: rotate(180deg);
-}
-
-.theme-toggle svg {
-    width: 20px;
-    height: 20px;
-}
-
-.theme-toggle .sun-icon {
-    display: none;
-}
-
-.theme-toggle .moon-icon {
-    display: block;
-}
-
-[data-theme="dark"] .theme-toggle .sun-icon {
-    display: block;
-}
-
-[data-theme="dark"] .theme-toggle .moon-icon {
-    display: none;
-}
-
-/* Smooth theme transition */
-body {
-    transition: background-color var(--transition), color var(--transition);
-}
-
-* {
-    transition: background-color var(--transition), color var(--transition), border-color var(--transition);
 }
