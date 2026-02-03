@@ -91,8 +91,8 @@
 
 .toc-sticky {
     position: sticky;
-    top: var(--spacing-xl);
-    max-height: calc(100vh - var(--spacing-2xl) - 80px);
+    top: calc(70px + var(--spacing-md));
+    max-height: calc(100vh - 100px - var(--spacing-2xl));
     overflow-y: auto;
     padding: var(--spacing-md);
     background: var(--bg-primary);
