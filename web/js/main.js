@@ -45,6 +45,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ====================================
+    // Smart Header: Hide on scroll down, show on scroll up
+    // ====================================
+    const header = document.querySelector('.site-header');
+    let lastScrollTop = 0;
+    let scrollThreshold = 10; // Minimum scroll to trigger hide/show
+    
+    if (header) {
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Don't hide header at very top of page
+            if (scrollTop < 100) {
+                header.classList.remove('header-hidden');
+                lastScrollTop = scrollTop;
+                return;
+            }
+            
+            // Check scroll direction
+            if (Math.abs(scrollTop - lastScrollTop) < scrollThreshold) {
+                return;
+            }
+            
+            if (scrollTop > lastScrollTop) {
+                // Scrolling down
+                header.classList.add('header-hidden');
+            } else {
+                // Scrolling up
+                header.classList.remove('header-hidden');
+            }
+            
+            lastScrollTop = scrollTop;
+        }, { passive: true });
+    }
+
+    // ====================================
     // Homepage: Article Card Hover Effects
     // ====================================
     const cards = document.querySelectorAll('.article-card:not(.placeholder-card)');
@@ -86,14 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Smooth scroll for anchor links
+    // Smooth scroll for anchor links with proper offset
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                const offset = 100; // Offset for fixed header
-                const targetPosition = target.offsetTop - offset;
+                const headerHeight = header ? header.offsetHeight : 80;
+                const offset = 20; // Extra padding
+                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight - offset;
+                
                 window.scrollTo({
                     top: targetPosition,
                     behavior: 'smooth'
@@ -108,7 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function highlightActiveSection() {
         let currentSection = '';
-        const scrollPosition = window.scrollY + 150;
+        const headerHeight = header ? header.offsetHeight : 80;
+        const scrollPosition = window.scrollY + headerHeight + 50;
 
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
@@ -138,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     scrollTimeout = null;
                 }, 100);
             }
-        });
+        }, { passive: true });
 
         // Initial highlight
         highlightActiveSection();
