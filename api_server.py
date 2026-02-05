@@ -49,6 +49,14 @@ class ExpertProposalResponse(BaseModel):
     suggested_model: str
 
 
+class CostEstimate(BaseModel):
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    estimated_cost_usd: float
+    model_breakdown: Dict[str, dict]
+
+
 class TeamProposalResponse(BaseModel):
     topic: str
     proposed_experts: List[ExpertProposalResponse]
@@ -72,13 +80,6 @@ class ExpertStatus(BaseModel):
     progress: int  # 0-100
     message: str
     score: Optional[float] = None
-
-class CostEstimate(BaseModel):
-    input_tokens: int
-    output_tokens: int
-    total_tokens: int
-    estimated_cost_usd: float
-    model_breakdown: Dict[str, dict]
 
 class ActivityLogEntry(BaseModel):
     timestamp: str
