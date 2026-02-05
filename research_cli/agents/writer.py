@@ -75,7 +75,7 @@ Write the complete manuscript now."""
             prompt=prompt,
             system=system_prompt,
             temperature=0.7,
-            max_tokens=8000
+            max_tokens=16384  # Claude Opus 4.5 maximum output
         )
 
         return response.content
@@ -157,7 +157,7 @@ Focus on substantive improvements that address reviewer concerns."""
             prompt=prompt,
             system=system_prompt,
             temperature=0.7,
-            max_tokens=8000
+            max_tokens=16384  # Claude Opus 4.5 maximum output
         )
 
         return response.content
