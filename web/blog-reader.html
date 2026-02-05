@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Article</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/article.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-nav">
+                <a href="index.html" class="back-link">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Back to Research
+                </a>
+                <div class="header-content">
+                    <h1 class="site-title">AI-Backed Research</h1>
+                    <p class="site-subtitle">Tokamak Network Research Lab</p>
+                </div>
+                <button class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="simple-article-layout" style="max-width: 900px; margin: 0 auto; padding: 3rem 2rem;">
+        <article class="research-report">
+            <div id="content" class="loading" style="text-align: center; padding: 4rem 0;">Loading article...</div>
+        </article>
+    </main>
+
+    <script src="js/theme.js"></script>
+    <script>
+        // Theme toggle already handled by theme.js
+
+        async function loadArticle() {
+            const params = new URLSearchParams(window.location.search);
+            const projectId = params.get('project');
+
+            if (!projectId) {
+                document.getElementById('content').innerHTML =
+                    `<div style="background: #fef3c7; border: 1px solid #fbbf24; color: #92400e; padding: 1.5rem; border-radius: 8px; margin: 2rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1.125rem;">No project specified</h3>
+                        <p style="margin: 0;">Please provide a project ID in the URL:</p>
+                        <code style="display: block; background: #fff; padding: 0.5rem; margin: 0.5rem 0; border-radius: 4px;">?project=your-project-id</code>
+                    </div>`;
+                return;
+            }
+
+            try {
+                console.log('Loading project:', projectId);
+
+                // Load workflow data
+                const workflowUrl = `data/${projectId}.json`;
+                console.log('Fetching workflow from:', workflowUrl);
+                const response = await fetch(workflowUrl);
+                console.log('Workflow response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`Project not found (${response.status}). URL: ${workflowUrl}`);
+                }
+
+                const data = await response.json();
+                console.log('Data loaded, topic:', data.topic);
+
+                // Load manuscripts
+                const manuscriptsUrl = `data/${projectId}_manuscripts.json`;
+                console.log('Fetching manuscripts from:', manuscriptsUrl);
+                const manuscriptsResponse = await fetch(manuscriptsUrl);
+                console.log('Manuscripts response status:', manuscriptsResponse.status);
+
+                if (!manuscriptsResponse.ok) {
+                    throw new Error(`Manuscripts not found (${manuscriptsResponse.status}). URL: ${manuscriptsUrl}`);
+                }
+
+                const manuscripts = await manuscriptsResponse.json();
+                console.log('Available manuscript versions:', Object.keys(manuscripts));
+
+                // Get latest version
+                const latestRound = data.rounds[data.rounds.length - 1];
+                const latestVersion = latestRound.round;
+                const manuscriptKey = `manuscript_v${latestVersion}`;
+                console.log('Looking for manuscript key:', manuscriptKey);
+
+                const manuscriptText = manuscripts[manuscriptKey] || '';
+
+                if (!manuscriptText) {
+                    throw new Error(`Manuscript content not available for key: ${manuscriptKey}. Available keys: ${Object.keys(manuscripts).join(', ')}`);
+                }
+
+                console.log('Manuscript loaded, length:', manuscriptText.length);
+
+                // Render article
+                const finalDecision = latestRound.moderator_decision?.decision || 'PENDING';
+                const finalScore = latestRound.overall_average;
+
+                // Use marked correctly based on version
+                let parsedContent;
+                if (typeof marked === 'function') {
+                    parsedContent = marked(manuscriptText);
+                } else if (marked.parse) {
+                    parsedContent = marked.parse(manuscriptText);
+                } else {
+                    throw new Error('Marked library not loaded correctly');
+                }
+
+                const html = `
+                    <header class="article-header">
+                        <div class="info-banner" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                            <svg viewBox="0 0 20 20" fill="currentColor" style="width: 20px; height: 20px; color: #3b82f6; flex-shrink: 0;">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <span style="font-size: 0.9rem;">
+                                This article shows the <strong>latest version</strong> of the manuscript.
+                                <a href="review-viewer.html?id=${projectId}" style="color: #3b82f6; text-decoration: underline; font-weight: 600;">View full review board</a> to see all versions, reviewer feedback, and revision history.
+                            </span>
+                        </div>
+                        <h1 class="article-title">${data.topic}</h1>
+                        <div class="article-meta">
+                            <span class="meta-item"><strong>Version:</strong> ${latestVersion}</span>
+                            <span class="meta-item"><strong>Score:</strong> ${finalScore}/10</span>
+                            <span class="meta-item"><strong>Status:</strong> ${finalDecision}</span>
+                        </div>
+                    </header>
+
+                    <div class="section">
+                        ${parsedContent}
+                    </div>
+                `;
+
+                document.getElementById('content').innerHTML = html;
+
+                console.log('Article rendered successfully');
+
+            } catch (error) {
+                console.error('Error loading article:', error);
+                document.getElementById('content').innerHTML =
+                    `<div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 1.5rem; border-radius: 8px; margin: 2rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1.125rem;">Error loading article</h3>
+                        <p style="margin: 0 0 0.5rem 0;"><strong>Message:</strong> ${error.message}</p>
+                        <p style="margin: 0 0 0.5rem 0;"><strong>Project ID:</strong> ${projectId}</p>
+                        <p style="margin: 0 0 0.5rem 0;"><strong>URL:</strong> ${window.location.href}</p>
+                        <p style="margin: 1rem 0 0 0; font-size: 0.875rem;">Check browser console (F12) for more details.</p>
+                    </div>`;
+            }
+        }
+
+        loadArticle();
+    </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+{
+  "projects": [
+    {
+      "id": "rollup-security-mechanism-20260205-154031",
+      "topic": "Rollup security mechanism",
+      "final_score": 7.1,
+      "passed": false,
+      "total_rounds": 3,
+      "timestamp": "2026-02-05T15:51:29.262578",
+      "data_file": "data/rollup-security-mechanism-20260205-154031.json"
+    },
+    {
+      "id": "most-efficient-and-secure-voting-system-for-evm-compatible-blockchain-20260205-152402",
+      "topic": "Most efficient and secure voting system for EVM compatible blockchain",
+      "final_score": 7.2,
+      "passed": false,
+      "total_rounds": 3,
+      "timestamp": "2026-02-05T15:33:57.881137",
+      "data_file": "data/most-efficient-and-secure-voting-system-for-evm-compatible-blockchain-20260205-152402.json"
+    },
+    {
+      "id": "ethereum's-pos-20260205-145041",
+      "topic": "Ethereum's PoS",
+      "final_score": 7.2,
+      "passed": false,
+      "total_rounds": 3,
+      "timestamp": "2026-02-05T15:00:35.537959",
+      "data_file": "data/ethereum's-pos-20260205-145041.json"
+    },
+    {
+      "id": "ethereum-pos-20260205-140001",
+      "topic": "Ethereum PoS",
+      "final_score": 7.3,
+      "passed": false,
+      "total_rounds": 3,
+      "timestamp": "2026-02-05T14:10:00.969916",
+      "data_file": "data/ethereum-pos-20260205-140001.json"
+    },
+    {
+      "id": "ethereum-pos-consensus-mechanism-20260205-112608",
+      "topic": "Ethereum PoS consensus mechanism",
+      "final_score": 7.2,
+      "passed": false,
+      "total_rounds": 3,
+      "timestamp": "2026-02-05T11:35:58.915716",
+      "data_file": "data/ethereum-pos-consensus-mechanism-20260205-112608.json"
+    },
+    {
+      "id": "bitcoin-lightning-network-overview",
+      "topic": "Bitcoin Lightning Network Overview",
+      "final_score": 7.3,
+      "passed": false,
+      "total_rounds": 2,
+      "timestamp": "2026-02-04T15:22:25.324502",
+      "data_file": "data/bitcoin-lightning-network-overview.json"
+    },
+    {
+      "id": "research-report",
+      "topic": "Research Report",
+      "final_score": 7.9,
+      "passed": false,
+      "total_rounds": 3,
+      "timestamp": "2026-02-04T10:24:30.437491",
+      "data_file": "data/research-report.json"
+    }
+  ],
+  "updated_at": "2026-02-05T15:51:29.290715"
+}

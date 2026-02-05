@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "ai-research"
+version = "0.1.0"
+description = "AI-native research workflow with multi-provider LLM peer review"
+authors = ["Jazz <jazz@example.com>"]
+readme = "README.md"
+packages = [{include = "research_cli"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+anthropic = "^0.39.0"
+openai = "^1.58.0"
+google-generativeai = "^0.8.0"
+click = "^8.1.7"
+pydantic = "^2.10.0"
+python-dotenv = "^1.0.0"
+rich = "^13.9.0"
+aiohttp = "^3.11.0"
+pyyaml = "^6.0.2"
+
+[tool.poetry.scripts]
+ai-research = "research_cli.cli:cli"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
