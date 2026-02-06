@@ -3,6 +3,7 @@
 from typing import Optional, List, Dict
 from ..llm import ClaudeLLM
 from ..config import get_config
+from ..models.section import WritingContext, SectionOutput
 
 
 class WriterAgent:
@@ -303,3 +304,157 @@ Focus on substantive improvements that address reviewer concerns."""
             feedback_parts.append(part)
 
         return "\n---\n".join(feedback_parts)
+
+    async def write_section(
+        self,
+        context: WritingContext
+    ) -> SectionOutput:
+        """Write a single section with full context.
+
+        Args:
+            context: Writing context with plan, previous sections, and section spec
+
+        Returns:
+            Section output with content and metadata
+        """
+        section_spec = context.section_spec
+        previous_summaries = context.get_all_previous_summaries()
+
+        system_prompt = """You are an expert research writer specializing in blockchain technology and distributed systems.
+
+Your writing style:
+- Clear, precise technical language
+- Well-structured with logical flow
+- Evidence-based with specific examples and data
+- Balanced perspective considering multiple viewpoints
+- Academic rigor with proper analysis
+
+You are writing ONE SECTION of a larger paper. Focus deeply on this section's topic."""
+
+        prompt = f"""You are writing Section {section_spec.order} of a research paper.
+
+OVERALL RESEARCH PLAN:
+Topic: {context.research_plan.topic}
+
+Research Questions:
+{chr(10).join(f'- {q}' for q in context.research_plan.research_questions)}
+
+PREVIOUSLY WRITTEN SECTIONS:
+{previous_summaries}
+
+---
+
+CURRENT SECTION TO WRITE:
+Title: {section_spec.title}
+Section ID: {section_spec.id}
+Depth Level: {section_spec.depth_level}
+
+Key Points to Cover:
+{chr(10).join(f'- {p}' for p in section_spec.key_points)}
+
+---
+
+YOUR TASK:
+
+Write this section in complete detail. You have the FULL token budget dedicated to just this section.
+
+Requirements:
+- Write {section_spec.estimated_tokens//250}-{section_spec.estimated_tokens//150} words (aim for depth, not brevity)
+- Reference previous sections naturally when relevant (e.g., "As discussed in the Introduction...")
+- Maintain consistent terminology with previous sections
+- Provide technical depth appropriate for the {section_spec.depth_level} level
+- Include specific examples, data, protocols, and analysis
+- Use proper markdown formatting with subheadings (###) where appropriate
+
+Write the complete section now. Focus on quality and comprehensiveness - you have the full token budget for just this section."""
+
+        response = await self.llm.generate(
+            prompt=prompt,
+            system=system_prompt,
+            temperature=0.7,
+            max_tokens=16384
+        )
+
+        content = response.content
+        word_count = len(content.split())
+
+        return SectionOutput(
+            section_id=section_spec.id,
+            content=content,
+            word_count=word_count,
+            tokens_used=response.total_tokens,
+            metadata={
+                "title": section_spec.title,
+                "order": section_spec.order,
+                "depth_level": section_spec.depth_level
+            }
+        )
+
+    async def revise_section(
+        self,
+        section: SectionOutput,
+        feedback: str,
+        context: WritingContext
+    ) -> SectionOutput:
+        """Revise a specific section based on feedback.
+
+        Args:
+            section: Original section output
+            feedback: Reviewer feedback specific to this section
+            context: Writing context
+
+        Returns:
+            Revised section output
+        """
+        system_prompt = """You are an expert research writer revising a section based on peer review feedback.
+
+Your revision approach:
+- Address all substantive criticisms
+- Add missing analysis and evidence as requested
+- Improve clarity and precision
+- Maintain coherence with rest of paper
+- Keep what works"""
+
+        prompt = f"""You are revising one section of a research paper based on reviewer feedback.
+
+SECTION TITLE: {section.metadata.get('title', 'Unknown')}
+CURRENT SECTION CONTENT:
+{section.content}
+
+---
+
+REVIEWER FEEDBACK FOR THIS SECTION:
+{feedback}
+
+---
+
+YOUR TASK:
+
+Revise this section to address the feedback. You have the full token budget for this section.
+
+Requirements:
+- Address all substantive criticisms
+- Add missing technical depth, examples, or data as requested
+- Improve clarity where needed
+- Maintain consistent terminology
+- Keep strengths that reviewers identified
+
+Write the complete revised section now."""
+
+        response = await self.llm.generate(
+            prompt=prompt,
+            system=system_prompt,
+            temperature=0.7,
+            max_tokens=16384
+        )
+
+        content = response.content
+        word_count = len(content.split())
+
+        return SectionOutput(
+            section_id=section.section_id,
+            content=content,
+            word_count=word_count,
+            tokens_used=response.total_tokens,
+            metadata=section.metadata
+        )
