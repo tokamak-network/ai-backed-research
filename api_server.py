@@ -392,10 +392,18 @@ async def resume_workflow_background(project_id: str, project_dir: Path):
     """Resume workflow from checkpoint in background."""
     try:
         from research_cli.workflow.orchestrator import WorkflowOrchestrator
+        import json
+
+        # Load checkpoint to get max_rounds
+        checkpoint_file = project_dir / "workflow_checkpoint.json"
+        with open(checkpoint_file) as f:
+            checkpoint = json.load(f)
+
+        max_rounds = checkpoint.get("max_rounds", 3)
 
         # Status callback
         def status_update(status: str, round_num: int, message: str):
-            update_workflow_status(project_id, status, round_num, 0, message)
+            update_workflow_status(project_id, status, round_num, max_rounds, message)
 
         # Resume from checkpoint
         result = await WorkflowOrchestrator.resume_from_checkpoint(
