@@ -1,0 +1,512 @@
+{
+  "topic": "Most efficient and secure voting system for EVM compatible blockchain",
+  "output_directory": "results/most-efficient-and-secure-voting-system-for-evm-compatible-blockchain-20260205-233921",
+  "max_rounds": 3,
+  "threshold": 8.0,
+  "expert_team": [
+    {
+      "id": "expert-1",
+      "name": "Expert 1",
+      "domain": "General",
+      "focus_areas": [
+        "Gas cost analysis for voter registration, ballot casting, and tallying operations",
+        "Smart contract upgrade patterns and their impact on voting system integrity",
+        "Comparison of on-chain vs off-chain computation tradeoffs for vote processing"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    },
+    {
+      "id": "expert-2",
+      "name": "Expert 2",
+      "domain": "General",
+      "focus_areas": [
+        "Ballot secrecy guarantees and resistance to coercion/vote-buying attacks",
+        "Verifiability properties: individual, universal, and end-to-end verification mechanisms",
+        "ZK-proof system selection and on-chain verification efficiency for voter privacy"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    },
+    {
+      "id": "expert-3",
+      "name": "Expert 3",
+      "domain": "General",
+      "focus_areas": [
+        "MEV and transaction ordering attacks on vote submission and revelation phases",
+        "Sybil resistance mechanisms and identity/eligibility verification approaches",
+        "Liveness and censorship resistance guarantees for voter participation"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "manuscript_version": "v1",
+      "word_count": 3442,
+      "reviews": [
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Expert 1",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 6
+          },
+          "average": 6.6,
+          "summary": "This manuscript provides a comprehensive survey of blockchain voting architectures with practical implementation guidance. While the coverage is broad and the presentation is clear, the work lacks empirical validation of claimed gas costs, contains some technical inaccuracies in cryptographic implementations, and offers limited novel contributions beyond synthesizing existing knowledge.",
+          "strengths": [
+            "Well-structured decision framework that provides actionable guidance for practitioners selecting voting architectures based on their specific requirements",
+            "Comprehensive coverage of the voting system landscape from simple token-weighted approaches to advanced MACI implementations, with appropriate security property comparisons",
+            "Clear presentation of gas cost tradeoffs and layer-2 scaling options with practical deployment recommendations across different network choices"
+          ],
+          "weaknesses": [
+            "Gas cost figures appear to be estimates rather than empirically measured values - the appendix promising benchmarks is incomplete, and claimed 60-85% reduction through batching lacks supporting methodology or data",
+            "The smart contract upgrade patterns section mentioned in review focus areas is entirely absent from the manuscript, despite being critical for long-term voting system integrity",
+            "The on-chain vs off-chain computation tradeoff analysis is superficial - missing detailed analysis of data availability guarantees, censorship resistance implications, and verification cost breakdowns for hybrid architectures"
+          ],
+          "suggestions": [
+            "Complete the gas cost benchmarks appendix with actual measured values from testnet/mainnet deployments, including methodology, transaction hashes, and statistical variance across different network conditions",
+            "Add a dedicated section on smart contract upgradeability patterns (proxy patterns, diamond standard, immutable vs upgradeable tradeoffs) and their specific implications for voting system trust assumptions and security",
+            "Provide quantitative analysis of the on-chain/off-chain boundary decisions, including concrete examples of what happens when off-chain components fail, censorship scenarios, and data availability attack costs"
+          ],
+          "detailed_feedback": "The manuscript demonstrates solid foundational knowledge of blockchain voting systems but falls short of the rigor expected for a comprehensive research report. The gas cost analysis, which should be central to efficiency claims, relies heavily on estimated ranges (e.g., '200,000-500,000 gas' for ZK verification) without specifying proof systems, circuit sizes, or measurement conditions. The claim that 'gas costs can be reduced by 60-85% through batching and layer-2 deployment' in the executive summary is not substantiated with empirical data anywhere in the document. The security analysis, while covering the right properties, lacks formal treatment - for instance, the claim that MACI achieves 'receipt-freeness through key-change mechanism' deserves more rigorous analysis of the conditions under which this holds (e.g., timing assumptions, coordinator behavior). The code examples, while illustrative, contain simplifications that could mislead implementers - the ElGamal homomorphic addition in the EnhancedVoting contract uses addmod which is incorrect for elliptic curve operations. The comparison tables are useful but would benefit from citations to security proofs or audit reports rather than checkmarks. The treatment of emerging technologies (FHE, account abstraction) is appropriately forward-looking but speculative timelines ('2-3 years') should be qualified with technical milestones required. Overall, this reads more as a practitioner's guide than a research contribution, which is valuable but should be positioned accordingly.",
+          "tokens": 9358
+        },
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Expert 3",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 6,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 5
+          },
+          "average": 6.2,
+          "summary": "This manuscript provides a well-structured survey of blockchain voting systems with good practical guidance, but significantly underexplores critical security concerns around MEV/transaction ordering attacks, Sybil resistance mechanisms, and liveness/censorship resistance guarantees. The treatment of these fundamental security properties is superficial given their importance to real-world deployment security.",
+          "strengths": [
+            "Comprehensive architectural taxonomy covering the spectrum from simple token voting to MACI, with clear trade-off analysis and practical deployment recommendations",
+            "Strong practical orientation with concrete gas cost benchmarks, code examples, and real-world case studies (Gitcoin, Compound, Snapshot) that ground theoretical concepts",
+            "Well-organized decision framework and clear recommendations stratified by use case requirements, making the research actionable for practitioners"
+          ],
+          "weaknesses": [
+            "MEV and transaction ordering attacks receive only cursory treatment (single row in attack matrix marked as 'front-running'), despite being critical attack vectors that can compromise vote privacy, enable vote manipulation through sandwich attacks, and allow strategic last-block voting even in commit-reveal schemes",
+            "Sybil resistance is mentioned briefly but lacks rigorous analysis of identity/eligibility verification approaches\u2014the manuscript assumes Merkle tree eligibility proofs without discussing how the eligibility set is constructed, maintained, or protected against Sybil attacks at the identity layer",
+            "Liveness and censorship resistance guarantees are essentially absent from the analysis, despite being fundamental to voter participation\u2014no discussion of what happens when validators/sequencers selectively censor vote transactions, or how different L2 architectures affect censorship resistance"
+          ],
+          "suggestions": [
+            "Add a dedicated section on MEV attack vectors specific to voting: analyze how commit-reveal can be attacked via mempool observation and block builder collusion, discuss MEV-resistant transaction submission (private mempools, commit chains, threshold encryption of transactions), and quantify the economic incentives for MEV extraction in high-stakes votes",
+            "Expand Sybil resistance analysis to cover the full identity stack: compare approaches like proof-of-humanity, BrightID, Worldcoin, credential-based systems (Sismo, Polygon ID), and analyze their trust assumptions, privacy properties, and failure modes in voting contexts",
+            "Include rigorous analysis of liveness and censorship resistance: compare L1 vs L2 censorship resistance properties, discuss forced inclusion mechanisms, analyze the impact of sequencer centralization on vote censorship, and provide concrete recommendations for achieving censorship-resistant vote submission"
+          ],
+          "detailed_feedback": "From my review perspective focusing on MEV/transaction ordering, Sybil resistance, and liveness guarantees, this manuscript has significant gaps that undermine its claim to comprehensively address 'secure' voting systems. On MEV: the commit-reveal scheme is presented as solving front-running, but this is incomplete\u2014sophisticated attackers can still extract value through mempool observation during the reveal phase, sandwich attacks on vote-dependent token prices, and collusion with block builders to strategically order reveals. The manuscript should analyze private transaction submission mechanisms (Flashbots Protect, MEV Blocker), threshold-encrypted mempools, and the specific MEV risks in each proposed architecture. On Sybil resistance: the ZK-based eligibility verification via Merkle proofs is a cryptographic mechanism, not a Sybil resistance mechanism\u2014it only proves membership in a predefined set without addressing how that set achieves one-person-one-vote or prevents wealth-based Sybil attacks. The manuscript conflates token-weighted voting (explicitly not Sybil-resistant) with identity-based eligibility without adequately distinguishing these threat models. On liveness: the comparison of L2 solutions mentions finality times but ignores censorship resistance entirely. Optimistic rollups with centralized sequencers can trivially censor vote transactions; the 7-day challenge period doesn't help if your vote was never included. The manuscript should discuss forced transaction inclusion mechanisms, escape hatches, and the concrete censorship resistance properties of each recommended deployment target. These omissions are particularly concerning given the manuscript's practical orientation\u2014organizations following these recommendations without understanding these attack vectors could deploy systems vulnerable to sophisticated adversaries.",
+          "tokens": 9549
+        },
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Expert 2",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 6
+          },
+          "average": 6.6,
+          "summary": "This manuscript provides a comprehensive survey of blockchain voting systems with practical implementation guidance, but lacks depth in formal security analysis and novel contributions. While well-organized and accessible, the treatment of critical security properties like coercion resistance and verifiability remains superficial, and several technical claims require stronger justification or correction.",
+          "strengths": [
+            "Excellent organization and clear presentation of complex cryptographic concepts, making the material accessible to practitioners while maintaining technical accuracy in most areas",
+            "Comprehensive coverage of the design space from simple token voting through MACI, with practical code examples and deployment considerations that bridge theory and practice",
+            "Useful decision framework and comparative tables that provide actionable guidance for system designers, including realistic gas cost estimates and layer-2 deployment recommendations"
+          ],
+          "weaknesses": [
+            "The security analysis of ballot secrecy is incomplete\u2014the manuscript conflates temporal privacy (commit-reveal) with cryptographic privacy (ZK/homomorphic) without adequately distinguishing their threat model implications; specifically, commit-reveal provides NO ballot secrecy after reveal phase, which undermines coercion resistance claims",
+            "Verifiability properties are poorly defined and analyzed: the manuscript mentions 'universal verifiability' but fails to distinguish between individual verifiability, universal verifiability, and end-to-end verifiability (E2E-V), nor does it analyze which systems achieve which properties",
+            "The ZK-proof system comparison lacks rigor\u2014security level claims (e.g., '~100-128 bit' for Groth16 on BN254) are imprecise and the manuscript doesn't address the practical implications of the 110-bit security of BN254 versus the claimed 128-bit security levels elsewhere"
+          ],
+          "suggestions": [
+            "Add a formal definitions section covering ballot secrecy, coercion resistance, receipt-freeness, and the three types of verifiability (individual, universal, E2E), then systematically evaluate each system against these definitions with precise threat model assumptions",
+            "Revise the security analysis of commit-reveal to accurately reflect that it provides ZERO coercion resistance (voters can prove their vote by revealing commitment before the reveal phase to a coercer) and clarify that MACI's coercion resistance relies on specific trust assumptions about the coordinator",
+            "Provide more rigorous analysis of ZK proof system selection: compare Groth16, PLONK, and Halo2 specifically for voting circuits, discuss the trusted setup implications in detail, and address the verification gas costs for different circuit sizes relevant to voting (e.g., Merkle tree depth, number of candidates)"
+          ],
+          "detailed_feedback": "From a security perspective, this manuscript requires significant strengthening in its treatment of the core voting security properties. The attack resistance matrix in Section 4.1 is misleading: marking commit-reveal as providing protection against 'vote visibility' with a warning symbol obscures the fundamental limitation that all votes become public after the reveal phase. This is not merely 'temporal' privacy\u2014it's a complete failure of ballot secrecy for any threat model where the adversary can wait until after the election. Similarly, the claim that ZK-based systems provide partial protection against vote buying (marked with \u26a0\ufe0f) needs elaboration: without MACI's key-change mechanism, ZK proofs alone do not prevent a voter from proving their vote to a briber by sharing their witness.\n\nThe treatment of MACI's security properties, while generally accurate, understates the trust assumptions. The coordinator learns all votes in plaintext during processing\u2014this is a significant centralization risk that the manuscript acknowledges but doesn't adequately weight in the recommendations. The claim that MACI provides 'receipt-freeness through key-change mechanism' is technically correct but practically limited: if a coercer demands proof of a vote BEFORE the voter has opportunity to change keys, the system fails. The manuscript should discuss timing attacks and the practical constraints on key rotation.\n\nRegarding ZK proof efficiency, the gas cost estimates for verification (200,000-500,000 gas) are reasonable but the manuscript doesn't address the critical issue of proof generation time on client devices. For a voting system to be practical, voters must be able to generate proofs on mobile devices within seconds\u2014this constraint significantly impacts circuit design choices and should inform the recommendation of specific proof systems. The manuscript also doesn't discuss the implications of using Poseidon hash (as in MACI) versus Pedersen commitments for Merkle trees, which has substantial impact on both prover time and verifier gas costs.\n\nThe homomorphic encryption section correctly identifies the gas cost challenges but doesn't explore threshold decryption in sufficient depth. For practical deployment, the key management for threshold Paillier or threshold ElGamal is a critical design consideration that affects both security (what if threshold parties collude?) and liveness (what if threshold parties go offline?). The enhanced voting contract in Section 6.2 uses ElGamal but the security analysis doesn't address the malleability of ElGamal ciphertexts or the need for proof of correct encryption.\n\nFinally, the manuscript would benefit from discussing formal verification efforts for voting smart contracts and the specific vulnerabilities that have been found in production systems beyond the Compound incident mentioned.",
+          "tokens": 9801
+        }
+      ],
+      "overall_average": 6.5,
+      "moderator_decision": {
+        "decision": "MAJOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive survey of blockchain voting architectures with practical implementation guidance. All three reviewers consistently praise the work's clear organization, accessible presentation of complex cryptographic concepts, and actionable decision framework for practitioners. The coverage spanning from simple token-weighted voting to advanced MACI implementations is thorough, and the inclusion of real-world case studies (Gitcoin, Compound, Snapshot) grounds the theoretical discussion effectively.\n\nHowever, the reviewers identify several significant gaps that undermine the manuscript's contribution. Most critically, the security analysis lacks rigor in multiple dimensions: (1) the treatment of MEV and transaction ordering attacks is superficial despite their critical importance to voting integrity; (2) the manuscript conflates temporal privacy (commit-reveal) with cryptographic privacy without clarifying that commit-reveal provides zero coercion resistance after the reveal phase; (3) Sybil resistance and liveness/censorship resistance receive inadequate attention despite being fundamental to real-world deployment security. Additionally, the claimed gas cost benchmarks lack empirical validation\u2014the appendix promising measured values is incomplete, and the 60-85% batching reduction claim has no supporting methodology. The novelty scores (5/10 across all reviewers) indicate the work primarily synthesizes existing knowledge without sufficient original contribution.\n\nWhile the manuscript has clear practical value, addressing these gaps requires substantial revision rather than minor corrections. The missing smart contract upgrade patterns section, incomplete formal security definitions, and superficial on-chain/off-chain tradeoff analysis represent significant omissions that must be remedied for the work to meet publication standards.",
+        "key_strengths": [
+          "Well-structured decision framework providing actionable guidance for practitioners selecting voting architectures based on specific requirements, with clear trade-off analysis across the design space",
+          "Comprehensive coverage from simple token voting to MACI with excellent organization and accessible presentation of complex cryptographic concepts",
+          "Strong practical orientation with code examples, real-world case studies, and deployment recommendations across different network choices"
+        ],
+        "key_weaknesses": [
+          "Critical security gaps: MEV/transaction ordering attacks, Sybil resistance mechanisms, and liveness/censorship resistance guarantees receive superficial treatment despite being fundamental to deployment security",
+          "Incomplete and potentially misleading security analysis: commit-reveal's lack of coercion resistance is not clearly stated, verifiability properties are poorly defined, and the distinction between temporal and cryptographic privacy is conflated",
+          "Empirical validation is missing: gas cost figures appear to be estimates without measured values, the benchmarks appendix is incomplete, and claimed optimizations lack supporting methodology"
+        ],
+        "required_changes": [
+          "Add a dedicated section on MEV attack vectors specific to voting systems, including analysis of commit-reveal vulnerabilities, MEV-resistant submission mechanisms, and economic incentive quantification for high-stakes votes",
+          "Provide formal definitions of ballot secrecy, coercion resistance, receipt-freeness, and verifiability types (individual, universal, E2E-V), then systematically evaluate each system against these definitions with explicit threat model assumptions",
+          "Complete the gas cost benchmarks appendix with empirically measured values from testnet/mainnet deployments, including methodology, transaction hashes, and statistical variance",
+          "Expand Sybil resistance analysis to cover identity verification approaches (proof-of-humanity, BrightID, credential systems) with their trust assumptions and failure modes",
+          "Add analysis of liveness and censorship resistance comparing L1 vs L2 properties, forced inclusion mechanisms, and sequencer centralization impacts",
+          "Include the missing smart contract upgrade patterns section addressing proxy patterns, upgradeability tradeoffs, and implications for voting system trust assumptions"
+        ],
+        "recommendation": "The manuscript addresses an important practical topic and demonstrates strong organizational and pedagogical qualities. However, the current version has significant gaps in security analysis rigor and empirical validation that must be addressed before publication. Authors should prioritize: (1) completing the formal security definitions and systematically evaluating systems against them, with particular attention to correcting the misleading treatment of commit-reveal coercion resistance; (2) adding substantive analysis of MEV, Sybil resistance, and censorship resistance; (3) providing actual measured gas cost data rather than estimates. These revisions will require substantial effort but are achievable within a revision cycle. The authors should also consider whether novel contributions beyond synthesis can be strengthened\u2014all reviewers noted limited novelty, which could be addressed by providing original empirical measurements, novel comparative frameworks, or new security analysis results.",
+        "round": 1,
+        "overall_average": 6.5,
+        "tokens": 3270
+      },
+      "manuscript_diff": null,
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T23:42:26.923229"
+    },
+    {
+      "round": 2,
+      "manuscript_version": "v2",
+      "word_count": 3985,
+      "reviews": [
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Expert 2",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive and well-structured survey of blockchain voting systems with strong technical depth on cryptographic mechanisms. The manuscript demonstrates solid understanding of security properties and provides useful practical guidance, though it lacks formal security proofs and leaves some critical areas (particularly the ZK credential section) incomplete.",
+          "strengths": [
+            "Excellent formal definitions of security properties (ballot secrecy, coercion resistance, receipt-freeness) with clear distinctions between commonly conflated concepts - the critical distinction between ballot secrecy and coercion resistance is particularly valuable",
+            "Thorough and honest analysis of MACI's trust assumptions and timing attack vulnerabilities, including the coordinator collusion problem and practical mitigations",
+            "Strong practical focus with empirical gas measurements, device-specific proof generation constraints, and actionable recommendations stratified by threat level"
+          ],
+          "weaknesses": [
+            "The manuscript appears truncated mid-sentence in Section 5.2, leaving the ZK-based credential verification incomplete - this is a significant gap given the importance of Sybil resistance to the overall security model",
+            "While security properties are formally defined, the analysis of whether each system achieves them lacks formal proofs or reduction arguments - claims like 'MACI achieves coercion resistance' should be accompanied by proof sketches under stated assumptions",
+            "The verifiability analysis for MACI understates a fundamental limitation: voters cannot independently verify their vote was counted correctly without trusting the coordinator, which arguably disqualifies it from true E2E verifiability under standard definitions"
+          ],
+          "suggestions": [
+            "Complete the truncated Section 5.2 and add a dedicated section on composing identity/Sybil solutions with cryptographic voting mechanisms, including formal analysis of how identity layer failures propagate to voting security",
+            "Strengthen the MACI verifiability discussion by either (a) providing a formal argument for why coordinator trust is acceptable under specific threat models, or (b) discussing emerging solutions like multiple independent coordinators with threshold decryption that could achieve stronger verifiability",
+            "Add a section on censorship resistance that analyzes forced inclusion mechanisms, timelock-based fallbacks, and the specific censorship vulnerabilities of L2 sequencers for rollup deployments - this is mentioned in the threat model but not adequately addressed"
+          ],
+          "detailed_feedback": "This manuscript represents solid work that will be valuable to practitioners implementing blockchain voting systems. The formal definitions in Section 2.1 are particularly well-crafted and address common misconceptions in the field - for instance, explicitly noting that commit-reveal provides 'temporal privacy only (NOT ballot secrecy per Definition 1)' corrects a widespread misunderstanding. The MACI analysis is notably honest about trust assumptions, which is refreshing given the tendency in blockchain literature to oversell security properties.\n\nHowever, several areas require attention. First, the manuscript's treatment of verifiability needs refinement. The claim that MACI provides universal verifiability is technically correct (the tally proof is publicly verifiable), but the individual verifiability assessment deserves deeper analysis. Under Benaloh's original framework, individual verifiability requires voters to verify their vote was counted without trusting any single party - MACI fails this under coordinator compromise. The manuscript should either adopt a weaker definition explicitly or discuss this limitation more thoroughly.\n\nSecond, the security level discussion for BN254-based Groth16 (~110 bits) is accurate and important, but the implications for long-term security of voting records should be discussed. If votes must remain secret for decades (as in some governmental contexts), the reduced security margin may be unacceptable.\n\nThird, the MEV analysis in Section 5.1 is excellent and addresses a genuinely underexplored area, but it would benefit from discussing the interaction between MEV protection and liveness guarantees - private transaction submission can fail silently, potentially disenfranchising voters.\n\nFinally, the manuscript would benefit from a clearer threat model hierarchy. Currently, recommendations are stratified by economic stakes, but the appropriate system also depends on adversary capabilities (nation-state vs. opportunistic attacker) and whether coercion resistance is required. A decision tree or flowchart would help practitioners navigate these tradeoffs.",
+          "tokens": 9590
+        },
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Expert 1",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive and well-structured survey of blockchain voting systems with strong technical depth in cryptographic mechanisms and practical implementation considerations. The manuscript demonstrates significant improvement in addressing security nuances and provides valuable empirical measurements, though it remains incomplete (appears truncated) and would benefit from deeper analysis of real-world deployment challenges and failure modes.",
+          "strengths": [
+            "Excellent formal definitions of security properties (Definitions 1-7) with clear distinctions between ballot secrecy, coercion resistance, and receipt-freeness - this addresses a common source of confusion in the literature",
+            "Strong empirical grounding with measured gas costs from Sepolia testnet (December 2024) and practical device-specific proof generation benchmarks that provide actionable guidance for implementers",
+            "Thorough MEV analysis in Section 5.1 that goes beyond typical voting system surveys, including specific attack vectors and tiered mitigation recommendations based on governance stakes"
+          ],
+          "weaknesses": [
+            "The manuscript appears truncated mid-section (cuts off during ZK credential verification code), leaving the Sybil resistance section incomplete and missing promised content like Appendix A with full measurement methodology",
+            "Limited discussion of real-world failure modes and incidents - no analysis of actual governance attacks (e.g., Beanstalk flash loan attack, various DAO governance exploits) that would ground the theoretical analysis",
+            "The comparison of on-chain vs off-chain computation tradeoffs (a stated focus area) is scattered throughout rather than systematically analyzed - missing a dedicated section comparing hybrid architectures like Vocdoni, Snapshot+, or Aragon's approach"
+          ],
+          "suggestions": [
+            "Complete the truncated sections and ensure Appendix A with full measurement methodology is included - the empirical claims are valuable but need reproducibility details (contract addresses, transaction hashes, test parameters)",
+            "Add a dedicated section on hybrid on-chain/off-chain architectures with systematic comparison of trust assumptions, cost profiles, and latency characteristics - this is critical for practical deployment decisions",
+            "Include case studies of production deployments with lessons learned, including both successes (Gitcoin Grants MACI usage) and failures/challenges (e.g., low participation rates, coordinator availability issues, upgrade incidents)"
+          ],
+          "detailed_feedback": "This manuscript represents solid work that would serve as a valuable reference for practitioners implementing blockchain voting systems. The formal security definitions in Section 2.1 are particularly well-crafted and address a genuine gap in how these properties are often conflated in practice. The critical analysis of commit-reveal's limitations regarding coercion resistance is accurate and important - many implementations incorrectly claim privacy properties that commit-reveal cannot provide.\n\nRegarding the gas cost analysis, the measurements appear reasonable and the methodology of using Sepolia testnet is appropriate, though I would strongly recommend including mainnet validation samples given the differences in state size and potential precompile behavior. The amortized MACI cost of ~55,000 gas per vote seems optimistic and should clarify assumptions about batch sizes and voter counts.\n\nThe smart contract upgrade patterns section appears to be missing entirely, which is concerning given it was listed as a focus area. Voting systems have unique upgrade challenges - how do you handle mid-election upgrades? What happens to committed votes if the reveal logic changes? The UUPS vs transparent proxy tradeoffs are particularly relevant here.\n\nFor the on-chain vs off-chain tradeoffs, the manuscript touches on this implicitly but never provides a systematic framework. Key questions remain unaddressed: What's the trust model when vote aggregation happens off-chain? How do you handle data availability for off-chain votes? What are the censorship resistance implications of relying on centralized sequencers for L2 deployments?\n\nThe MACI analysis is thorough but should acknowledge the practical challenges observed in production: coordinator key management complexity, the UX burden of key changes for coercion resistance, and the significant infrastructure requirements. The timing attack vulnerability discussion is valuable but could benefit from quantitative analysis of the timing windows in practice.\n\nFinally, the security level discussion correctly notes BN254's reduced security (~110 bits) but should more strongly recommend BLS12-381 for new deployments, especially given the long-term nature of voting records and potential future cryptanalytic advances.",
+          "tokens": 9594
+        },
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Expert 3",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive and well-structured survey of blockchain voting systems with strong technical depth on cryptographic mechanisms. The manuscript demonstrates significant improvement in addressing MEV concerns and Sybil resistance, though the analysis of censorship resistance and liveness guarantees remains underdeveloped, and the document appears truncated before completion.",
+          "strengths": [
+            "Excellent treatment of MEV attack vectors specific to voting systems, including concrete attack scenarios, measured risk assessments by architecture, and tiered mitigation recommendations based on governance stakes",
+            "Strong formal definitions of security properties (Definitions 1-7) with clear distinctions between ballot secrecy, coercion resistance, and receipt-freeness that correct common misconceptions in the field",
+            "Thorough analysis of MACI's trust assumptions including timing attack vulnerabilities and coordinator collusion risks, with practical mitigation strategies"
+          ],
+          "weaknesses": [
+            "The manuscript is clearly truncated mid-section (Section 5.2 ends abruptly during ZK credential verification code), leaving censorship resistance (mentioned in scope) inadequately addressed",
+            "Liveness guarantees receive minimal treatment despite being listed as a key review focus - no formal analysis of what happens when coordinators go offline, threshold participants are unavailable, or reveal phases have low participation",
+            "The Sybil resistance section, while improved, lacks quantitative analysis of attack costs and doesn't adequately address the interaction between identity layer failures and cryptographic layer guarantees"
+          ],
+          "suggestions": [
+            "Complete the truncated sections and add dedicated analysis of censorship resistance mechanisms including forced inclusion protocols, escape hatches, and L2-specific considerations (sequencer censorship on Optimism/Arbitrum)",
+            "Add formal liveness analysis: define liveness properties, analyze failure modes (coordinator unavailability, insufficient reveal participation, threshold decryption failures), and specify recovery mechanisms with concrete timeout parameters",
+            "Quantify Sybil attack economics: what does it cost to acquire N Sybil identities under each identity system, and how does this interact with voting power? Include analysis of credential farming attacks on Gitcoin Passport-style systems"
+          ],
+          "detailed_feedback": "This manuscript represents solid work on a practically important topic, with notable improvements in the MEV and Sybil resistance sections compared to what appears to be an earlier version. The MEV analysis in Section 5.1 is particularly valuable, providing concrete attack scenarios and actionable mitigation recommendations stratified by governance stakes. The formal security definitions in Section 2.1 are rigorous and the explicit distinction between ballot secrecy and coercion resistance addresses a common source of confusion.\n\nHowever, from my review perspective focusing on MEV/transaction ordering, Sybil resistance, and liveness/censorship resistance, several gaps remain. First, the document is clearly incomplete - Section 5.2 cuts off mid-code-block, and the promised analysis of censorship resistance in the threat model (Section 2.4) never materializes in the body. This is a significant omission given that censorship is arguably the most practical attack vector on L2s where most voting will occur.\n\nFor liveness, the manuscript mentions coordinator availability as a MACI trust assumption but doesn't analyze what happens when liveness fails. What are the timeout mechanisms? Can votes be recovered if a coordinator disappears? What participation threshold is needed for commit-reveal schemes to produce valid results? These operational concerns are critical for production deployments.\n\nThe Sybil resistance table is useful but lacks depth. The claim that Worldcoin provides 'High' Sybil resistance deserves scrutiny - what about the orb operator attack surface, biometric spoofing, or the centralized nature of the uniqueness database? Similarly, the interaction between Sybil attacks and the cryptographic layer needs exploration: if an attacker controls 30% of 'unique' identities in a Proof of Humanity registry, how does this propagate through MACI's anti-collusion guarantees?\n\nThe gas measurements and empirical methodology (referenced Appendix A) add credibility, though the appendix itself is not included. The client-side proof generation constraints table is practically valuable for implementers. I recommend completing the missing sections, adding formal liveness definitions and failure mode analysis, and deepening the Sybil resistance economics before this work is ready for publication.",
+          "tokens": 9601
+        }
+      ],
+      "overall_average": 7.2,
+      "moderator_decision": {
+        "decision": "MINOR_REVISION",
+        "confidence": 4,
+        "meta_review": "All three reviewers converge on a consistent assessment (7.2/10 average) of this blockchain voting systems survey, recognizing it as a comprehensive and technically rigorous contribution with strong formal definitions of security properties, excellent MEV analysis, and valuable empirical measurements. The reviewers unanimously praise the clear distinctions between ballot secrecy, coercion resistance, and receipt-freeness, as well as the thorough treatment of MACI's trust assumptions and practical implementation guidance with concrete gas costs and device-specific benchmarks.\n\nThe most critical issue identified by all reviewers is that the manuscript is clearly truncated mid-section (Section 5.2 ends abruptly during ZK credential verification code), leaving the Sybil resistance discussion incomplete and missing promised appendix content. Beyond this structural problem, reviewers identify substantive gaps: insufficient treatment of censorship resistance and liveness guarantees despite being listed in scope, lack of formal security proofs or reduction arguments for claimed properties, and missing analysis of real-world deployment failures and hybrid on-chain/off-chain architectures. The MACI verifiability claims are also questioned as potentially overstated given coordinator trust requirements.\n\nDespite these concerns, the reviewers agree the manuscript makes valuable contributions to the field and the identified issues are addressable through revision rather than fundamental restructuring. The technical foundation is sound, and the practical guidance is actionable. With completion of truncated sections and targeted additions addressing the identified gaps, this survey would represent a significant contribution to blockchain voting literature.",
+        "key_strengths": [
+          "Excellent formal definitions of security properties (Definitions 1-7) with clear, valuable distinctions between ballot secrecy, coercion resistance, and receipt-freeness that correct common misconceptions",
+          "Strong empirical grounding with measured gas costs from Sepolia testnet and device-specific proof generation benchmarks providing actionable implementation guidance",
+          "Thorough MEV analysis with concrete attack scenarios, tiered mitigation recommendations, and honest treatment of MACI's trust assumptions including timing attack vulnerabilities"
+        ],
+        "key_weaknesses": [
+          "Manuscript is truncated mid-section (Section 5.2), leaving ZK credential verification and Sybil resistance incomplete, with missing Appendix A containing measurement methodology",
+          "Censorship resistance and liveness guarantees receive inadequate treatment despite being listed in scope - no formal analysis of coordinator failures, threshold unavailability, or recovery mechanisms",
+          "Security claims lack formal proofs or reduction arguments, and MACI verifiability analysis may overstate guarantees given coordinator trust requirements"
+        ],
+        "required_changes": [
+          "Complete all truncated sections including Section 5.2 on ZK credentials and include Appendix A with full measurement methodology (contract addresses, transaction hashes, reproducibility details)",
+          "Add dedicated analysis of censorship resistance (forced inclusion protocols, L2 sequencer considerations) and formal liveness properties with failure mode analysis and concrete recovery mechanisms",
+          "Either provide proof sketches for security claims under stated assumptions or qualify claims appropriately; clarify MACI verifiability limitations and discuss emerging solutions like threshold decryption with multiple coordinators"
+        ],
+        "recommendation": "This is a strong survey that requires completion and targeted improvements before acceptance. Priority actions: (1) Complete the truncated Section 5.2 and include all promised appendix material - this is non-negotiable as the manuscript is currently incomplete. (2) Add a dedicated section on censorship resistance and liveness guarantees with formal definitions and failure mode analysis. (3) Strengthen the rigor of security claims by either adding proof sketches or appropriately qualifying statements about which properties each system achieves. (4) Consider adding brief case studies of production deployments (successes and failures) to ground the theoretical analysis. The core technical content is valuable and well-executed; these revisions will elevate the manuscript to publication quality.",
+        "round": 2,
+        "overall_average": 7.2,
+        "tokens": 3061
+      },
+      "manuscript_diff": {
+        "words_added": 543,
+        "previous_version": "v1",
+        "current_version": "v2"
+      },
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T23:45:44.903812"
+    },
+    {
+      "round": 3,
+      "manuscript_version": "v3",
+      "word_count": 4100,
+      "reviews": [
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Expert 1",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive and well-structured survey of blockchain voting systems with strong formal definitions and practical implementation details. The manuscript demonstrates solid technical understanding but appears truncated and would benefit from deeper analysis of emerging solutions and more complete empirical validation.",
+          "strengths": [
+            "Excellent formal definitions of security properties (Definitions 1-8) that clearly distinguish between commonly conflated concepts like ballot secrecy vs. coercion resistance, and strong vs. weak individual verifiability",
+            "Thorough and honest analysis of MACI's trust assumptions and limitations, including the critical examination of why it fails strict E2E verifiability - this nuanced treatment is often missing in similar surveys",
+            "Practical gas cost measurements with clear methodology references and realistic cost tables that practitioners can actually use for deployment planning"
+          ],
+          "weaknesses": [
+            "The manuscript is clearly truncated mid-sentence in Section 4.2, missing significant promised content including Sections 5-7 on MEV attacks, implementation guidance, and future directions",
+            "The claimed 60-85% gas reduction through batching and L2 deployment is stated in the executive summary but the supporting empirical analysis in 'Appendix A' is referenced but not provided",
+            "Limited discussion of post-quantum considerations - given the long-term nature of vote secrecy requirements mentioned for governmental elections, the absence of lattice-based or hash-based alternatives is notable"
+          ],
+          "suggestions": [
+            "Complete the truncated sections, particularly the MEV analysis (Section 5.1) and censorship resistance (Section 5.3) which are critical for practical deployments and repeatedly referenced but never delivered",
+            "Include Appendix A with full measurement methodology, contract addresses, and transaction hashes as promised - this is essential for reproducibility and verification of the empirical claims",
+            "Add a dedicated section on hybrid architectures that combine multiple approaches (e.g., commit-reveal with ZK proofs for eligibility, or MACI with threshold coordinator decryption) as these represent practical deployment patterns"
+          ],
+          "detailed_feedback": "This manuscript represents solid work on a practically important topic. The formal treatment of security properties is particularly valuable - the distinction between temporal privacy and true ballot secrecy (Section 3.2) addresses a common source of confusion in the field. The critical analysis of MACI's verifiability properties is commendable; too many treatments uncritically accept MACI as providing E2E verifiability when it demonstrably does not under standard definitions. However, several issues require attention. First, the document is incomplete - it cuts off mid-table in Section 4.2, and the promised sections on MEV exploitation, Sybil resistance propagation, censorship resistance, smart contract upgradeability patterns, and hybrid architectures are missing. These are not minor omissions; MEV and censorship resistance are existential concerns for blockchain voting systems. Second, the empirical methodology is referenced but not provided - claims about gas measurements 'from Ethereum Sepolia testnet, December 2024' and 'Appendix A' cannot be verified. Third, the comparison of proof systems would benefit from discussing recursive proof composition for vote aggregation, which is increasingly relevant for scalability. Fourth, the Sybil resistance table, while useful, could be strengthened with more rigorous analysis of attack costs and threat models. Finally, consider discussing the tension between upgradeability (needed for bug fixes) and immutability (needed for election integrity) - this is mentioned in the research objectives but not addressed in the provided content.",
+          "tokens": 9418
+        },
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Expert 2",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive and well-structured survey of blockchain voting systems with strong formal definitions and practical implementation guidance. The manuscript demonstrates solid technical understanding but is notably incomplete (appears truncated at Section 4.2) and would benefit from deeper analysis of emerging solutions and more rigorous treatment of the fundamental tensions between verifiability and privacy properties.",
+          "strengths": [
+            "Excellent formal definitions of security properties (Definitions 1-8) that clearly distinguish between commonly conflated concepts like ballot secrecy vs. coercion resistance, and strong vs. weak individual verifiability",
+            "Honest and nuanced treatment of MACI's limitations, particularly the critical analysis of why it fails strict E2E verifiability under Benaloh's framework while still providing practical coercion resistance",
+            "Strong practical grounding with empirical gas measurements, device-specific proof generation constraints, and lessons learned from production deployments (Gitcoin Grants, clr.fund)"
+          ],
+          "weaknesses": [
+            "The manuscript is clearly incomplete - it cuts off mid-sentence in Section 4.2 and appears to be missing Sections 5-7 referenced in the objectives (MEV attacks, implementation guidance, future directions)",
+            "The Sybil resistance table conflates fundamentally different approaches (token-weighted voting is explicitly not Sybil-resistant, yet appears alongside identity solutions) without adequately explaining this categorical difference",
+            "Limited discussion of the fundamental impossibility results in voting theory - the tension between coercion resistance and individual verifiability deserves more rigorous treatment, including references to Juels-Catalano-Jakobsson's foundational work"
+          ],
+          "suggestions": [
+            "Complete the missing sections, particularly the promised MEV analysis (Section 5.1), censorship resistance (Section 5.3), and implementation guidance which are critical for practitioners",
+            "Add a dedicated section on impossibility results and fundamental tradeoffs - specifically address why no system can simultaneously achieve strong coercion resistance AND strong individual verifiability without trusted parties",
+            "Expand the 'Emerging Solutions for Stronger Verifiability' subsection with concrete protocol descriptions and security analysis of threshold MACI variants and verifiable shuffle networks currently under development"
+          ],
+          "detailed_feedback": "This manuscript represents solid work on a practically important topic, but several issues prevent it from reaching publication quality. First, the obvious incompleteness is a major concern - the document promises analysis of MEV attacks, censorship resistance, and implementation guidance in Section 1.2 but cuts off before delivering these sections. The existing content is generally accurate, though I note the ~110-bit security claim for BN254 should cite the specific Kim-Barbulescu result more precisely (the attack affects the discrete log problem in extension fields, not the elliptic curve discrete log directly). The treatment of verifiability properties is commendable - too many papers in this space conflate ballot secrecy with coercion resistance or claim E2E verifiability for systems that only provide universal verifiability. However, the manuscript would benefit from engaging more deeply with the theoretical foundations. Specifically, the Juels-Catalano-Jakobsson impossibility result (2005) establishes fundamental limits on achieving coercion resistance with receipt-freeness in remote voting settings - this should be discussed. The MACI analysis correctly identifies the coordinator trust assumption but could go further in analyzing the game-theoretic aspects: under what conditions is the coordinator incentivized to behave honestly? The liveness analysis tables are useful but lack formal treatment - what are the actual availability requirements for t-of-n threshold systems? The empirical measurements are valuable but would benefit from statistical characterization (variance, confidence intervals) rather than point estimates. Finally, the manuscript should address post-quantum considerations given that voting systems may need to protect ballot secrecy for extended periods.",
+          "tokens": 9495
+        },
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Expert 3",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive and well-structured survey of blockchain voting systems with strong technical depth on cryptographic mechanisms. The manuscript demonstrates significant improvement in addressing MEV, Sybil resistance, and liveness concerns, though the analysis remains incomplete in several areas and the document appears truncated before completion.",
+          "strengths": [
+            "Excellent formal definitions of security properties (Definitions 1-8) with clear distinctions between ballot secrecy, coercion resistance, and receipt-freeness that avoid common conflations in the literature",
+            "Thorough and honest analysis of MACI's trust assumptions, including the critical examination of why it fails strict E2E verifiability under Benaloh's framework - this nuanced treatment is rarely seen",
+            "Strong empirical grounding with measured gas costs from actual testnet deployments, including methodology transparency with references to Appendix A"
+          ],
+          "weaknesses": [
+            "The manuscript is clearly truncated mid-sentence in Section 4.2, missing substantial promised content including Sections 5.1-5.3 on MEV attacks, Sybil resistance propagation, and censorship resistance that were explicitly mentioned in the scope",
+            "MEV analysis is mentioned throughout but never delivered in depth - the promised Section 5.1 on MEV exploitation is missing, leaving critical questions about sandwich attacks on reveal phases, sequencer manipulation on L2s, and builder/proposer collusion unaddressed",
+            "Censorship resistance treatment is superficial - the matrix marks systems as 'not protected' but lacks analysis of forced inclusion mechanisms, censorship-resistant transaction submission channels, or the differential censorship resistance properties of L1 vs various L2 architectures"
+          ],
+          "suggestions": [
+            "Complete the truncated sections, particularly the promised MEV analysis (Section 5.1) which should cover: (a) commit-reveal reveal-phase MEV extraction, (b) sequencer ordering attacks on rollups, (c) time-bandit attacks on vote finality, and (d) MEV-Share/Flashbots Protect integration for vote transactions",
+            "Expand liveness analysis to include quantitative bounds - what are the actual timeout parameters that provide meaningful guarantees? How do these interact with block finality times on different L2s? What happens when Ethereum L1 experiences extended finality delays?",
+            "Add a dedicated section on censorship resistance that analyzes: (a) validator/sequencer censorship capabilities by chain, (b) forced inclusion mechanisms (escape hatches, L1 fallback), (c) geographic and jurisdictional distribution requirements, and (d) the interaction between censorship resistance and the timing assumptions required for MACI's coercion resistance"
+          ],
+          "detailed_feedback": "This manuscript represents solid work on a complex topic, with particular strength in its cryptographic analysis and honest treatment of system limitations. The formal definitions in Section 2.1 are exemplary and should serve as a reference for future work. The MACI analysis in Section 3.5 is notably thorough, correctly identifying the tension between coercion resistance and strict E2E verifiability - a nuance often glossed over in promotional materials.\n\nHowever, the manuscript's treatment of the three focus areas (MEV, Sybil resistance, liveness/censorship) is uneven. The Sybil resistance table in Section 2.2 is useful but lacks depth on how identity layer failures propagate to voting security (promised in Section 5.2 but not delivered). The liveness analysis is scattered across sections rather than consolidated, making it difficult to assess the complete threat model.\n\nThe MEV discussion is particularly concerning given its prominence in the research objectives. The attack resistance matrix marks several systems as 'partially protected' against MEV but provides no substantive analysis of what attacks are possible, their economic viability, or mitigation strategies. For commit-reveal specifically, the reveal phase creates a known MEV opportunity where miners/validators can observe reveal transactions and potentially front-run or reorder them - this deserves explicit treatment.\n\nThe truncation is a significant issue that must be resolved before this work can be properly evaluated. The missing sections appear to contain critical analysis that would substantially affect the overall assessment. Additionally, while the empirical measurements are valuable, the methodology appendix is referenced but not included, making it impossible to verify the measurement validity.\n\nFor the censorship resistance analysis, I would recommend examining the specific guarantees provided by different L2 architectures: optimistic rollups with their 7-day challenge periods create different censorship dynamics than ZK rollups with faster finality. The interaction between sequencer centralization (common in current L2 deployments) and vote censorship resistance deserves explicit treatment, particularly given the recommendation to deploy on optimistic rollups in the executive summary.",
+          "tokens": 9694
+        }
+      ],
+      "overall_average": 7.2,
+      "moderator_decision": {
+        "decision": "MINOR_REVISION",
+        "confidence": 4,
+        "meta_review": "All three reviewers converge on a consistent assessment (7.2/10 average) of this blockchain voting systems survey, recognizing its substantial technical contributions while identifying a critical structural problem: the manuscript is clearly truncated mid-sentence in Section 4.2, with promised Sections 5-7 on MEV attacks, implementation guidance, and future directions entirely missing. The reviewers unanimously praise the formal security property definitions (Definitions 1-8), the nuanced and honest treatment of MACI's limitations regarding E2E verifiability, and the practical grounding through empirical gas measurements. These strengths represent genuine contributions to the field.\n\nThe primary weakness is unambiguous: the manuscript is incomplete. All reviewers note that critical promised content\u2014particularly the MEV analysis (Section 5.1), censorship resistance discussion (Section 5.3), and the referenced Appendix A with measurement methodology\u2014are missing. Secondary concerns include limited treatment of impossibility results in voting theory, insufficient depth on post-quantum considerations given long-term vote secrecy requirements, and some categorical confusion in the Sybil resistance comparison table. However, these are addressable issues that do not undermine the fundamental quality of the existing content.\n\nGiven this is the final review round and the core technical content that exists is of high quality, the path forward is clear: the authors must complete the truncated sections to deliver on the manuscript's stated scope. The existing material demonstrates the authors' capability to produce rigorous analysis; the issue is simply that the work was submitted incomplete.",
+        "key_strengths": [
+          "Excellent formal definitions of security properties (Definitions 1-8) that clearly distinguish commonly conflated concepts like ballot secrecy vs. coercion resistance and strong vs. weak individual verifiability",
+          "Thorough and honest analysis of MACI's trust assumptions and limitations, including critical examination of why it fails strict E2E verifiability under Benaloh's framework",
+          "Strong practical grounding with empirical gas cost measurements, device-specific proof generation constraints, and lessons learned from production deployments"
+        ],
+        "key_weaknesses": [
+          "Manuscript is truncated mid-sentence in Section 4.2, missing promised Sections 5-7 on MEV attacks, censorship resistance, implementation guidance, and future directions",
+          "Referenced Appendix A with measurement methodology, contract addresses, and transaction hashes is not provided, undermining reproducibility claims",
+          "Limited treatment of fundamental impossibility results and the theoretical tension between coercion resistance and individual verifiability"
+        ],
+        "required_changes": [
+          "Complete all truncated sections (5.1-5.3, 6, 7) with particular emphasis on the MEV analysis covering reveal-phase extraction, sequencer ordering attacks, and mitigation strategies",
+          "Provide the referenced Appendix A with full measurement methodology, contract addresses, and transaction hashes to support the claimed 60-85% gas reduction figures",
+          "Add discussion of impossibility results in voting theory, specifically addressing why no system can simultaneously achieve strong coercion resistance AND strong individual verifiability without trusted parties"
+        ],
+        "recommendation": "This survey makes valuable contributions to the blockchain voting literature through its rigorous formal definitions and honest technical analysis. However, the manuscript cannot be accepted in its current truncated state. Authors must complete the missing sections (5-7) and provide the referenced Appendix A. Given the high quality of existing content, we are confident a complete version will meet publication standards. Please submit a complete manuscript addressing the structural incompleteness and the secondary concerns regarding impossibility results and post-quantum considerations. A focused revision addressing these specific issues should be achievable within a standard revision timeline.",
+        "round": 3,
+        "overall_average": 7.2,
+        "tokens": 3081
+      },
+      "manuscript_diff": {
+        "words_added": 115,
+        "previous_version": "v2",
+        "current_version": "v3"
+      },
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T23:49:10.189878"
+    }
+  ],
+  "final_score": 7.2,
+  "passed": false,
+  "total_rounds": 3,
+  "performance": {
+    "workflow_start": "2026-02-05T23:39:21.937490",
+    "workflow_end": "2026-02-05T23:49:10.193297",
+    "total_duration": 588.26,
+    "initial_draft_time": 132.22,
+    "initial_draft_tokens": 0,
+    "team_composition_time": 0.0,
+    "team_composition_tokens": 0,
+    "rounds": [
+      {
+        "round_number": 1,
+        "review_start": "2026-02-05T23:41:34.157825",
+        "review_end": "2026-02-05T23:42:26.923042",
+        "review_duration": 52.77,
+        "reviewer_times": {
+          "expert-1": 20.96,
+          "expert-3": 27.68,
+          "expert-2": 33.13
+        },
+        "moderator_time": 19.6,
+        "revision_time": null,
+        "round_tokens": 28708
+      },
+      {
+        "round_number": 2,
+        "review_start": "2026-02-05T23:44:58.895855",
+        "review_end": "2026-02-05T23:45:44.903676",
+        "review_duration": 46.01,
+        "reviewer_times": {
+          "expert-2": 26.01,
+          "expert-1": 27.5,
+          "expert-3": 28.11
+        },
+        "moderator_time": 17.86,
+        "revision_time": null,
+        "round_tokens": 28785
+      },
+      {
+        "round_number": 3,
+        "review_start": "2026-02-05T23:48:24.227413",
+        "review_end": "2026-02-05T23:49:10.189733",
+        "review_duration": 45.96,
+        "reviewer_times": {
+          "expert-1": 22.16,
+          "expert-2": 24.23,
+          "expert-3": 29.0
+        },
+        "moderator_time": 16.93,
+        "revision_time": null,
+        "round_tokens": 28607
+      }
+    ],
+    "total_tokens": 86100,
+    "estimated_cost": 0.26
+  },
+  "timestamp": "2026-02-05T23:49:10.194453"
+}

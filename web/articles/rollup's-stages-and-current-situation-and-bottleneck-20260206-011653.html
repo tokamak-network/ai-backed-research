@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rollup's stages and current situation and bottleneck | AI-Backed Research</title>
+    <meta name="description" content="Rollup's stages and current situation and bottleneck - Comprehensive research analysis with AI-powered peer review">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" href="../favicon.svg">
+    <link rel="mask-icon" href="../favicon.svg" color="#2563eb">
+
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/article.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-nav">
+                <a href="../index.html" class="back-link">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Back to Research
+                </a>
+                <div class="header-content">
+                    <h1 class="site-title">AI-Backed Research</h1>
+                    <p class="site-subtitle">Tokamak Network Research Lab</p>
+                </div>
+                <button class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-layout">
+        <button class="toc-toggle" aria-label="Toggle table of contents">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            Table of Contents
+        </button>
+
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <h3 class="toc-title">On This Page</h3>
+                <nav class="toc-nav">
+                    <ul>
+                        <li><a href="#a-comprehensive-research-report-on-layer-2-scaling-solutions">A Comprehensive Research Report on Layer 2 Scaling Solutions</a></li>
+                        <li><a href="#executive-summary">Executive Summary</a></li>
+                        <li><a href="#introduction">Introduction</a></li>
+                        <li><a href="#the-rollup-stage-framework">The Rollup Stage Framework</a></li>
+                        <li><a href="#current-landscape-analysis">Current Landscape Analysis</a></li>
+                        <li><a href="#critical-bottlenecks">Critical Bottlenecks</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <article class="research-report">
+            <header class="article-header">
+                <div class="info-banner" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <svg viewBox="0 0 20 20" fill="currentColor" style="width: 20px; height: 20px; color: #3b82f6; flex-shrink: 0;">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <span style="font-size: 0.9rem;">
+                        This article shows the <strong>latest version</strong> of the manuscript.
+                        <a href="../review-viewer.html?id=rollup's-stages-and-current-situation-and-bottleneck-20260206-011653" style="color: #3b82f6; text-decoration: underline; font-weight: 600;">View full review board</a> to see all versions, reviewer feedback, and revision history.
+                    </span>
+                </div>
+                <h1 class="article-title">Rollup's stages and current situation and bottleneck</h1>
+                <div class="article-meta">
+                    <span class="meta-item"><strong>Version:</strong> 3</span>
+                    <span class="meta-item"><strong>Review Score:</strong> 6.9/10</span>
+                    <span class="meta-item"><strong>Status:</strong> MAJOR REVISION</span>
+                </div>
+            </header>
+
+            <div id="article-content">
+                <!-- Content will be rendered by JavaScript -->
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p><strong>Generated by:</strong> AI-Backed Research Platform with 3 Expert Reviewers</p>
+            <p><strong>Review Process:</strong> 3 Round(s) of Peer Review</p>
+            <p><strong>Platform:</strong> Tokamak Network Research Lab</p>
+            <p class="copyright">© 2026 Tokamak Network Research Lab. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        // Render markdown content
+        const markdownContent = `# Rollup Stages: Current Landscape, Challenges, and the Path to Full Decentralization
+
+## A Comprehensive Research Report on Layer 2 Scaling Solutions
+
+---
+
+## Executive Summary
+
+Rollups have emerged as the dominant paradigm for scaling Ethereum and other Layer 1 blockchains, processing billions of dollars in transactions while inheriting the security guarantees of their underlying networks. However, the journey from centralized sequencers to fully decentralized, trustless systems remains incomplete. This report provides a comprehensive analysis of the rollup maturity framework, examining the current state of major rollup implementations, identifying critical bottlenecks preventing progression to higher stages, and evaluating emerging solutions.
+
+Our analysis reveals that as of early 2025, the vast majority of rollups by Total Value Locked (TVL) remain at Stage 0, with Arbitrum One representing the most advanced major rollup at Stage 1. Stage 2—the highest level of decentralization where users can exit without any trust assumptions beyond L1 security and cryptographic soundness—remains unachieved by any major rollup. Key bottlenecks include incomplete proof system maturity, centralized sequencer architectures, Security Council governance structures with broad upgrade powers, and the absence of robust cross-rollup interoperability with appropriate trust guarantees.
+
+This report examines these challenges through technical, economic, and governance lenses, providing actionable insights for researchers, developers, and stakeholders invested in the rollup ecosystem's maturation. We conclude that while the technical foundations for Stage 2 rollups exist, achieving this milestone requires coordinated advances in proof systems, decentralized sequencing, governance minimization, and cross-rollup bridging infrastructure over the next 24-48 months.
+
+---
+
+## 1. Introduction
+
+### 1.1 The Scaling Imperative
+
+Ethereum's transition to proof-of-stake and the implementation of EIP-4844 (Proto-Danksharding) have established a clear roadmap: the base layer optimizes for security and data availability, while execution scales through Layer 2 solutions. This "rollup-centric" roadmap, articulated by Vitalik Buterin in 2020, has fundamentally shaped blockchain architecture.
+
+Rollups execute transactions off-chain while posting transaction data (or state differences) to the parent chain, achieving throughput improvements of 10-100x while maintaining security guarantees derived from the underlying Layer 1. As of January 2025, rollups collectively secure over \$40 billion in TVL and process more daily transactions than Ethereum mainnet.
+
+### 1.2 The Trust Spectrum
+
+Despite their promise, rollups exist on a spectrum of decentralization and trustlessness. Early implementations required users to trust operators completely—a regression from blockchain's core value proposition. The community recognized this tension, leading to the development of maturity frameworks that track rollups' progression toward full decentralization.
+
+### 1.3 Research Objectives
+
+This report addresses four primary questions:
+
+1. What constitutes a mature, trustless rollup, and how do we measure progress toward this goal?
+2. What is the current state of major rollup implementations relative to these standards?
+3. What technical, economic, and governance bottlenecks prevent advancement, and what solutions are emerging?
+4. How do cross-rollup interoperability and bridging mechanisms affect the practical security of the rollup ecosystem?
+
+---
+
+## 2. The Rollup Stage Framework
+
+### 2.1 Origins and Rationale
+
+The rollup stage framework was formalized by L2Beat, the leading Layer 2 analytics platform, in collaboration with the Ethereum research community. The framework emerged from recognition that marketing claims about "decentralization" and "security" required objective, verifiable criteria.
+
+The framework defines three stages (0, 1, and 2), each representing increasing levels of trustlessness and decentralization. Critically, the framework focuses on **exit guarantees**—the ability of users to withdraw their funds without relying on any trusted party.
+
+### 2.2 Stage Definitions
+
+#### Stage 0: Full Training Wheels
+
+At Stage 0, a rollup has deployed on mainnet but retains significant centralized control. The defining characteristics include:
+
+- **Centralized sequencing**: A single operator orders and executes transactions
+- **Upgradeable contracts**: The rollup's smart contracts can be modified without delay or with minimal timelock
+- **No fraud/validity proofs**: Users cannot independently verify state transitions, or proofs exist but can be overridden
+- **Operator-dependent exits**: Users rely on the operator to process withdrawals
+
+Stage 0 rollups are functionally similar to sidechains with additional data availability guarantees. Users must trust that operators will not censor transactions, steal funds through malicious upgrades, or abandon the network.
+
+#### Stage 1: Limited Training Wheels
+
+Stage 1 represents meaningful progress toward trustlessness:
+
+- **Functional proof system**: Either fraud proofs (optimistic rollups) or validity proofs (ZK-rollups) are deployed and operational
+- **Permissionless verification**: Anyone can submit fraud proofs or verify validity proofs
+- **Escape hatch mechanism**: Users can force withdrawals through the L1 if the operator becomes unresponsive
+- **Security Council**: A multisig can intervene in case of bugs, but with significant constraints (typically requiring supermajority threshold)
+
+The key advancement at Stage 1 is that **users can exit without operator cooperation**, though they may still need to trust a Security Council for bug fixes during an interim period.
+
+#### Stage 2: No Training Wheels
+
+Stage 2 represents full trustlessness:
+
+- **Immutable or governance-minimized contracts**: Upgrades require extended timelocks (30+ days) or are impossible
+- **No Security Council override**: Or the council can only act after the timelock expires, giving users time to exit
+- **Battle-tested proof system**: The proof mechanism has been operational without critical failures for an extended period
+- **Decentralized sequencing**: Multiple parties can propose blocks, eliminating single points of failure (or users can self-sequence via L1)
+
+At Stage 2, the rollup inherits Ethereum's security guarantees fully. Users need only trust the L1 consensus and the mathematical soundness of the proof system.
+
+### 2.3 Framework Limitations and Ongoing Debates
+
+The stage framework, while valuable, has acknowledged limitations:
+
+1. **Binary categorization**: Rollups may meet some but not all criteria for a stage, creating edge cases where classification is contested
+2. **Implementation nuance**: Two Stage 1 rollups may have significantly different security properties depending on Security Council structure, proof system maturity, and escape hatch robustness
+3. **Dynamic assessment**: A rollup's stage can regress if vulnerabilities are discovered or if governance decisions weaken security guarantees
+4. **Scope limitations**: The framework doesn't directly assess liveness, MEV extraction, economic security, or cross-rollup bridging trust assumptions
+5. **Classification disputes**: Stage classifications are sometimes contested by rollup teams or community members who interpret criteria differently; readers should consult L2Beat directly for current classifications and understand the methodology behind disputed assessments
+
+---
+
+## 3. Current Landscape Analysis
+
+### 3.1 Market Overview
+
+As of January 2025, the rollup ecosystem comprises over 50 active networks with combined TVL exceeding \$40 billion. The market is dominated by a small number of major players:
+
+| Rollup | Type | TVL (USD) | Stage | Launch Date |
+|--------|------|-----------|-------|-------------|
+| Arbitrum One | Optimistic | ~\$15B | 1 | August 2021 |
+| Base | Optimistic | ~\$12B | 0 | August 2023 |
+| OP Mainnet | Optimistic | ~\$7B | 0 | December 2021 |
+| zkSync Era | ZK | ~\$1B | 0 | March 2023 |
+| Starknet | ZK | ~\$500M | 0 | November 2022 |
+| Linea | ZK | ~\$800M | 0 | July 2023 |
+| Scroll | ZK | ~\$600M | 0 | October 2023 |
+
+*Data approximate as of January 2025. Stage classifications per L2Beat methodology and subject to change. Readers should verify current status at l2beat.com.*
+
+### 3.2 Optimistic Rollups: Detailed Assessment
+
+#### 3.2.1 Arbitrum One
+
+Arbitrum One, developed by Offchain Labs, represents the most mature optimistic rollup implementation. Key characteristics:
+
+**Stage 1 Qualifications:**
+- Deployed BOLD (Bounded Liquidity Delay) fraud proof system in late 2024
+- Permissionless validation enabled—anyone can challenge invalid state roots
+- Functional escape hatch through \`forceInclusion\` mechanism allowing users to submit transactions directly to L1
+- 6 day, 8 hour challenge period for fraud proofs
+
+**Remaining Limitations:**
+- Security Council (12-member multisig) can upgrade contracts with a 3-day delay for non-emergency actions
+- Emergency upgrades require 9/12 threshold but can bypass timelock
+- Sequencer remains centralized (operated by Offchain Labs)
+- Council can pause the system in emergencies
+
+The Security Council's powers represent the primary barrier to Stage 2. While the council provides important bug-fix capabilities, its ability to execute emergency upgrades creates trust assumptions that Stage 2 would eliminate.
+
+#### 3.2.2 Optimism (OP Mainnet)
+
+OP Mainnet, the flagship chain of the OP Stack, has made significant progress but remains at Stage 0:
+
+**Current State:**
+- Fault proof system (FPAC - Fault Proof Alpha Cannon) launched in June 2024
+- Permissionless proposers enabled
+- 7-day challenge window
+
+**Stage 0 Classification Rationale:**
+- Guardian role can disable fault proofs entirely, reverting to permissioned output proposals
+- Deputy Guardian can pause withdrawals
+- Security Council can upgrade without delay in emergency situations
+- Proof system relatively new, requiring more battle-testing before governance constraints can be safely reduced
+
+The OP Stack's modular design means improvements benefit the entire Superchain ecosystem (Base, Mode, Zora, etc.), but this also means vulnerabilities affect multiple networks simultaneously—a systemic risk consideration.
+
+#### 3.2.3 Base
+
+Base, developed by Coinbase, is the largest Stage 0 rollup by TVL:
+
+**Current Limitations:**
+- Inherits OP Stack limitations including Guardian override capabilities
+- Additional Coinbase operational dependencies
+- Relies on Optimism's Security Council rather than independent governance
+- Sequencer operated by Coinbase with no current decentralization timeline
+
+Base's rapid growth (\$12B+ TVL) despite Stage 0 status highlights that users currently prioritize other factors (UX, ecosystem, institutional backing, regulatory clarity) over decentralization metrics—a finding with implications for the pace of ecosystem-wide decentralization.
+
+### 3.3 ZK-Rollups: Detailed Assessment
+
+#### 3.3.1 zkSync Era
+
+zkSync Era, developed by Matter Labs, is the largest ZK-rollup by TVL:
+
+**Technical Architecture:**
+- Uses a customized PLONK-based proof system (specifically a variant with custom gates and lookup arguments)
+- Boojum prover utilizing FRI-based polynomial commitments for improved efficiency
+- EVM-equivalent execution environment via zkEVM
+
+**Stage 0 Limitations:**
+- Validity proofs cover state transitions but the system retains centralized override capabilities
+- Centralized sequencer and prover operated by Matter Labs
+- Upgradeable contracts with Security Council control
+- Escape hatch mechanism exists but has not been battle-tested in adversarial conditions
+
+#### 3.3.2 Starknet
+
+Starknet, developed by StarkWare, uses STARK proofs:
+
+**Technical Characteristics:**
+- Cairo VM (not EVM-equivalent, requiring contract rewriting or transpilation)
+- Recursive proofs for scalability via SHARP (Shared Prover)
+- FRI-based polynomial commitments providing post-quantum security assumptions
+
+**Current Limitations:**
+- Centralized sequencer operated by StarkWare
+- Upgradeable contracts with multisig control
+- Escape hatch exists but requires specific conditions and has operational complexity
+- Governance transitioning toward decentralization but not yet complete
+
+#### 3.3.3 Scroll and Linea
+
+Both represent newer zkEVM implementations:
+
+**Scroll:**
+- Type 2 zkEVM (EVM-equivalent at bytecode level)
+- Uses a combination of KZG commitments and custom proving system
+- Decentralized prover network in development
+- Currently centralized sequencing and proving with roadmap toward decentralization
+
+**Linea:**
+- Developed by Consensys
+- Type 2 zkEVM with Lattice-based proof system
+- Centralized operations with published decentralization roadmap
+- Benefits from Consensys infrastructure but inherits single-operator risks
+
+### 3.4 Comparative Analysis
+
+\`\`\`
+Decentralization Spectrum (January 2025)
+
+Stage 2: [None]
+         |
+Stage 1: [Arbitrum One]
+         |
+Stage 0: [Base, OP Mainnet, zkSync Era, Starknet, Scroll, Linea, ...]
+         |
+Centralized: [Various app-specific rollups, new launches]
+\`\`\`
+
+The clustering at Stage 0 reflects both the technical difficulty of advancement and the recency of many implementations. Notably, the transition from Stage 0 to Stage 1 requires not just technical implementation but sufficient operational history to justify reduced governance intervention capabilities.
+
+---
+
+## 4. Critical Bottlenecks
+
+### 4.1 Proof System Maturity
+
+#### 4.1.1 Optimistic Rollup Challenges
+
+Fraud proof systems face several fundamental challenges:
+
+**Complexity of Dispute Resolution:**
+The fraud proof game requires proving that a specific instruction in a potentially billions-long execution trace was computed incorrectly. This involves:
+
+1. Interactive bisection to identify the disputed instruction
+2. One-step proof execution on L1
+3. Handling of edge cases (memory access, precompiles, cross-contract calls, etc.)
+
+Arbitrum's BOLD protocol addresses the "delay attack" vulnerability where malicious actors could indefinitely postpone fraud proof resolution by posting multiple invalid claims. BOLD bounds the maximum delay regardless of attacker resources, but introduces its own complexity and capital requirements for defenders.
+
+**The Verifier's Dilemma:**
+Rational validators may not monitor for fraud if the expected cost exceeds the expected reward. This creates scenarios where fraud could go unchallenged during periods of:
+- Low attention (holidays, competing events)
+- High gas prices making challenges expensive
+- Coordination failures among potential challengers
+
+Research by Thibault et al. (2024) formalizes this dilemma and proposes mechanism design solutions, but production implementations remain limited.
+
+#### 4.1.2 ZK-Rollup Challenges
+
+ZK-rollups face different but equally significant challenges:
+
+**Proof Generation Costs and Batched Economics:**
+Generating validity proofs remains computationally expensive. Critically, ZK-rollups do not prove individual transactions but rather batches of thousands of transactions, amortizing proving costs across the batch. The relevant metrics are therefore proving throughput and batch finalization latency rather than per-transaction costs:
+
+| Proof System | Proof Size | Proving Throughput | Batch Size | L1 Verification Cost | Trusted Setup |
+|--------------|------------|-------------------|------------|---------------------|---------------|
+| Groth16 | ~200 bytes | ~1-5 TPS | 1000-5000 tx | ~230K gas | Required (circuit-specific) |
+| PLONK (KZG) | ~400 bytes | ~5-15 TPS | 1000-10000 tx | ~300K gas | Required (universal) |
+| STARKs (FRI) | ~50-200 KB | ~10-50 TPS | 5000-20000 tx | ~1-5M gas | None |
+| Halo2 (IPA) | ~5 KB | ~2-10 TPS | 1000-5000 tx | ~500K gas | None |
+
+*Throughput figures reflect current production implementations with GPU acceleration. Actual performance varies significantly based on circuit complexity, hardware, and optimization level.*
+
+For context, zkSync Era's Boojum prover achieves approximately 10 TPS proving throughput through parallelization and GPU acceleration. Scroll's proving pipeline separates EVM trace generation from constraint satisfaction, enabling different optimization strategies for each phase.
+
+**Hardware Acceleration and Prover Infrastructure:**
+Current proving infrastructure relies heavily on hardware acceleration:
+
+- **GPU Proving**: Most production provers use CUDA-optimized implementations, achieving 10-100x speedups over CPU proving
+- **FPGA Development**: Several teams (Ingonyama, Cysic) are developing FPGA-based provers for improved efficiency
+- **ASIC Prospects**: Purpose-built proving ASICs could provide further order-of-magnitude improvements but require significant capital investment and introduce centralization concerns
+
+The capital requirements for competitive proving infrastructure create natural centralization pressure, as only well-resourced operators can afford state-of-the-art hardware.
+
+**Circuit Completeness and Soundness:**
+ZK circuits must correctly encode all EVM opcodes and edge cases. The audit surface is enormous:
+
+- Compiler correctness (high-level language to circuit constraints)
+- Constraint system completeness (all execution paths properly constrained)
+- Prover implementation (no bugs allowing false proofs)
+- Verifier implementation (no bugs accepting invalid proofs)
+
+Bugs in circuit design can lead to:
+- Invalid state transitions being accepted (soundness failure)
+- Valid transactions being rejected (completeness failure)
+- Exploitable vulnerabilities allowing fund theft
+
+**Cryptographic Security Assumptions:**
+Different proof systems rely on different cryptographic assumptions with varying confidence levels:
+
+| Assumption | Proof Systems | Post-Quantum | Confidence | Notes |
+|------------|---------------|--------------|------------|-------|
+| Discrete Log (Elliptic Curves) | Groth16, PLONK (KZG) | No | High | Well-studied, decades of cryptanalysis |
+| Random Oracle Model | Most systems | Varies | High | Standard model alternative exists for some |
+| Algebraic Group Model | PLONK, Groth16 | No | Medium-High | Relatively newer assumption |
+| Collision-Resistant Hashing | STARKs | Yes | Very High | Minimal assumptions |
+| Knowledge of Exponent (KEA) | Groth16 | No | Medium | Non-falsifiable assumption; genuine long-term concern |
+
+The Knowledge of Exponent assumption underlying Groth16 deserves particular attention: it is non-falsifiable (cannot be proven false even if incorrect), representing a qualitatively different security foundation than falsifiable assumptions. This motivates the industry trend toward PLONK-based systems with universal trusted setups.
+
+**Trusted Setup Considerations:**
+The trusted setup burden varies significantly:
+
+- **Circuit-specific setups (Groth16)**: Each circuit requires a new ceremony; compromise of any ceremony's toxic waste enables proof forgery
+- **Universal setups (PLONK with KZG)**: A single ceremony (e.g., Aztec's Ignition with 176 participants, Zcash's Powers of Tau) can be reused across all circuits, dramatically reducing practical burden
+- **Transparent setups (STARKs, Halo2 with IPA)**: No trusted setup required; security relies only on hash function collision resistance
+
+#### 4.1.3 Recursive Proofs and Proof Aggregation
+
+A critical area omitted from many rollup analyses is the role of recursive proof composition in addressing scalability bottlenecks:
+
+**Recursive Proof Fundamentals:**
+Recursive proofs allow a proof to verify other proofs, enabling:
+- Proof aggregation: Multiple transaction batch proofs combined into a single proof
+- Incremental verification: Proving correctness of computation that includes previous proof verification
+- Compression: Reducing L1 verification costs by posting a single proof for many batches
+
+**Production Implementations:**
+
+*Starknet's SHARP (Shared Prover):*
+SHARP aggregates proofs from multiple applications (Starknet, StarkEx-based systems) into recursive proof trees, amortizing L1 verification costs across all participants. A single L1 proof can attest to millions of transactions across multiple applications.
+
+*Polygon zkEVM's STARK-to-SNARK Wrapping:*
+Polygon zkEVM generates STARK proofs for execution (benefiting from no trusted setup and post-quantum security) then proves STARK verification inside a SNARK circuit for L1 submission. This provides:
+- STARK security properties for execution proving
+- SNARK efficiency (~230K gas) for L1 verification
+- Practical solution to the proof size vs. verification cost tradeoff
+
+**Emerging Folding Schemes:**
+Recent advances in folding schemes represent paradigm shifts in recursive proving:
+
+- **Nova**: Introduces folding for R1CS, enabling incremental computation with minimal per-step overhead (~10K constraints vs. millions for traditional recursion)
+- **SuperNova**: Extends Nova to support multiple circuit types, enabling efficient proving of programs with branching
+- **HyperNova**: Generalizes to customizable constraint systems (CCS), supporting PLONK-style arithmetization
+
+These schemes directly address the "proof generation costs" bottleneck by reducing the marginal cost of proving additional computation steps. While not yet deployed in production rollups, folding schemes are under active development by multiple teams and may fundamentally change prover economics within 12-24 months.
+
+#### 4.1.4 Prover Decentralization and Proof Markets
+
+Currently, all major ZK-rollups use centralized provers:
+
+\`\`\`
+Transaction Flow (Current):
+User → Centralized Sequencer → Centralized Prover → L1 Verification
+
+Ideal Flow:
+User → Decentralized Sequencer Network → Decentralized Prover Market → L1 Verification
+\`\`\`
+
+**Cryptographic Requirements for Decentralized Proving:**
+Delegating proof generation to untrusted provers requires solving several cryptographic challenges:
+
+1. **Verifiable Computation Outsourcing**: How does a rollup verify that a delegated prover computed correctly without re-executing? Solutions include:
+   - Requiring provers to stake collateral slashable for invalid proofs
+   - Using commitment schemes where provers commit to intermediate values
+   - Proof-carrying data where the proof itself attests to correct computation
+
+2. **Prover Accountability**: Commitment schemes (polynomial commitments, Merkle trees) enable provers to commit to computation traces, with slashing if the commitment doesn't match the claimed proof
+
+3. **Fair Work Distribution**: Avoiding scenarios where powerful provers capture all work requires careful mechanism design (lottery-based assignment, parallel proving with fastest-wins, etc.)
+
+**Emerging Prover Marketplaces:**
+Several projects are building decentralized proving infrastructure:
+
+- **Gevulot**: Decentralized prover network with proof-of-work-style competition
+- **=nil; Foundation's Proof Market**: Marketplace matching proof requests with provers, using cryptographic verification of proof validity
+- **Succinct**: Proving-as-a-service with standardized interfaces
+
+These marketplaces face the challenge of bootstrapping two-sided networks while maintaining proving quality and latency guarantees.
+
+### 4.2 Sequencer Decentralization
+
+The sequencer—the entity that orders transactions and produces blocks—represents the most significant centralization point in current rollups.
+
+#### 4.2.1 Current Centralization and Economic Incentives
+
+All major rollups operate centralized sequencers:
+
+| Rollup | Sequencer Operator | 2023 Sequencer Revenue | Geographic Distribution |
+|--------|-------------------|----------------------|------------------------|
+| Arbitrum One | Offchain Labs | ~\$50M+ | Single operator |
+| Base | Coinbase | ~\$30M+ | Single operator |
+| OP Mainnet | Optimism Foundation | ~\$20M+ | Single operator |
+| zkSync Era | Matter Labs | ~\$15M+ | Single operator |
+
+*Revenue estimates based on on-chain fee data; actual figures may vary.*
+
+Centralized sequencers create multiple risk categories:
+
+- **Censorship**: Operators can exclude specific transactions or addresses
+- **MEV extraction**: Operators capture ordering value without competitive redistribution
+- **Liveness**: Single point of failure for transaction inclusion
+- **Regulatory capture**: Identifiable operators subject to legal pressure in their jurisdictions
+
+**The Political Economy of Decentralization:**
+The substantial revenue generated by centralized sequencers creates strong economic incentives against decentralization. Rollup teams and their investors benefit directly from sequencer profits, creating a principal-agent problem: teams control decentralization timelines while users bear centralization risks.
+
+This dynamic helps explain why sequencer decentralization has been consistently delayed despite years of promises. Arbitrum's sequencer decentralization was originally targeted for 2023, then 2024, and now has no firm timeline. Similar patterns exist across other major rollups.
+
+#### 4.2.2 Decentralization Approaches
+
+Several approaches to sequencer decentralization are under development:
+
+**Leader Rotation:**
+Validators take turns as sequencer based on stake weight or verifiable random selection.
+
+*Technical Challenges:*
+- Latency increases from geographic distribution and leader handoff
+- MEV distribution complexity across rotating leaders
+- Validator set management and stake security
+- Potential for leader extraction during their slot
+
+*Specific Blockers Cited by Teams:*
+- Arbitrum: Concerns about latency impact on user experience; need for robust validator selection mechanism
+- Optimism: Focus on fault proof deployment before sequencer decentralization; coordination across Superchain
+
+**Based Sequencing:**
+Ethereum L1 validators/proposers sequence L2 transactions, inheriting L1's decentralization directly. Projects like Taiko are exploring this model.
+
+*Advantages:*
+- Immediate inheritance of L1 decentralization (~900,000 validators)
+- No separate validator set to bootstrap
+- Atomic L1-L2 composability potential
+- Credible neutrality from L1 proposer selection
+
+*Challenges:*
+- Reduced L2 sovereignty (can't implement custom ordering rules)
+- Block time limited to L1 (~12 seconds vs. sub-second L2 blocks)
+- Cross-domain MEV complications where L1 proposers extract L2 value
+- Proposer-builder separation (PBS) interactions add complexity
+
+**Shared Sequencing:**
+Multiple rollups share a decentralized sequencer network (e.g., Espresso Systems, Astria, Radius).
+
+\`\`\`
+Shared Sequencing Architecture:
+
+        ┌─────────────────────┐
+        │   Shared Sequencer  │
+        │      Network        │
+        │  (HotShot/Astria)   │
+        └──────────┬──────────┘
+                   │
+    ┌──────────────┼──────────────┐
+    │              │              │
+    ▼              ▼              ▼
+┌────────┐    ┌────────┐    ┌────────┐
+│Rollup A│    │Rollup B│    │Rollup C│
+│        │    │        │    │        │
+└────────┘    └────────┘    └────────┘
+\`\`\`
+
+*Advantages:*
+- Atomic cross-rollup transactions possible
+- Shared security across participant rollups
+- Economies of scale for decentralization infrastructure
+
+*Challenges:*
+- Consensus mechanism must provide fast finality (Espresso's HotShot, Astria's CometBFT)
+- Value distribution across rollups and sequencer operators
+- Governance coordination across independent ecosystems
+- Dependency on external infrastructure availability
+
+#### 4.2.3 Game-Theoretic Analysis of Decentralization Delays
+
+Why haven't decentralization commitments materialized? A game-theoretic perspective reveals structural barriers:
+
+1. **First-Mover Disadvantage**: The first major rollup to decentralize sequencing may experience:
+   - Increased latency relative to competitors
+   - Higher operational complexity
+   - Potential MEV leakage to validators rather than protocol treasury
+   
+2. **Coordination Failure**: No single rollup wants to bear decentralization costs while competitors maintain centralized efficiency advantages
+
+3. **Investor Pressure**: Rollup teams have raised significant venture capital with expectations of returns; sequencer revenue is a primary value capture mechanism
+
+4. **User Indifference**: As demonstrated by Base's growth, users currently don't penalize Stage 0 rollups, reducing competitive pressure to decentralize
+
+Breaking this equilibrium may require:
+- Regulatory pressure mandating decentralization for certain use cases
+- Competitive pressure from new entrants launching with decentralized sequencing
+- Ethereum community norms that stigmatize prolonged centralization
+- Technical breakthroughs reducing decentralization's performance costs
+
+#### 4.2.4 MEV Considerations in Decentralized Sequencing
+
+MEV (Maximal Extractable Value) redistribution is a critical unsolved problem:
+
+**Current State:**
+- Centralized sequencers capture 100% of MEV
+- Some rollups implement MEV-share mechanisms (e.g., Arbitrum's Timeboost)
+- No standardized approach to MEV redistribution
+
+**Proposed Solutions:**
+- *Encrypted mempools*: Transactions encrypted until ordering committed (threshold encryption, delay encryption)
+- *MEV auctions*: Competitive bidding for ordering rights with proceeds distributed
+- *Fair ordering*: First-come-first-served or batch auctions eliminating ordering-based extraction
+- *MEV-burn*: Captured MEV burned or distributed to users
+
+Each approach involves tradeoffs between extraction prevention, latency, complexity, and economic efficiency.
+
+### 4.3 Security Council Governance
+
+#### 4.3.1 The Upgrade Dilemma
+
+Rollups face a fundamental tension:
+
+- **Upgradeability enables bug fixes**: Critical vulnerabilities require rapid response capability
+- **Upgradeability enables attacks**: Malicious upgrades can steal all user funds
+
+This tension is particularly acute for systems securing billions of dollars where both risks are existential.
+
+#### 4.3.2 Security Council Structures: Comparative Analysis
+
+Security Councils vary significantly in their design and operation:
+
+**Arbitrum Security Council:**
+- **Composition**: 12 members from diverse ecosystem organizations
+- **Threshold**: 9/12 for emergency actions, 7/12 for non-emergency upgrades
+- **Selection**: Members elected by ARB token holders through on-chain governance
+- **Term Length**: 12-month terms with staggered elections (6 seats every 6 months)
+- **Removal**: Token holders can remove members via governance proposal
+- **Compensation**: Members receive ARB token grants for service
+- **Constraints**: Operates under Arbitrum Constitution defining scope and limitations
+- **Accountability**: Public member identities, election cycles, removal procedures
+- **Geographic Distribution**: Members span multiple jurisdictions to reduce regulatory capture risk
+
+**Optimism Security Council:**
+- **Composition**: 13 members in nested multisig structure
+- **Threshold**: Varies by action type
+- **Selection**: Foundation-appointed with planned transition to elected
+- **Term Length**: Not formally defined; at Foundation discretion
+- **Removal**: Foundation-controlled
+- **Compensation**: Not publicly disclosed
+- **Constraints**: Can pause fault proofs via Guardian role
+- **Accountability**: Less formal accountability framework currently
+- **Relationship to Foundation**: Optimism Foundation maintains significant influence
+
+**zkSync Era Security Council:**
+- **Composition**: Matter Labs-controlled multisig
+- **Threshold**: Not publicly disclosed
+- **Selection**: Company-appointed
+- **Term Length**: Indefinite
+- **Removal**: Company-controlled
+- **Compensation**: Not applicable (employees/affiliates)
+- **Constraints**: No formal constitutional constraints
+- **Accountability**: Limited public accountability mechanisms
+
+**Comparative Assessment:**
+
+| Dimension | Arbitrum | Optimism | zkSync Era |
+|-----------|----------|----------|------------|
+| Member Selection | Elected | Appointed | Company-controlled |
+| Public Identities | Yes | Partial | Limited |
+| Constitutional Constraints | Yes | Developing | No |
+| Emergency Threshold | 9/12 | Variable | Not disclosed |
+| Term Limits | Yes (12 months) | No | No |
+| Removal Mechanism | Token vote | Foundation | None |
+| Compensation Transparency | Yes | No | No |
+
+#### 4.3.3 Governance Token Dynamics and Council Legitimacy
+
+The democratic legitimacy of elected Security Councils depends critically on governance token distribution and participation:
+
+**ARB Token Concentration:**
+- Top 10 addresses control approximately 40% of ARB supply
+- Offchain Labs and affiliated entities retain significant holdings
+- Voter turnout in Security Council elections has ranged from 5-15% of circulating supply
+
+**Implications for Council Elections:**
+- Concentrated holdings could enable coordinated council capture
+- Low turnout amplifies influence of large holders
+- Delegation patterns create additional concentration (top delegates control disproportionate voting power)
+
+**OP Token Governance:**
+- Optimism's bicameral structure (Token House + Citizens' House) attempts to mitigate plutocratic capture
+- Citizens' House uses non-transferable citizenship for certain decisions
+- Token House still exhibits concentration similar to ARB
+
+These dynamics raise questions about whether elected councils truly represent user interests or primarily serve large token holders whose incentives may diverge from typical users.
+
+#### 4.3.4 Governance Attack Vectors
+
+Security Councils introduce specific attack vectors that Stage 2 would eliminate:
+
+**Social Engineering:**
+- Council members can be individually targeted through phishing, impersonation, or social manipulation
+- Compromise of member keys enables participation in malicious upgrades
+- Mitigation: Hardware security modules, operational security training, key rotation
+
+**Regulatory`;
+
+        // Parse with marked
+        const htmlContent = marked.parse(markdownContent);
+
+        // Create temporary div to process HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+
+        // Wrap sections with proper section tags and IDs
+        let currentSection = null;
+        const contentDiv = document.createElement('div');
+
+        Array.from(tempDiv.children).forEach(el => {
+            if (el.tagName === 'H2') {
+                // Create new section for each H2
+                if (currentSection) {
+                    contentDiv.appendChild(currentSection);
+                }
+                currentSection = document.createElement('section');
+                currentSection.className = 'section';
+
+                // Generate ID from heading text
+                let text = el.textContent;
+                text = text.replace(/^\d+(\.\d+)*\.?\s*/, '');
+                let slug = text.toLowerCase()
+                    .replace(/[:.]/, '')
+                    .replace(/&/g, 'and')
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-z0-9-]/g, '');
+                currentSection.id = slug;
+                el.id = slug;
+                currentSection.appendChild(el);
+            } else if (currentSection) {
+                // Add element to current section
+                currentSection.appendChild(el);
+            } else {
+                // Before first H2, add directly
+                contentDiv.appendChild(el);
+            }
+        });
+
+        // Add last section
+        if (currentSection) {
+            contentDiv.appendChild(currentSection);
+        }
+
+        // Apply styling classes to specific elements
+        contentDiv.querySelectorAll('p').forEach(p => {
+            const text = p.textContent.trim();
+            const html = p.innerHTML;
+
+            // Lead paragraphs (first paragraph after Executive Summary)
+            if (p.previousElementSibling?.tagName === 'H2' &&
+                p.previousElementSibling.textContent.includes('Executive Summary')) {
+                p.className = 'lead';
+            }
+
+            // Key insights and findings
+            if (text.startsWith('Key findings') || text.startsWith('Key insight') ||
+                text.startsWith('Key Findings') || text.startsWith('Key Insight')) {
+                p.className = 'key-insight';
+            }
+
+            // Practical implications
+            if (html.includes('<strong>Practical implications:') ||
+                html.includes('<strong>Practical Implications:')) {
+                p.className = 'insight';
+            }
+
+            // Historical context
+            if (html.includes('<strong>Historical context:') ||
+                html.includes('<strong>Historical Context:')) {
+                p.className = 'historical-context';
+            }
+
+            // Impact statements
+            if (html.includes('<strong>Impact on') || html.includes('<strong>The ') ||
+                html.includes('<strong>This ')) {
+                if (p.className === '') p.className = 'insight';
+            }
+        });
+
+        // Style code blocks
+        contentDiv.querySelectorAll('pre').forEach(pre => {
+            const code = pre.querySelector('code');
+            if (code) {
+                pre.className = 'code-block';
+            }
+        });
+
+        // Convert certain lists into highlight boxes
+        contentDiv.querySelectorAll('ul').forEach(ul => {
+            const prevEl = ul.previousElementSibling;
+            if (prevEl && prevEl.tagName === 'P') {
+                const text = prevEl.textContent.trim();
+                if (text.includes('Key findings') || text.includes('Key Findings') ||
+                    text.includes('findings indicate') || text.includes('Key metrics')) {
+                    const box = document.createElement('div');
+                    box.className = 'highlight-box';
+                    const title = document.createElement('h3');
+                    title.textContent = 'Key Findings:';
+                    box.appendChild(title);
+                    box.appendChild(ul.cloneNode(true));
+                    ul.replaceWith(box);
+                }
+            }
+        });
+
+        // Insert processed HTML
+        document.getElementById('article-content').innerHTML = contentDiv.innerHTML;
+    </script>
+</body>
+</html>

@@ -366,7 +366,7 @@ class WorkflowOrchestrator:
 
             # Run review
             if self.status_callback:
-                self.status_callback("reviewing", round_num, f"Round {round_num}: Expert reviews in progress...")
+                self.status_callback("reviewing", round_num, f"Round {round_num}/{self.max_rounds}: Expert reviews in progress...")
 
             # Get previous reviews and rebuttal for context
             prev_reviews = all_rounds[-1]['reviews'] if all_rounds else None
@@ -381,6 +381,10 @@ class WorkflowOrchestrator:
                 previous_manuscript,
                 prev_rebuttal  # Pass author rebuttal to reviewers
             )
+
+            # Update status after reviews complete
+            if self.status_callback:
+                self.status_callback("reviewing", round_num, f"Round {round_num}/{self.max_rounds}: Reviews complete, moderator evaluating...")
 
             # Moderator decision
             console.print("\n[cyan]Moderator evaluating reviews...[/cyan]")

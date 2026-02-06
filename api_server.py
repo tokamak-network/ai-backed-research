@@ -430,10 +430,14 @@ def update_workflow_status(project_id: str, status: str, round_num: int, total_r
         progress = 10
         add_activity_log(project_id, "info", message)
     elif status == "reviewing":
-        progress = 10 + (round_num / total_rounds) * 70
+        # Progress based on current round within review phase (10-80%)
+        review_progress = (round_num / total_rounds) * 70
+        progress = 10 + review_progress
         add_activity_log(project_id, "info", f"Round {round_num}/{total_rounds}: {message}")
     elif status == "revising":
-        progress = 10 + (round_num / total_rounds) * 70 + 10
+        # Progress during revision (slightly ahead of review progress)
+        review_progress = (round_num / total_rounds) * 70
+        progress = 10 + review_progress + 5
         add_activity_log(project_id, "info", f"Round {round_num}/{total_rounds}: Revising manuscript")
     elif status == "completed":
         progress = 100
@@ -445,11 +449,15 @@ def update_workflow_status(project_id: str, status: str, round_num: int, total_r
     # Update estimated time remaining
     start_time = datetime.fromisoformat(workflow_status[project_id].get("start_time", datetime.now().isoformat()))
     elapsed = (datetime.now() - start_time).total_seconds()
-    if progress > 0:
+
+    if progress > 5 and progress < 100:  # Only estimate if we have meaningful progress
         estimated_total = (elapsed / progress) * 100
         estimated_remaining = max(0, int(estimated_total - elapsed))
+    elif progress >= 100:
+        estimated_remaining = 0
     else:
-        estimated_remaining = workflow_status[project_id].get("estimated_time_remaining_seconds", 0)
+        # Initial estimate based on typical workflow
+        estimated_remaining = workflow_status[project_id].get("estimated_time_remaining_seconds", total_rounds * 180)
 
     workflow_status[project_id].update({
         "status": status,

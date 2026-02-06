@@ -1,0 +1,512 @@
+{
+  "topic": "Most efficient and secure voting system for EVM compatible blockchain",
+  "output_directory": "results/most-efficient-and-secure-voting-system-for-evm-compatible-blockchain-20260205-152402",
+  "max_rounds": 3,
+  "threshold": 8.0,
+  "expert_team": [
+    {
+      "id": "expert-1",
+      "name": "EVM Smart Contract Engineering & Gas Optimization",
+      "domain": "EVM Smart Contract Engineering & Gas Optimization",
+      "focus_areas": [
+        "Gas cost analysis for voter registration, ballot casting, and tallying operations",
+        "Smart contract upgrade patterns and their impact on voting system integrity",
+        "Comparison of on-chain vs off-chain computation tradeoffs for vote processing"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    },
+    {
+      "id": "expert-2",
+      "name": "Cryptographic Voting Protocols & Verifiable Computation",
+      "domain": "Cryptographic Voting Protocols & Verifiable Computation",
+      "focus_areas": [
+        "Ballot secrecy guarantees and resistance to coercion/vote-buying attacks",
+        "Verifiability properties: individual, universal, and end-to-end verification mechanisms",
+        "ZK-proof system selection and on-chain verification efficiency for voter privacy"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    },
+    {
+      "id": "expert-3",
+      "name": "Blockchain Security & Adversarial Threat Modeling",
+      "domain": "Blockchain Security & Adversarial Threat Modeling",
+      "focus_areas": [
+        "MEV and transaction ordering attacks on vote submission and revelation phases",
+        "Sybil resistance mechanisms and identity/eligibility verification approaches",
+        "Liveness and censorship resistance guarantees for voter participation"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "manuscript_version": "v1",
+      "word_count": 3473,
+      "reviews": [
+        {
+          "specialist": "expert-1",
+          "specialist_name": "EVM Smart Contract Engineering & Gas Optimization",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 6,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 5
+          },
+          "average": 6.2,
+          "summary": "This manuscript provides a comprehensive survey of EVM voting architectures with reasonable breadth, but lacks the rigorous gas cost analysis and empirical validation expected for claims about 'most efficient' systems. The gas figures presented appear to be rough estimates rather than measured values, and critical analysis of smart contract upgrade patterns and on-chain vs off-chain tradeoffs remains superficial.",
+          "strengths": [
+            "Well-structured taxonomy of voting system architectures with clear progression from simple to complex implementations",
+            "Practical code examples demonstrating implementation patterns, including Solidity contracts and Circom circuits",
+            "Good coverage of real-world deployments (Gitcoin, MakerDAO, Optimism) providing valuable context for practitioners"
+          ],
+          "weaknesses": [
+            "Gas cost figures lack empirical validation - the claim of '50,000-200,000 gas per vote' for traditional systems and '60-80% reduction' with ZK implementations are not substantiated with actual measurements or methodology",
+            "MACI gas analysis appears significantly underestimated - registration at ~100,000 gas ignores the expensive state tree operations, and the 400,000 gas per vote figure doesn't account for message processing complexity",
+            "Smart contract upgrade patterns and their security implications for voting integrity are completely absent despite being listed as a focus area"
+          ],
+          "suggestions": [
+            "Conduct actual gas profiling using tools like Foundry's gas snapshots or Hardhat gas reporter, providing specific EVM opcode breakdowns for each architecture",
+            "Add a dedicated section analyzing proxy patterns (UUPS, Transparent, Diamond) for voting contracts, including attack vectors like storage collision and initialization vulnerabilities",
+            "Expand the on-chain vs off-chain analysis with concrete cost models including data availability costs, proof generation costs, and verification costs across different L2 solutions"
+          ],
+          "detailed_feedback": "From an EVM gas optimization perspective, this manuscript requires substantial strengthening. The gas figures in Table 4.1 appear to be rough approximations rather than measured values. For instance, the 'Simple On-chain' figure of 50,000 gas per vote is plausible for the basic implementation shown, but fails to account for cold vs warm storage access (SSTORE costs 20,000 gas for zero-to-nonzero vs 2,900 for nonzero-to-nonzero post-EIP-2929). The MACI analysis is particularly problematic - the claim of 400,000 gas per vote significantly underestimates the actual costs. MACI's message tree insertions involve multiple Poseidon hash computations (each ~25,000 gas for a 2-input hash via precompile, or ~100,000+ via Solidity), and the state tree updates are O(log n) operations. Real MACI deployments on mainnet have shown costs exceeding 800,000 gas per vote in many cases. The manuscript also neglects critical gas optimization patterns: calldata packing for vote batching, using events vs storage for vote recording (21,000 gas base + 8 gas/byte for logs vs 20,000+ for SSTORE), and the impact of EIP-4844 blob transactions on L2 voting costs. The comparison between Vocdoni showing '0 gas per vote' and on-chain solutions is misleading without accounting for the full cost model including data availability and cross-chain verification. Furthermore, the smart contract upgrade analysis is entirely missing - this is critical because voting systems often require upgrades, and patterns like UUPS proxies introduce specific vulnerabilities (e.g., the Wormhole-style uninitialized implementation attack) that could compromise voting integrity. The manuscript should analyze how different upgrade patterns affect vote finality guarantees and whether historical votes remain verifiable post-upgrade.",
+          "tokens": 9496
+        },
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Blockchain Security & Adversarial Threat Modeling",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 6,
+            "completeness": 5,
+            "clarity": 7,
+            "novelty": 5,
+            "rigor": 4
+          },
+          "average": 5.4,
+          "summary": "This manuscript provides a broad survey of EVM-compatible voting systems but significantly underanalyzes critical adversarial threat vectors including MEV attacks, sophisticated Sybil resistance mechanisms, and liveness/censorship resistance guarantees. While the architectural overview is competent, the security analysis lacks the depth required for a comprehensive treatment of blockchain voting security.",
+          "strengths": [
+            "Comprehensive coverage of voting system architectures from simple on-chain to zk-SNARK based systems with clear comparative tables",
+            "Practical code examples and circuit designs that demonstrate implementation feasibility",
+            "Good treatment of the MACI system's coercion resistance properties and its deployment history at Gitcoin"
+          ],
+          "weaknesses": [
+            "Critical omission of MEV attack vectors: no analysis of transaction ordering attacks during commit-reveal phases, frontrunning of vote revelations, or sandwich attacks on vote submissions that could enable vote manipulation or privacy breaches",
+            "Superficial treatment of Sybil resistance: the manuscript mentions 'Passport' and 'identity verification' without rigorous analysis of identity oracle trust assumptions, proof-of-personhood mechanisms, or the fundamental tension between privacy and Sybil resistance",
+            "Inadequate analysis of liveness and censorship resistance: no discussion of validator/sequencer censorship of vote transactions, forced inclusion mechanisms, or what happens when coordinators in MACI-style systems become unavailable or malicious"
+          ],
+          "suggestions": [
+            "Add a dedicated section on MEV threat modeling covering: (1) commit-phase frontrunning where attackers observe pending commits to infer voting patterns, (2) reveal-phase ordering attacks, (3) private mempool solutions like Flashbots Protect for vote submission, and (4) encrypted mempool approaches",
+            "Expand Sybil resistance analysis to include formal threat models for identity verification, analysis of proof-of-humanity/proof-of-personhood protocols, discussion of collusion resistance bounds, and the privacy-Sybil resistance tradeoff curve",
+            "Include rigorous liveness analysis covering: coordinator failure modes in MACI, censorship resistance guarantees (or lack thereof) on L2s, forced transaction inclusion mechanisms, and quantitative analysis of what percentage of validators/sequencers must be honest for voting liveness"
+          ],
+          "detailed_feedback": "From a blockchain security and adversarial threat modeling perspective, this manuscript has significant gaps that undermine its claim to identify the 'most efficient and secure' voting system. The MEV analysis is essentially absent\u2014this is a critical oversight given that vote submission and revelation phases are prime targets for sophisticated MEV extraction. For commit-reveal schemes, an adversary observing the mempool can potentially correlate commits with voters based on timing, gas prices, or transaction patterns, even before revelation. During the reveal phase, transaction ordering can be manipulated to selectively censor or delay certain vote revelations. The manuscript should analyze private transaction submission mechanisms (Flashbots, MEV Blocker), threshold encryption of transactions, and time-locked encryption approaches.\n\nThe Sybil resistance treatment is particularly weak. Simply stating that Gitcoin uses 'Passport' without analyzing the trust assumptions, false positive/negative rates, privacy implications, and attack costs is insufficient. The manuscript should formalize the Sybil resistance requirements, analyze existing solutions (BrightID, Proof of Humanity, Worldcoin, government ID verification), and discuss the fundamental impossibility results around achieving both strong privacy and strong Sybil resistance simultaneously.\n\nThe liveness analysis is also inadequate. For MACI, what happens if the coordinator goes offline? The manuscript mentions this as a 'trust assumption' but doesn't analyze mitigation strategies like threshold decryption, backup coordinators, or time-locked fallback mechanisms. For L2-based voting, the censorship resistance guarantees are fundamentally weaker than L1\u2014sequencers can trivially censor transactions, and forced inclusion mechanisms have significant delays. The manuscript should quantify these delays and analyze their implications for time-sensitive votes.\n\nThe security property matrix in Section 4.2 assigns ratings without sufficient justification. For example, MACI receives a checkmark for 'Privacy' but the coordinator sees all individual votes\u2014this should be clearly qualified. The 'Liveness' ratings need formal definitions and quantitative bounds. Overall, the manuscript needs substantially more rigorous adversarial analysis to support its conclusions.",
+          "tokens": 9633
+        },
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Cryptographic Voting Protocols & Verifiable Computation",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 6,
+            "completeness": 6,
+            "clarity": 7,
+            "novelty": 5,
+            "rigor": 5
+          },
+          "average": 5.8,
+          "summary": "This manuscript provides a broad survey of blockchain voting architectures with reasonable coverage of practical systems, but lacks the cryptographic depth and formal rigor expected for a comprehensive treatment of secure voting protocols. The security analysis remains superficial, missing critical threat model formalization and failing to adequately address the nuanced tradeoffs between different ZK proof systems for voting applications.",
+          "strengths": [
+            "Comprehensive coverage of deployed systems (MACI, Vocdoni, Snapshot) with practical gas cost benchmarks that provide useful engineering guidance",
+            "Clear architectural diagrams and code examples that effectively communicate implementation patterns for the hybrid zk-rollup voting proposal",
+            "Good treatment of the tension between efficiency and security properties, with the comparative matrices providing actionable decision frameworks"
+          ],
+          "weaknesses": [
+            "The coercion-resistance analysis is incomplete: MACI's security relies on the coordinator not colluding with coercers, but the manuscript doesn't adequately discuss receipt-freeness vs. coercion-resistance distinctions, nor does it address the impossibility results from Juels-Catalano-Jakobsson regarding coercion-resistance in remote voting",
+            "ZK proof system selection lacks rigor: the manuscript conflates zk-SNARKs as a monolithic category without distinguishing Groth16, PLONK, or STARKs, each with different trust assumptions (trusted setup vs. transparent), proof sizes, and verification costs critical for on-chain deployment",
+            "The verifiability analysis conflates individual verifiability (voter can check their vote was recorded) with universal verifiability (anyone can verify the tally) and end-to-end verifiability (combining both with cast-as-intended verification), which are distinct security properties with different implementation requirements"
+          ],
+          "suggestions": [
+            "Formalize the threat model explicitly: define adversary capabilities (passive/active, computational bounds, collusion models), specify what 'coercion-resistance' means in the blockchain context where transaction graphs are public, and address the fundamental tension between blockchain transparency and ballot secrecy",
+            "Provide detailed comparison of ZK proof systems: include concrete verification gas costs for Groth16 (~200k gas) vs PLONK (~300k gas) vs STARKs (~500k+ gas), discuss trusted setup ceremonies and their implications for decentralized voting, and analyze prover time complexity which affects voter UX",
+            "Add formal security proofs or at minimum cite the cryptographic assumptions underlying each scheme: the Pedersen commitment security relies on discrete log hardness, MACI's coercion-resistance depends on the key-change mechanism and coordinator honesty, and the nullifier scheme requires collision-resistant hashing"
+          ],
+          "detailed_feedback": "From a cryptographic voting protocols perspective, this manuscript requires substantial strengthening in several areas. First, the treatment of ballot secrecy is imprecise. The manuscript claims MACI provides 'privacy' but doesn't distinguish between computational privacy (votes hidden under encryption) and information-theoretic privacy. More critically, it doesn't address that MACI's coordinator sees all decrypted votes, creating a single point of failure for privacy\u2014this is a significant trust assumption that should be prominently discussed alongside threshold decryption alternatives.\n\nThe verifiability discussion needs restructuring around the established taxonomy: cast-as-intended (voter's device correctly encodes their intent), recorded-as-cast (the system correctly records the encrypted vote), and counted-as-recorded (the tally correctly reflects recorded votes). The circom circuit provided only addresses eligibility and vote validity, not the crucial tally correctness proof which is where the cryptographic complexity lies for universal verifiability.\n\nRegarding ZK proof selection, the manuscript should address that Groth16 (used in many MACI deployments) requires a per-circuit trusted setup, which is problematic for upgradeable voting systems. PLONK with a universal trusted setup or STARKs with transparent setup may be preferable despite higher verification costs. The claim of '60-80% verification cost reduction' from ZK implementations needs citation and clarification\u2014compared to what baseline?\n\nThe homomorphic encryption discussion mentions Paillier and ElGamal but doesn't address the critical distinction: Paillier is additively homomorphic (suitable for tallying) while ElGamal requires re-encryption mixnets for privacy. The circuit example uses ElGamal encryption but doesn't explain how tallying would work without decryption, which is the key advantage of homomorphic schemes.\n\nFinally, the manuscript should engage with the impossibility results in the literature: Benaloh showed that unconditional receipt-freeness is impossible with untrusted voting devices, and this has direct implications for browser-based blockchain voting where the voter's device generates the ZK proof.",
+          "tokens": 9740
+        }
+      ],
+      "overall_average": 5.8,
+      "moderator_decision": {
+        "decision": "MAJOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive survey of EVM-compatible voting architectures with practical value for practitioners, covering systems from simple on-chain implementations to sophisticated ZK-based protocols like MACI. The reviewers unanimously acknowledge the manuscript's strengths in providing well-structured taxonomies, practical code examples, and coverage of real-world deployments (Gitcoin, MakerDAO, Optimism). The comparative matrices and architectural diagrams effectively communicate implementation patterns and tradeoffs.\n\nHowever, all three reviewers identify significant gaps that undermine the manuscript's claims to comprehensiveness and rigor. The security analysis is notably superficial: Reviewer 2 highlights critical omissions regarding MEV attack vectors, sophisticated Sybil resistance mechanisms, and liveness/censorship guarantees\u2014all essential considerations for production voting systems. Reviewer 3 notes that the cryptographic treatment conflates distinct security properties (individual vs. universal vs. end-to-end verifiability) and fails to distinguish between ZK proof systems with fundamentally different trust assumptions. Reviewer 1's concern about unsubstantiated gas cost claims is particularly damaging, as efficiency comparisons are central to the manuscript's contribution yet lack empirical validation.\n\nThe manuscript has clear potential but requires substantial strengthening in three areas: (1) rigorous empirical validation of gas cost claims using standard profiling tools, (2) formalized threat modeling that addresses MEV, Sybil resistance, and liveness guarantees with appropriate depth, and (3) more precise cryptographic analysis distinguishing proof systems and verifiability properties. These are addressable issues that would significantly elevate the contribution.",
+        "key_strengths": [
+          "Well-structured taxonomy of voting architectures with clear progression from simple to complex implementations, supported by practical Solidity and Circom code examples",
+          "Valuable coverage of real-world deployments (Gitcoin, MakerDAO, Optimism, Vocdoni) providing actionable context for practitioners",
+          "Effective comparative matrices and architectural diagrams that communicate implementation tradeoffs and decision frameworks"
+        ],
+        "key_weaknesses": [
+          "Gas cost figures lack empirical validation\u2014claims of efficiency improvements are unsubstantiated without actual measurements using standard profiling tools",
+          "Critical security gaps: no analysis of MEV attack vectors (frontrunning, transaction ordering), inadequate Sybil resistance treatment, and missing liveness/censorship resistance guarantees",
+          "Cryptographic analysis lacks rigor: conflates distinct ZK proof systems (Groth16/PLONK/STARKs), mixes verifiability properties, and omits formal threat model definitions"
+        ],
+        "required_changes": [
+          "Conduct empirical gas profiling using Foundry or Hardhat gas reporter, providing specific measurements and methodology for all claimed efficiency figures, including opcode-level breakdowns for key operations",
+          "Add dedicated MEV threat modeling section covering commit-phase frontrunning, reveal-phase ordering attacks, and mitigation strategies (private mempools, encrypted transactions); expand Sybil resistance analysis with formal threat models and the privacy-Sybil resistance tradeoff",
+          "Formalize the cryptographic treatment: distinguish ZK proof systems with concrete verification costs and trust assumptions, separate individual/universal/end-to-end verifiability properties, and explicitly state security assumptions (discrete log hardness, collision resistance, coordinator honesty bounds)"
+        ],
+        "recommendation": "The manuscript addresses an important topic and demonstrates solid foundational work, but currently falls short of the rigor expected for a comprehensive survey in this space. Authors should prioritize: (1) replacing estimated gas figures with empirical measurements\u2014this is non-negotiable given the manuscript's efficiency claims; (2) substantially expanding the security analysis to address MEV, Sybil resistance, and liveness with the depth these critical topics deserve; and (3) sharpening the cryptographic precision throughout, particularly regarding ZK proof system selection and verifiability definitions. Consider adding a formal threat model section early in the paper that subsequent analysis can reference. With these revisions, this could become a valuable reference for both researchers and practitioners in the blockchain voting space.",
+        "round": 1,
+        "overall_average": 5.8,
+        "tokens": 3186
+      },
+      "manuscript_diff": null,
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T15:27:00.735337"
+    },
+    {
+      "round": 2,
+      "manuscript_version": "v2",
+      "word_count": 3838,
+      "reviews": [
+        {
+          "specialist": "expert-1",
+          "specialist_name": "EVM Smart Contract Engineering & Gas Optimization",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.0,
+          "summary": "This manuscript provides a comprehensive survey of EVM voting systems with substantially improved gas analysis methodology compared to typical treatments. The empirical measurements using Foundry and mainnet transaction data add credibility, though several gas figures require verification and the upgrade pattern analysis, while present, lacks depth on storage layout migration challenges.",
+          "strengths": [
+            "Excellent granular breakdown of EVM opcode costs (SSTORE cold/warm, SLOAD, precompile costs) that correctly reflects post-EIP-2929 pricing, demonstrating genuine understanding of gas mechanics",
+            "Honest acknowledgment of MACI gas cost variance (450K-550K) rather than presenting idealized figures, with proper attribution to tree depth and batch size dependencies",
+            "Strong treatment of MEV attack vectors specific to voting phases, including commit-phase timing correlation and reveal-phase censorship - this is often overlooked in voting system literature"
+          ],
+          "weaknesses": [
+            "The gas comparison table is incomplete (manuscript cuts off mid-sentence) and the 'Total (1000 voters)' column conflates per-vote costs with fixed verification costs in misleading ways - MACI's 700K verification is amortized across all voters, not additive",
+            "Upgrade pattern analysis (Section 2.6) mentions UUPS and Diamond patterns but doesn't address the critical issue of storage slot collision when upgrading voting contracts with active state - what happens to in-progress votes during upgrade?",
+            "Missing analysis of calldata vs storage tradeoffs for vote data, particularly relevant given EIP-4844 blob transactions which could dramatically reduce costs for batch vote submission"
+          ],
+          "suggestions": [
+            "Add explicit gas profiling for Merkle proof verification at different tree depths (common in voter eligibility checks) - the cost scales as O(depth * hash_cost) and this significantly impacts voter registration gas",
+            "Include analysis of ERC-2771 meta-transactions and gas abstraction patterns for voting - many DAOs subsidize voter gas costs, and the relayer architecture has security implications for vote integrity",
+            "Provide concrete storage layout diagrams for upgradeable voting contracts showing how vote commitments, revealed votes, and tally state must be preserved across implementation upgrades"
+          ],
+          "detailed_feedback": "From a gas optimization perspective, this manuscript demonstrates solid foundational knowledge but misses several optimization opportunities that practitioners would find valuable. The SSTORE analysis correctly identifies cold/warm access patterns, but doesn't explore the implications of EIP-1153 transient storage for commit-reveal schemes where commitments could be stored transiently during a single block's voting window, potentially reducing costs by 90%+. The MACI gas analysis is commendably honest about real-world costs, but the manuscript should clarify that the Poseidon hash used in MACI is not a native EVM precompile - it's implemented in Solidity with ~15,000 gas per hash, which explains much of the cost overhead compared to native keccak256. For the upgrade patterns section, the critical missing piece is how to handle the state migration problem: if a voting contract has 10,000 voter commitments in a mapping, upgrading the implementation doesn't migrate that data, but changing the storage layout in the new implementation will cause slot collisions. The manuscript should recommend immutable storage layouts or explicit migration functions with gas cost estimates. The optimistic voting gas estimate of 100K-150K for verification seems low if fraud proofs require re-executing vote tallies on-chain - this needs clarification on what computation the fraud proof actually verifies. Finally, the comparison table's methodology column is good practice, but the table itself appears truncated and the cost model clarification sentence is cut off, suggesting incomplete revision.",
+          "tokens": 9484
+        },
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Cryptographic Voting Protocols & Verifiable Computation",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 6
+          },
+          "average": 6.8,
+          "summary": "This manuscript provides a comprehensive survey of EVM-compatible voting systems with good coverage of fundamental cryptographic voting properties and practical implementation concerns. However, the treatment of ballot secrecy guarantees, coercion-resistance mechanisms, and ZK-proof system tradeoffs lacks the formal rigor expected for a definitive analysis, with several claims requiring stronger justification or correction.",
+          "strengths": [
+            "Excellent acknowledgment of fundamental impossibility results (Benaloh, JCJ) that constrain what blockchain voting can achieve - this intellectual honesty is crucial and often missing from similar surveys",
+            "Thorough treatment of MEV attack vectors specific to voting systems, including commit-phase timing correlation and reveal-phase censorship attacks, which represents a meaningful contribution to the threat modeling literature",
+            "Nuanced analysis of MACI's coercion-resistance limitations, correctly identifying that the coordinator sees decrypted votes and that key-change detection remains a practical vulnerability"
+          ],
+          "weaknesses": [
+            "The claim that 'commit-reveal schemes combined with ZKPs' offer 'the most balanced approach' is insufficiently justified - commit-reveal fundamentally fails to provide ballot secrecy during the reveal phase, and the manuscript doesn't adequately explain how ZKPs remediate this (they don't in the described architecture)",
+            "Missing formal security definitions and reductions: the paper lists security properties but doesn't provide game-based definitions or prove that any system achieves them under stated assumptions - this is critical for a paper claiming to identify 'most secure' systems",
+            "The ZK-proof system comparison table oversimplifies verification costs and omits critical factors: recursive proof composition capabilities, proof aggregation for batch verification, and the actual circuit constraints required for voting (eligibility proofs, range proofs for valid choices, etc.)"
+          ],
+          "suggestions": [
+            "Provide formal game-based definitions for ballot secrecy and coercion-resistance in the blockchain setting, then rigorously analyze which systems achieve which properties under explicit computational assumptions",
+            "Expand the ZK-proof analysis to include: (1) concrete circuit sizes for voting operations, (2) prover memory requirements which often dominate practical deployments, (3) proof aggregation schemes like SnarkPack that dramatically change the amortized verification cost analysis",
+            "Address the cast-as-intended verification gap more thoroughly - this is arguably the weakest link in all described systems and deserves dedicated treatment including approaches like Benaloh challenges, return codes, or verifiable client-side computation"
+          ],
+          "detailed_feedback": "From a cryptographic voting protocols perspective, this manuscript demonstrates solid foundational knowledge but falls short of the rigor needed for its ambitious claims. The treatment of ballot secrecy is particularly concerning: the paper correctly notes that commit-reveal exposes votes during reveal, but then recommends commit-reveal combined with ZKPs without clearly explaining the construction. A proper privacy-preserving voting scheme would use homomorphic tallying (as briefly mentioned with Paillier/ElGamal) or mixnets, not commit-reveal. The MACI analysis is the strongest section, correctly identifying that computational privacy depends on coordinator honesty - but this should lead to a stronger recommendation for threshold decryption variants like MACI with distributed coordinators.\n\nThe verifiability analysis conflates three distinct properties (cast-as-intended, recorded-as-cast, counted-as-recorded) without adequately addressing how each is achieved. For instance, the paper notes cast-as-intended 'depends on client software' but doesn't discuss cryptographic approaches like Benaloh challenges or code voting that can provide stronger guarantees. The end-to-end verifiability claims for various systems need more careful treatment.\n\nThe ZK-proof discussion would benefit from concrete circuit analysis. Stating that Groth16 verification costs '~200,000 gas' is meaningless without specifying the circuit - a simple membership proof differs enormously from a full vote validity proof with eligibility checks. The paper should analyze specific voting circuits: proving vote is in valid range, proving voter eligibility via Merkle membership, proving no double-voting, etc. Additionally, the prover-side costs are dismissed too quickly - for voter-generated proofs, prover efficiency directly impacts usability and may require trusted hardware or delegation, each with security implications.\n\nThe manuscript would be significantly strengthened by: (1) a formal security model with explicit adversary capabilities and winning conditions, (2) concrete protocol specifications rather than high-level descriptions, (3) security proofs or at minimum security arguments with explicit assumptions, and (4) a clearer separation between what is theoretically achievable versus practically deployed. The current presentation mixes aspirational properties with actual system capabilities in ways that could mislead practitioners.",
+          "tokens": 9736
+        },
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Blockchain Security & Adversarial Threat Modeling",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.0,
+          "summary": "This manuscript demonstrates substantial improvement in addressing blockchain security concerns, particularly with the addition of a dedicated threat model section covering MEV attacks, Sybil resistance, and liveness guarantees. However, several critical adversarial scenarios remain underexplored, and the analysis would benefit from more formal treatment of attack economics and quantitative security bounds.",
+          "strengths": [
+            "Comprehensive MEV attack taxonomy covering commit-phase, reveal-phase, and vote submission attacks with specific mitigation strategies (Flashbots Protect, threshold reveal mechanisms, encrypted mempools)",
+            "Explicit formalization of adversary capabilities (passive, active, coercive) with computational bounds and collusion models, which is essential for rigorous security analysis",
+            "Nuanced treatment of L2 liveness concerns including specific forced inclusion delays for major rollups (Arbitrum ~24h, Optimism ~12h) and their implications for time-sensitive voting"
+          ],
+          "weaknesses": [
+            "Missing quantitative analysis of MEV attack profitability thresholds - at what governance TVL does MEV extraction become economically rational? The mention of '30% of blocks contain MEV' lacks connection to voting-specific attack economics",
+            "Sybil resistance section lacks formal security bounds - what is the cost to create k Sybil identities under each approach? The layered scoring system (MINIMUM_SCORE = 15) appears arbitrary without adversarial cost analysis",
+            "Coordinator collusion attack in MACI insufficiently analyzed - if coordinator colludes with coercer, they can reveal individual votes AND detect key-change attempts, completely breaking coercion resistance"
+          ],
+          "suggestions": [
+            "Add game-theoretic analysis of MEV attacks: model the expected value of frontrunning/censorship attacks as a function of governance TVL, gas costs, and detection probability. Include break-even analysis for rational adversaries",
+            "Formalize Sybil resistance with cost functions: for each identity mechanism, derive C(k) = cost to create k Sybil identities, and analyze how the layered approach affects this. Consider adaptive adversaries who optimize across verification methods",
+            "Expand MACI threat analysis to include coordinator-coercer collusion scenarios with explicit mitigations (threshold coordinators, verifiable shuffle networks, or trusted execution environments). Quantify the trust reduction achieved by n-of-m threshold schemes"
+          ],
+          "detailed_feedback": "From a blockchain security and adversarial threat modeling perspective, this revision shows meaningful progress. The addition of Section 3 with explicit adversary models and MEV attack vectors addresses a critical gap from typical voting system analyses. The distinction between passive, active, and coercive adversaries with PPT bounds is appropriate, and the collusion models provide a useful framework.\n\nHowever, several security-critical issues require attention. First, the MEV analysis, while comprehensive in taxonomy, lacks economic modeling. The statement that '30% of Ethereum blocks contain MEV' is cited from Flashbots data but not connected to voting-specific attack incentives. A governance vote controlling $100M creates MEV opportunity, but what's the expected profit margin after accounting for failed attempts, gas costs, and detection risk? Without this, protocol designers cannot properly set bond sizes or challenge periods.\n\nSecond, the Sybil resistance analysis presents a layered scoring approach but doesn't analyze it adversarially. An attacker will optimize across the cheapest identity verification methods. If government ID provides 10 points and the threshold is 15, an attacker needs only 5 additional points from potentially gameable on-chain history or staking. The formal bounds mentioned (fp/fn tradeoffs) are not connected to the proposed implementation.\n\nThird, the MACI security analysis correctly identifies coordinator trust as a limitation but underestimates the severity of coordinator-coercer collusion. In this scenario, the coordinator can: (1) decrypt all votes, (2) monitor for key-change transactions in real-time, (3) inform the coercer before the voting deadline. The key-change mechanism provides no protection here. The manuscript should explicitly state this limitation and analyze threshold coordinator schemes quantitatively - how does security degrade as t approaches n in a t-of-n threshold scheme?\n\nThe liveness analysis for L2s is valuable but should include recent developments like based sequencing and shared sequencer networks that may improve censorship resistance. Additionally, the forced inclusion mechanism analysis should consider adversarial scenarios where the L1 itself experiences congestion during critical voting periods.\n\nFinally, the manuscript would benefit from a unified security comparison table mapping each system to explicit adversary capabilities it resists, similar to the gas comparison tables provided. This would make the security tradeoffs immediately actionable for practitioners.",
+          "tokens": 9724
+        }
+      ],
+      "overall_average": 6.9,
+      "moderator_decision": {
+        "decision": "MAJOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive survey of EVM-compatible voting systems that demonstrates genuine technical competence, particularly in gas analysis methodology, MEV attack taxonomy, and honest acknowledgment of fundamental impossibility results in cryptographic voting. All three reviewers recognize the improved quality from the previous round and commend the empirical grounding using Foundry and mainnet transaction data. The treatment of practical concerns\u2014including post-EIP-2929 gas pricing, L2 liveness delays, and MACI's coercion-resistance limitations\u2014reflects meaningful engagement with real-world deployment challenges.\n\nHowever, the reviewers converge on several substantive gaps that prevent acceptance in the current form. Most critically, the manuscript lacks formal rigor in its security claims: game-based definitions for ballot secrecy and coercion-resistance are absent, the claim that commit-reveal with ZKPs offers a 'balanced approach' is insufficiently justified (since commit-reveal fundamentally fails ballot secrecy during reveal), and the Sybil resistance scoring system appears arbitrary without adversarial cost analysis. The gas comparison table is incomplete and potentially misleading in how it presents amortized versus per-voter costs. Additionally, the MACI coordinator-coercer collusion scenario\u2014which completely breaks coercion resistance\u2014requires deeper analysis with concrete mitigations.\n\nWhile the manuscript has clear merit as a practitioner-oriented survey, the combination of incomplete technical content (truncated tables, missing storage layout analysis for upgrades) and insufficient formal treatment of security properties represents a gap between the paper's claims and its demonstrated rigor. These issues are addressable but require substantial work beyond minor editorial fixes.",
+        "key_strengths": [
+          "Excellent granular treatment of EVM gas mechanics with empirical validation, correctly reflecting post-EIP-2929 pricing and honest variance reporting for MACI costs",
+          "Comprehensive MEV attack taxonomy with specific mitigations (Flashbots Protect, threshold reveal, encrypted mempools) and nuanced L2 liveness analysis including concrete forced inclusion delays",
+          "Intellectually honest acknowledgment of fundamental impossibility results (Benaloh, JCJ) and MACI's practical limitations, which grounds the survey in realistic expectations"
+        ],
+        "key_weaknesses": [
+          "Missing formal security definitions and reductions: security properties are listed but not formally defined or proven under stated computational assumptions, undermining claims about 'most secure' systems",
+          "Incomplete and potentially misleading gas analysis: comparison table is truncated, amortized vs. per-voter costs are conflated, and critical calldata/storage tradeoffs (especially EIP-4844 implications) are absent",
+          "Insufficient analysis of critical attack scenarios: MACI coordinator-coercer collusion completely breaks coercion resistance but lacks concrete mitigations; MEV attack economics lack quantitative profitability thresholds"
+        ],
+        "required_changes": [
+          "Provide formal game-based definitions for ballot secrecy and coercion-resistance in the blockchain setting, with explicit computational assumptions and analysis of which systems achieve which properties",
+          "Complete and correct the gas comparison table: separate amortized verification costs from per-voter costs, add Merkle proof verification scaling analysis, and include EIP-4844 blob transaction implications for batch vote submission",
+          "Expand MACI threat analysis to address coordinator-coercer collusion with concrete mitigations (threshold coordinators, verifiable shuffle networks, TEEs) and quantify trust reduction achieved by n-of-m threshold schemes",
+          "Add quantitative analysis of Sybil resistance: derive cost functions C(k) for creating k Sybil identities under each mechanism and justify the layered scoring thresholds against adaptive adversaries",
+          "Address storage slot collision and state preservation for upgradeable voting contracts with active votes, including concrete storage layout diagrams"
+        ],
+        "recommendation": "The manuscript demonstrates solid technical foundations and addresses an important topic, but currently falls between a practitioner guide and a rigorous academic survey without fully succeeding as either. For the next revision, authors should choose one of two paths: (1) If targeting formal rigor, add game-based security definitions, formal reductions, and quantitative adversarial analysis throughout; (2) If targeting practitioners, explicitly scope the contribution as an implementation guide and remove claims about identifying 'most secure' systems without formal backing. Either path requires completing the truncated content, correcting the gas cost presentation, and substantially expanding the MACI collusion analysis. The core material is valuable\u2014the revision should focus on consistency between claims and demonstrated rigor.",
+        "round": 2,
+        "overall_average": 6.9,
+        "tokens": 3350
+      },
+      "manuscript_diff": {
+        "words_added": 365,
+        "previous_version": "v1",
+        "current_version": "v2"
+      },
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T15:30:22.838175"
+    },
+    {
+      "round": 3,
+      "manuscript_version": "v3",
+      "word_count": 4042,
+      "reviews": [
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Blockchain Security & Adversarial Threat Modeling",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This manuscript provides a comprehensive treatment of blockchain voting security with strong formal foundations and practical MEV analysis. However, the document appears truncated (ending mid-section on threshold coordinators), and while MEV and Sybil resistance are well-covered, the liveness/censorship analysis lacks depth on emerging attack vectors and cross-domain MEV implications.",
+          "strengths": [
+            "Excellent formal threat model with explicit adversary types (A_passive through A_coord) and game-based security definitions that properly distinguish between ballot secrecy, receipt-freeness, and coercion-resistance",
+            "Strong economic analysis of MEV attacks with concrete break-even calculations showing when MEV protection becomes essential (>$10M governance TVL), plus practical mitigation strategies including ordered reveal commitments",
+            "Rigorous treatment of Sybil resistance with formal cost models C(k) and layered defense architecture that enforces diversity across verification sources, preventing single-point-of-failure in identity verification"
+          ],
+          "weaknesses": [
+            "The manuscript is clearly truncated mid-section (Section 3.4.3 cuts off at 'Threshold Coordinator Architecture'), leaving critical analysis of coordinator liveness, threshold decryption ceremonies, and recovery mechanisms incomplete",
+            "Cross-domain MEV attacks are underexplored - specifically, how an adversary controlling both L1 and L2 sequencing could exploit timing differences between layers to manipulate votes submitted across multiple chains, or how atomic composability with DeFi protocols creates novel attack surfaces",
+            "The liveness analysis for L2s focuses on forced inclusion delays but neglects state validity attacks - a malicious sequencer could post invalid state roots that pass the challenge period if challengers are also censored, potentially invalidating entire voting periods before fraud proofs can be submitted"
+          ],
+          "suggestions": [
+            "Complete the threshold coordinator section and add formal analysis of coordinator failure recovery, including: (1) what happens to in-flight votes if t coordinators fail simultaneously, (2) key resharing protocols for coordinator rotation, and (3) verifiable delay functions as fallback decryption mechanisms",
+            "Add a dedicated subsection on cross-layer MEV and composability attacks, including scenarios where flash loans on L1 could influence L2 voting snapshots, or where bridge delays create arbitrage opportunities that affect governance token distribution during active votes",
+            "Strengthen the censorship resistance analysis with quantitative models: what percentage of sequencer/validator collusion is required to reliably censor a specific voter, and how does this change with multiple submission paths (e.g., submitting same vote to 3 L2s simultaneously)?"
+          ],
+          "detailed_feedback": "From a blockchain security and adversarial threat modeling perspective, this manuscript demonstrates strong foundational work but has notable gaps that should be addressed before publication. The formal adversary taxonomy is well-constructed, and I particularly appreciate the explicit computational bounds and the acknowledgment that all privacy guarantees are computational rather than information-theoretic. The MEV analysis is practical and actionable, with the economic break-even calculations providing clear guidance for practitioners.\n\nHowever, several security-critical areas need deeper treatment. First, the interaction between MEV and voting in the presence of proposer-builder separation (PBS) is not adequately addressed. Under PBS, block builders see all private mempool transactions from services like Flashbots Protect, creating a new trust assumption that isn't captured in your threat model. Second, the Sybil resistance section, while comprehensive, doesn't address the temporal dynamics of identity attacks - an adversary could slowly accumulate legitimate-seeming identities over months before a critical vote, making the cost model C(k) time-dependent in ways not captured.\n\nThe L2 liveness analysis correctly identifies forced inclusion delays but misses several critical attack vectors: (1) data availability attacks where the sequencer withholds transaction data, making it impossible to reconstruct state for fraud proofs; (2) griefing attacks on optimistic rollups where an adversary submits invalid fraud proofs to delay finality during voting periods; (3) the interaction between voting deadlines and rollup finality - a vote submitted 1 hour before deadline on an optimistic rollup isn't actually 'final' for 7 days. The manuscript should provide concrete recommendations for how voting periods should be structured relative to rollup finality assumptions.\n\nFinally, the coercion-resistance analysis of MACI is good but should be extended to cover the 'bribery market' attack where a smart contract offers payment for key-change proofs, effectively creating a trustless vote-buying mechanism that circumvents MACI's protections. This is a known attack vector that deserves explicit treatment given MACI's prominence in the manuscript.",
+          "tokens": 9716
+        },
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Cryptographic Voting Protocols & Verifiable Computation",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This manuscript provides a solid foundation for understanding EVM-compatible voting systems with commendable attention to formal security definitions and impossibility results. However, the treatment of coercion-resistance mechanisms and ZK-proof system selection contains gaps that require attention, and the analysis of end-to-end verifiability is incomplete.",
+          "strengths": [
+            "Excellent formal treatment of security definitions (Definitions 1-7) with proper game-based formulations, particularly the decomposition of E2E verifiability into cast-as-intended, recorded-as-cast, and counted-as-recorded properties",
+            "Strong acknowledgment of fundamental impossibility results (Benaloh, JCJ) with clear implications for blockchain voting - this intellectual honesty is crucial and often missing in similar works",
+            "Comprehensive ZK-proof system comparison table with realistic gas costs and the inclusion of proof aggregation analysis (SnarkPack) demonstrates practical understanding of on-chain verification efficiency"
+          ],
+          "weaknesses": [
+            "The coercion-resistance analysis for MACI is incomplete - while the paper correctly notes key-change limitations, it fails to analyze the timing attack where a coercer can monitor the blockchain for any state-changing transaction from the voter's address during the voting period, potentially detecting evasion attempts even without coordinator collusion",
+            "The ZK-proof system selection guidance lacks discussion of the trusted setup ceremony implications for voting legitimacy - a compromised Groth16 setup could allow vote fabrication, yet the paper doesn't address multi-party computation ceremonies or the political/social trust requirements",
+            "Individual verifiability mechanisms are underspecified - the paper mentions 'cast-as-intended' verification but doesn't address how voters verify correct vote encoding when using client-side ZK proof generation, where malicious JavaScript could encode votes incorrectly"
+          ],
+          "suggestions": [
+            "Add a dedicated section on verifiable vote encoding that addresses the 'malicious client' problem - consider discussing approaches like Benaloh challenges, code auditing requirements, or deterministic builds for voting clients",
+            "Expand the MACI coercion-resistance analysis to include a formal game capturing what guarantees actually hold: specifically, model the adversary who can observe all blockchain state and network traffic, and prove what information leakage occurs under different key-change strategies",
+            "Include analysis of universal verifiability for homomorphic tallying schemes - specifically, how observers verify that the decryption was performed correctly without learning individual votes (e.g., through Chaum-Pedersen proofs or similar mechanisms)"
+          ],
+          "detailed_feedback": "From a cryptographic voting protocols perspective, this manuscript demonstrates strong foundational knowledge but has notable gaps in the verification and coercion-resistance analysis. The formal definitions in Section 2.1.1 are well-constructed, though Definition 4 (coercion-resistance) would benefit from the full JCJ formalization including the 'fake credential' mechanism that enables the counter-strategy. The paper correctly identifies that MACI's key-change approach is an approximation of coercion-resistance, but the analysis should go further: even without coordinator collusion, a sophisticated coercer can implement a 'monitoring contract' that tracks all transactions from registered voters and flags any activity during the voting period as suspicious. This fundamentally limits MACI's coercion-resistance to scenarios where voters can plausibly deny that any transaction they made was a key change.\n\nThe ZK-proof efficiency analysis is practical and useful, but the paper should address the verification of proof correctness from the voter's perspective. When a voter generates a ZK proof client-side, how do they know the proof actually encodes their intended vote? This is the 'cast-as-intended' problem, and solutions like Benaloh challenges (where the voter can request the system 'open' a subset of ballots to verify correct encoding) don't translate directly to the ZK setting. The paper should discuss approaches like verifiable computation on the client side or trusted execution environments.\n\nFor the homomorphic encryption schemes discussed, the paper should elaborate on how universal verifiability is achieved. Simply stating that 'decryption reveals only the final tally' is insufficient - observers need cryptographic proof that the decryption was performed correctly. For threshold ElGamal, this typically involves each decryption share coming with a Chaum-Pedersen proof of correct partial decryption. This is a non-trivial gas cost that should be included in the efficiency analysis.\n\nThe proof aggregation discussion via SnarkPack is valuable, but note that aggregated proofs still require the original proofs to be valid - the aggregation doesn't hide invalid proofs. For voting, this means individual vote validity must still be checked somewhere, either on-chain before aggregation or within the aggregation circuit itself, which significantly increases circuit complexity.",
+          "tokens": 9759
+        },
+        {
+          "specialist": "expert-1",
+          "specialist_name": "EVM Smart Contract Engineering & Gas Optimization",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This manuscript provides a comprehensive treatment of EVM voting systems with strong gas cost analysis and good coverage of upgrade patterns. However, the document appears truncated (ending mid-section), and while gas figures are cited, the empirical methodology for obtaining them lacks sufficient detail. The treatment of on-chain vs off-chain tradeoffs is present but could benefit from more rigorous quantitative comparison.",
+          "strengths": [
+            "Excellent gas cost table for EVM opcodes post-EIP-2929, correctly distinguishing cold vs warm storage access patterns (2,100 vs 100 gas for SLOAD) which is critical for accurate voting cost estimation",
+            "Strong treatment of smart contract upgrade patterns with concrete code examples showing storage gap patterns and the critical noActiveVotes modifier to prevent mid-vote upgrades - this addresses a real security concern in production systems",
+            "Thorough proof system comparison table with realistic gas costs for verification (Groth16: 200-250k, PLONK: 300-350k, STARKs: 500k-1M) and the SnarkPack aggregation analysis showing 32x reduction for 1000 voters is valuable for system architects"
+          ],
+          "weaknesses": [
+            "The claimed gas costs (48,000-65,000 per vote for traditional systems, 450,000-550,000 for MACI signUp + publishMessage) are stated as 'measured via Foundry gas snapshots' but no methodology section describes the test contracts, compiler settings (optimizer runs), or whether these are mainnet fork tests vs isolated unit tests - this significantly impacts reproducibility",
+            "The document is truncated mid-section (ends at 'Threshold Coordinator Architecture') leaving the critical comparison of on-chain vs off-chain computation incomplete - specifically missing the promised analysis of vote processing tradeoffs",
+            "Storage layout migration analysis lacks gas cost quantification - while the pattern is correctly described, there's no analysis of the gas overhead of storage gaps (each gap slot costs 20,000 gas if ever written) or the cumulative cost impact of maintaining backward compatibility across multiple upgrades"
+          ],
+          "suggestions": [
+            "Add a dedicated methodology section with: (1) Solidity compiler version and optimizer settings, (2) specific test contract implementations used for gas measurement, (3) whether measurements used mainnet fork state or clean state (affects cold/warm access patterns significantly), (4) block gas limit assumptions for batch operation feasibility",
+            "Complete the on-chain vs off-chain tradeoffs section with a quantitative comparison table showing: gas costs, latency, trust assumptions, and failure modes for each approach - specifically comparing full on-chain tallying vs optimistic tallying with fraud proofs vs ZK-verified off-chain computation",
+            "Add empirical analysis of real deployed voting contracts (Compound Governor, Nouns DAO, Gitcoin) showing actual gas consumption distributions from mainnet data - this would validate the theoretical figures and reveal edge cases like high-participation votes hitting block gas limits"
+          ],
+          "detailed_feedback": "From an EVM gas optimization perspective, this manuscript demonstrates solid foundational knowledge but falls short of the empirical rigor expected for a comprehensive research report. The gas cost table for opcodes is accurate and the distinction between cold/warm storage access is correctly emphasized - this is crucial since a voting contract accessing voter state will see dramatically different costs depending on access patterns within a transaction. However, the per-vote cost claims need more substantiation. For instance, the 48,000-65,000 gas range for 'traditional on-chain voting' likely assumes a single SSTORE for vote recording plus some validation logic, but this varies enormously based on implementation: does the contract use a mapping (cheaper) or array (more expensive for enumeration)? Is there a snapshot lookup (additional SLOAD)? Are there event emissions (375 + 8*bytes gas)? The MACI figures of 450,000-550,000 gas are plausible for signUp + publishMessage but should be broken down by operation. The upgrade pattern section is genuinely useful, particularly the storage gap pattern and the noActiveVotes modifier - these are production-relevant concerns. However, I'd recommend adding analysis of the UUPS vs Transparent proxy gas overhead in the context of high-frequency voting operations: the ~500 gas difference per call becomes significant when processing thousands of votes. The EIP-7201 namespaced storage pattern mentioned deserves expansion as it's becoming the standard approach for avoiding storage collisions. The missing on-chain vs off-chain comparison is a significant gap given it was highlighted as a key focus area. A complete analysis should quantify: (1) full on-chain tallying costs O(n) in votes with ~5,000-10,000 gas per vote aggregation, (2) optimistic approaches with ~200,000 gas for fraud proof verification but O(1) happy-path costs, (3) ZK-verified off-chain computation with ~200,000-350,000 gas for proof verification regardless of vote count. This comparison would directly inform architecture decisions for different scale requirements.",
+          "tokens": 9789
+        }
+      ],
+      "overall_average": 7.2,
+      "moderator_decision": {
+        "decision": "MINOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive treatment of blockchain voting security with notable strengths in formal threat modeling, economic analysis of MEV attacks, and practical gas cost considerations for EVM-compatible systems. All three reviewers converge on similar assessments (7.2/10 average), recognizing the work's solid theoretical foundations\u2014particularly the game-based security definitions, impossibility result acknowledgments, and rigorous Sybil resistance analysis. The formal decomposition of end-to-end verifiability and the practical MEV break-even calculations demonstrate both academic rigor and real-world applicability.\n\nHowever, reviewers unanimously identify a critical structural issue: the manuscript is truncated mid-section (Section 3.4.3 on Threshold Coordinator Architecture), leaving essential analysis incomplete. Beyond this obvious gap, substantive technical concerns emerge across reviews: the coercion-resistance analysis for MACI overlooks timing attacks from blockchain observation; cross-domain MEV attacks and L1/L2 composability vulnerabilities receive insufficient attention; and the empirical methodology for gas cost measurements lacks reproducibility details. The trusted setup ceremony implications for ZK-proof systems and the 'malicious client' problem for vote encoding verification represent additional gaps that weaken the otherwise strong cryptographic treatment.\n\nGiven this is the final review round and the core contributions are sound, the identified issues are addressable through targeted revisions rather than fundamental restructuring. The manuscript would benefit the community once completed, but publication in its current truncated state would be inappropriate.",
+        "key_strengths": [
+          "Excellent formal threat model with explicit adversary types and game-based security definitions that properly distinguish ballot secrecy, receipt-freeness, and coercion-resistance",
+          "Strong economic analysis of MEV attacks with concrete break-even calculations and practical mitigation strategies including ordered reveal commitments",
+          "Comprehensive and accurate gas cost analysis with proper treatment of EIP-2929 cold/warm storage patterns and realistic ZK-proof verification costs"
+        ],
+        "key_weaknesses": [
+          "Manuscript is truncated mid-section, leaving threshold coordinator analysis, liveness guarantees, and on-chain vs off-chain tradeoffs incomplete",
+          "Coercion-resistance analysis for MACI is incomplete\u2014missing timing attack vectors where adversaries monitor blockchain state during voting periods",
+          "Empirical methodology for gas measurements lacks reproducibility details (compiler settings, test contracts, mainnet fork vs isolated tests)"
+        ],
+        "required_changes": [
+          "Complete Section 3.4.3 on Threshold Coordinator Architecture including coordinator failure recovery, key resharing protocols, and fallback decryption mechanisms",
+          "Add methodology section specifying Solidity compiler version, optimizer settings, test contract implementations, and measurement conditions for all claimed gas costs",
+          "Expand MACI coercion-resistance analysis to formally model adversaries with full blockchain observability and characterize actual information leakage under different key-change strategies",
+          "Address the 'malicious client' problem for vote encoding verification, discussing approaches like Benaloh challenges or deterministic builds"
+        ],
+        "recommendation": "The manuscript makes valuable contributions to blockchain voting security but cannot be accepted in its current truncated form. Authors should: (1) complete all unfinished sections, particularly the threshold coordinator analysis; (2) add a reproducibility-focused methodology section for empirical claims; (3) strengthen the coercion-resistance analysis with formal treatment of timing attacks; and (4) address verifiable vote encoding. These revisions are well-scoped and should be achievable without restructuring the core contributions. Upon satisfactory completion, this work would merit acceptance.",
+        "round": 3,
+        "overall_average": 7.2,
+        "tokens": 3369
+      },
+      "manuscript_diff": {
+        "words_added": 204,
+        "previous_version": "v2",
+        "current_version": "v3"
+      },
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T15:33:57.877123"
+    }
+  ],
+  "final_score": 7.2,
+  "passed": false,
+  "total_rounds": 3,
+  "performance": {
+    "workflow_start": "2026-02-05T15:24:02.135924",
+    "workflow_end": "2026-02-05T15:33:57.880050",
+    "total_duration": 595.74,
+    "initial_draft_time": 129.16,
+    "initial_draft_tokens": 0,
+    "team_composition_time": 0.0,
+    "team_composition_tokens": 0,
+    "rounds": [
+      {
+        "round_number": 1,
+        "review_start": "2026-02-05T15:26:11.304102",
+        "review_end": "2026-02-05T15:27:00.735117",
+        "review_duration": 49.43,
+        "reviewer_times": {
+          "expert-1": 24.25,
+          "expert-3": 26.82,
+          "expert-2": 29.39
+        },
+        "moderator_time": 19.98,
+        "revision_time": null,
+        "round_tokens": 28869
+      },
+      {
+        "round_number": 2,
+        "review_start": "2026-02-05T15:29:29.294105",
+        "review_end": "2026-02-05T15:30:22.838020",
+        "review_duration": 53.54,
+        "reviewer_times": {
+          "expert-1": 26.16,
+          "expert-2": 30.34,
+          "expert-3": 31.3
+        },
+        "moderator_time": 22.19,
+        "revision_time": null,
+        "round_tokens": 28944
+      },
+      {
+        "round_number": 3,
+        "review_start": "2026-02-05T15:33:06.562743",
+        "review_end": "2026-02-05T15:33:57.876989",
+        "review_duration": 51.31,
+        "reviewer_times": {
+          "expert-3": 28.85,
+          "expert-2": 32.59,
+          "expert-1": 34.16
+        },
+        "moderator_time": 17.12,
+        "revision_time": null,
+        "round_tokens": 29264
+      }
+    ],
+    "total_tokens": 87077,
+    "estimated_cost": 0.26
+  },
+  "timestamp": "2026-02-05T15:33:57.881137"
+}

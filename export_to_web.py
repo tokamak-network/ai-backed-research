@@ -317,7 +317,13 @@ def export_results_to_web():
                 json.dump(manuscripts, f, indent=2)
 
             # Generate static article HTML for latest version
-            latest_version = max(manuscripts.keys(), key=lambda x: int(x.split('_v')[1]))
+            # Try to find versioned manuscripts first, then fallback to final
+            versioned = [k for k in manuscripts.keys() if '_v' in k]
+            if versioned:
+                latest_version = max(versioned, key=lambda x: int(x.split('_v')[1]))
+            else:
+                # Use final or any manuscript
+                latest_version = 'manuscript_final' if 'manuscript_final' in manuscripts else list(manuscripts.keys())[0]
             latest_manuscript = manuscripts[latest_version]
 
             try:
@@ -329,15 +335,31 @@ def export_results_to_web():
             except Exception as e:
                 print(f"  ✗ Error generating {project_id}.html: {e}")
 
+        # Get performance metrics
+        performance = workflow_data.get("performance", {})
+        total_duration = performance.get("total_duration", 0)
+
+        # Determine status based on final round decision
+        final_decision = workflow_data.get("rounds", [{}])[-1].get("moderator_decision", {}).get("decision", "PENDING")
+        if final_decision == "ACCEPT":
+            status = "completed"
+        elif final_decision in ["MAJOR_REVISION", "MINOR_REVISION"]:
+            status = "rejected"  # Didn't pass threshold
+        else:
+            status = "failed"
+
         # Add to index
         workflows.append({
             "id": project_id,
             "topic": workflow_data.get("topic", project_id.replace("-", " ").title()),
             "final_score": workflow_data.get("final_score", 0),
             "passed": workflow_data.get("passed", False),
+            "status": status,
             "total_rounds": workflow_data.get("total_rounds", 0),
             "timestamp": workflow_data.get("timestamp", ""),
-            "data_file": f"data/{project_id}.json"
+            "data_file": f"data/{project_id}.json",
+            "elapsed_time_seconds": int(total_duration),
+            "final_decision": final_decision
         })
 
     # Sort by timestamp (newest first)

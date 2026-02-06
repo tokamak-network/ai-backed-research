@@ -647,17 +647,30 @@
                 <div class="stat-value active" id="stat-active">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Completed</div>
+                <div class="stat-label">Accepted</div>
                 <div class="stat-value completed" id="stat-completed">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Failed</div>
-                <div class="stat-value failed" id="stat-failed">0</div>
+                <div class="stat-label">Rejected</div>
+                <div class="stat-value failed" id="stat-rejected">0</div>
             </div>
         </div>
 
         <div id="workflow-list" class="workflow-list">
-            <!-- Workflows will be inserted here -->
+            <!-- Active/Accepted workflows will be inserted here -->
+        </div>
+
+        <!-- Rejected Papers Section -->
+        <div style="margin-top: 3rem;">
+            <button id="toggle-rejected" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <svg id="rejected-arrow" viewBox="0 0 20 20" fill="currentColor" style="width: 20px; height: 20px; transition: transform 0.3s;">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+                <span>Rejected Papers (<span id="rejected-count">0</span>)</span>
+            </button>
+            <div id="rejected-list" class="workflow-list" style="display: none; margin-top: 1.5rem;">
+                <!-- Rejected workflows will be inserted here -->
+            </div>
         </div>
 
         <div id="empty-state" class="empty-state" style="display: none;">
@@ -693,7 +706,15 @@
                 if (apiResponse && apiResponse.ok) {
                     const apiData = await apiResponse.json();
                     if (apiData && apiData.workflows && apiData.workflows.length > 0) {
-                        displayWorkflows(apiData.workflows);
+                        // Split API workflows into accepted and rejected
+                        const accepted = apiData.workflows.filter(wf =>
+                            wf.status === 'completed' ||
+                            ['queued', 'writing', 'reviewing', 'revising', 'composing_team'].includes(wf.status)
+                        );
+                        const rejected = apiData.workflows.filter(wf =>
+                            wf.status === 'failed' || wf.status === 'rejected'
+                        );
+                        displayWorkflows(accepted, rejected);
                         updateStats(apiData.workflows);
                         return;
                     }
@@ -708,25 +729,37 @@
                 const data = await response.json();
 
                 // Check if workflows exist
-                if (!data || !data.workflows || !Array.isArray(data.workflows)) {
+                if (!data || !data.projects || !Array.isArray(data.projects)) {
                     console.warn('No workflows found');
-                    displayWorkflows([]);
+                    displayWorkflows([], []);
                     updateStats([]);
                     return;
                 }
 
                 // Transform to match expected format
-                const workflows = data.workflows.map(wf => ({
-                    project_id: wf.id,
-                    status: wf.status,
-                    current_round: wf.rounds || 0,
-                    total_rounds: wf.rounds || 0,
-                    progress_percentage: 100,
-                    message: 'Workflow completed successfully',
-                    error: null
-                }));
+                const workflows = data.projects.map(wf => {
+                    // Determine status
+                    let status = wf.status || (wf.passed ? 'completed' : 'rejected');
+                    let message = wf.passed ? 'Accepted' : 'Rejected';
 
-                displayWorkflows(workflows);
+                    return {
+                        project_id: wf.id,
+                        status: status,
+                        current_round: wf.total_rounds || 0,
+                        total_rounds: wf.total_rounds || 0,
+                        progress_percentage: 100,
+                        message: message,
+                        error: null,
+                        elapsed_time_seconds: wf.elapsed_time_seconds || 0,
+                        estimated_time_remaining_seconds: 0
+                    };
+                });
+
+                // Split into accepted and rejected
+                const acceptedWorkflows = workflows.filter(wf => wf.status === 'completed');
+                const rejectedWorkflows = workflows.filter(wf => wf.status === 'rejected' || wf.status === 'failed');
+
+                displayWorkflows(acceptedWorkflows, rejectedWorkflows);
                 updateStats(workflows);
 
             } catch (error) {
@@ -738,20 +771,26 @@
             }
         }
 
-        function displayWorkflows(workflows) {
+        function displayWorkflows(acceptedWorkflows, rejectedWorkflows) {
             const listDiv = document.getElementById('workflow-list');
+            const rejectedListDiv = document.getElementById('rejected-list');
             const emptyDiv = document.getElementById('empty-state');
+            const rejectedCountSpan = document.getElementById('rejected-count');
 
-            if (workflows.length === 0) {
+            const allWorkflows = [...acceptedWorkflows, ...rejectedWorkflows];
+
+            if (allWorkflows.length === 0) {
                 listDiv.innerHTML = '';
+                rejectedListDiv.innerHTML = '';
                 emptyDiv.style.display = 'block';
+                document.getElementById('toggle-rejected').style.display = 'none';
                 return;
             }
 
             emptyDiv.style.display = 'none';
 
-            // Sort: active first, then by project_id desc
-            workflows.sort((a, b) => {
+            // Sort accepted workflows: active first, then by project_id desc
+            acceptedWorkflows.sort((a, b) => {
                 const activeStatuses = ['queued', 'writing', 'reviewing', 'revising'];
                 const aActive = activeStatuses.includes(a.status);
                 const bActive = activeStatuses.includes(b.status);
@@ -761,7 +800,15 @@
                 return b.project_id.localeCompare(a.project_id);
             });
 
-            listDiv.innerHTML = workflows.map(wf => createWorkflowCard(wf)).join('');
+            // Sort rejected workflows by project_id desc
+            rejectedWorkflows.sort((a, b) => b.project_id.localeCompare(a.project_id));
+
+            listDiv.innerHTML = acceptedWorkflows.map(wf => createWorkflowCard(wf)).join('');
+            rejectedListDiv.innerHTML = rejectedWorkflows.map(wf => createWorkflowCard(wf)).join('');
+
+            // Update rejected count
+            rejectedCountSpan.textContent = rejectedWorkflows.length;
+            document.getElementById('toggle-rejected').style.display = rejectedWorkflows.length > 0 ? 'flex' : 'none';
 
             // Scroll to highlighted workflow
             const urlParams = new URLSearchParams(window.location.search);
@@ -1014,14 +1061,14 @@
 
         function updateStats(workflows) {
             const total = workflows.length;
-            const active = workflows.filter(w => ['queued', 'writing', 'reviewing', 'revising'].includes(w.status)).length;
+            const active = workflows.filter(w => ['queued', 'writing', 'reviewing', 'revising', 'composing_team'].includes(w.status)).length;
             const completed = workflows.filter(w => w.status === 'completed').length;
-            const failed = workflows.filter(w => w.status === 'failed').length;
+            const rejected = workflows.filter(w => w.status === 'failed' || w.status === 'rejected').length;
 
             document.getElementById('stat-total').textContent = total;
             document.getElementById('stat-active').textContent = active;
             document.getElementById('stat-completed').textContent = completed;
-            document.getElementById('stat-failed').textContent = failed;
+            document.getElementById('stat-rejected').textContent = rejected;
         }
 
         function extractTopicFromId(projectId) {
@@ -1069,6 +1116,20 @@
                 document.getElementById('refresh-status').textContent = '';
             }
         }
+
+        // Toggle rejected section
+        document.getElementById('toggle-rejected').addEventListener('click', () => {
+            const rejectedList = document.getElementById('rejected-list');
+            const arrow = document.getElementById('rejected-arrow');
+
+            if (rejectedList.style.display === 'none') {
+                rejectedList.style.display = 'flex';
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                rejectedList.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        });
 
         // Initial load
         loadWorkflows();

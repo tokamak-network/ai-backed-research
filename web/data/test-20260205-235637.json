@@ -1,0 +1,284 @@
+{
+  "topic": "Test",
+  "output_directory": "results/test-20260205-235637",
+  "max_rounds": 3,
+  "threshold": 8.0,
+  "expert_team": [
+    {
+      "id": "expert-1",
+      "name": "Test Expert",
+      "domain": "Test Expert",
+      "focus_areas": [],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "manuscript_version": "v1",
+      "word_count": 3453,
+      "reviews": [
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Test Expert",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 6
+          },
+          "average": 6.8,
+          "summary": "This is a well-structured survey of blockchain testing methodologies that provides solid coverage of existing tools and practices. However, it reads more as a practitioner's guide than a research contribution, lacking empirical validation, quantitative analysis, and novel insights that would distinguish it as original research.",
+          "strengths": [
+            "Comprehensive taxonomy covering multiple testing layers (protocol, VM, smart contract, application) with clear delineation of concerns at each level",
+            "Practical code examples demonstrating testing patterns in Foundry, Hardhat, Echidna, and Certora that would be immediately useful to practitioners",
+            "Strong coverage of the security testing landscape including vulnerability classes, audit processes, and bug bounty programs with concrete examples like the DAO hack"
+          ],
+          "weaknesses": [
+            "Lacks empirical validation - claims about tool effectiveness (e.g., 'Foundry has emerged as a leading testing framework') are not supported by comparative studies, benchmarks, or usage statistics",
+            "The methodology section claims analysis of '150 academic papers' and '50 major blockchain projects' but provides no systematic review methodology, selection criteria, or synthesis of findings from this analysis",
+            "Missing critical discussion of test oracle problems specific to blockchain - how do we determine expected behavior when specifications are often informal or incomplete?"
+          ],
+          "suggestions": [
+            "Add empirical evaluation comparing testing tools on standardized vulnerability benchmarks (e.g., SmartBugs dataset) with detection rates, false positive rates, and performance metrics",
+            "Include a systematic literature review methodology with clear inclusion/exclusion criteria, and synthesize findings rather than simply citing papers in references",
+            "Expand the formal verification section to address the specification gap problem - discuss techniques for deriving specifications from informal requirements and the verification of specification correctness itself"
+          ],
+          "detailed_feedback": "From a testing research perspective, this manuscript provides a useful survey but falls short of research-grade rigor. The taxonomy is reasonable but not novel - similar classifications exist in prior work (Durieux et al., 2020; Perez & Livshits, 2021) which should be acknowledged and differentiated from. The treatment of formal verification is superficial; while Certora and KEVM are mentioned, there's no discussion of the fundamental limitations of formal methods in this domain - specifically the semantic gap between high-level specifications and low-level bytecode, the challenge of modeling the blockchain environment (gas, storage, external calls), and the undecidability results that limit what can be verified. The section on economic testing is promising but underdeveloped - agent-based modeling code snippets are illustrative but there's no discussion of validation of such models against real market behavior. The claim that 'formal verification represents the gold standard' needs qualification; formal verification proves properties about models, not deployed systems, and the specification itself can be wrong. I would recommend restructuring this as either (a) a systematic literature review with proper methodology, or (b) an empirical study comparing testing approaches on real-world vulnerabilities. The current hybrid approach lacks the depth required for either. Additionally, the discussion of mutation testing, metamorphic testing, and differential testing - all relevant techniques for blockchain - is notably absent.",
+          "tokens": 7833
+        }
+      ],
+      "overall_average": 6.8,
+      "moderator_decision": {
+        "decision": "MAJOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive survey of blockchain testing methodologies that demonstrates clear practical value through its well-organized taxonomy and useful code examples across multiple testing frameworks. The reviewer acknowledges the work's strengths in covering the full testing stack from protocol-level to application-level concerns, with particularly strong treatment of security testing practices and real-world vulnerability examples.\n\nHowever, the submission suffers from a fundamental tension between its apparent aims and its execution. While the paper claims to analyze 150 academic papers and 50 blockchain projects, it provides no systematic methodology for this analysis\u2014no selection criteria, no synthesis framework, and no quantitative findings. This undermines the work's credibility as a research contribution. Additionally, claims about tool effectiveness remain unsupported by empirical evidence, and the formal verification discussion lacks depth on the critical specification gap problem. As currently written, the manuscript reads more as a practitioner's handbook than a scholarly contribution suitable for a top-tier venue.\n\nThe core content is sound and the topic is timely, but significant revisions are needed to elevate this from a useful guide to a rigorous research contribution. The identified weaknesses are addressable but require substantial additional work rather than minor polish.",
+        "key_strengths": [
+          "Comprehensive and well-structured taxonomy covering protocol, VM, smart contract, and application testing layers with clear separation of concerns",
+          "Practical, immediately useful code examples demonstrating testing patterns in Foundry, Hardhat, Echidna, and Certora",
+          "Strong coverage of security testing landscape including vulnerability classification, audit processes, and concrete examples like the DAO hack"
+        ],
+        "key_weaknesses": [
+          "Claims of analyzing 150 papers and 50 projects lack systematic review methodology, selection criteria, or synthesized findings",
+          "Assertions about tool effectiveness (e.g., Foundry's emergence as leading framework) unsupported by comparative benchmarks or empirical data",
+          "Insufficient treatment of the test oracle and specification gap problems that are central challenges in blockchain testing"
+        ],
+        "required_changes": [
+          "Add explicit systematic review methodology with inclusion/exclusion criteria, search strategy, and synthesis approach for the claimed literature and project analysis",
+          "Include empirical evaluation comparing testing tools on standardized benchmarks (e.g., SmartBugs dataset) with quantitative metrics including detection rates, false positive rates, and performance",
+          "Expand formal verification section to address specification derivation from informal requirements and the verification of specification correctness itself"
+        ],
+        "recommendation": "The authors should substantially revise this manuscript to strengthen its research contribution. First, either provide a rigorous systematic review methodology for the claimed analysis of 150 papers and 50 projects, or adjust claims to match actual methodology. Second, add empirical validation through comparative tool evaluation on established benchmarks\u2014this would significantly strengthen the work's contribution. Third, deepen the theoretical discussion around test oracles and specification gaps, which are fundamental challenges the current draft glosses over. The practical content is valuable, but a top-tier venue requires demonstrated rigor beyond what a blog post or documentation would provide. Consider whether the contribution is better positioned as an empirical study with novel findings or a systematic literature review with clear methodology\u2014and execute accordingly.",
+        "round": 1,
+        "overall_average": 6.8,
+        "tokens": 1707
+      },
+      "manuscript_diff": null,
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T23:59:04.789245"
+    },
+    {
+      "round": 2,
+      "manuscript_version": "v2",
+      "word_count": 4009,
+      "reviews": [
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Test Expert",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive survey of blockchain testing methodologies that demonstrates strong technical understanding and practical applicability. The manuscript provides valuable coverage of testing approaches across multiple blockchain layers, though it would benefit from deeper empirical validation and more critical analysis of tool limitations.",
+          "strengths": [
+            "Excellent systematic methodology with clear inclusion/exclusion criteria and reproducible tool evaluation against the SmartBugs benchmark dataset",
+            "Strong practical orientation with concrete code examples in Solidity, Python, and CVL that practitioners can directly apply",
+            "Thoughtful treatment of the specification gap problem and fundamental limitations of formal verification, which is often overlooked in similar surveys",
+            "Comprehensive coverage of economic testing including agent-based modeling with validation against historical data, addressing a critical gap in existing literature"
+          ],
+          "weaknesses": [
+            "The manuscript appears truncated at Section 6.4 (Stress Testing), leaving the economic testing section incomplete and missing promised sections on AI-assisted verification and 5-year projections",
+            "Tool evaluation methodology lacks statistical rigor - no confidence intervals, significance tests, or discussion of benchmark representativeness for real-world contracts",
+            "Limited critical analysis of when testing approaches fail - the 67.2% detection rate for Slither means 32.8% of vulnerabilities are missed, but implications for practitioners are not adequately discussed"
+          ],
+          "suggestions": [
+            "Complete the truncated sections and add the promised analysis of emerging paradigms (AI-assisted verification) and future projections to fulfill the stated objectives",
+            "Add statistical analysis to tool comparisons including confidence intervals, and discuss the external validity of SmartBugs benchmark results for production DeFi contracts",
+            "Include a decision framework or flowchart helping practitioners select appropriate testing methodologies based on contract complexity, value at risk, and development timeline constraints"
+          ],
+          "detailed_feedback": "From a testing expert perspective, this manuscript makes a solid contribution to the blockchain testing literature by providing a well-structured taxonomy and practical guidance. The systematic literature review methodology (Section 1.3) is commendable and follows established guidelines. The treatment of the test oracle problem (Section 3.2) is particularly valuable, as this fundamental challenge is often glossed over in practitioner-focused materials. However, several issues require attention. First, the empirical evaluation, while useful, needs strengthening - the SmartBugs dataset, while standard, contains relatively simple contracts that may not represent the complexity of modern DeFi protocols with cross-contract interactions and flash loan vectors. The detection rates reported should be contextualized with this limitation. Second, the mutation testing section (2.2.3) correctly identifies the gap between coverage and mutation scores but doesn't provide guidance on achieving adequate mutation coverage or discuss computational costs of mutation testing at scale. Third, the differential testing discussion (2.2.5) is excellent but could benefit from discussing the challenge of maintaining test oracles when all implementations might share the same bug (specification bugs). The economic testing section (Section 6) is a highlight, particularly the model validation table showing error rates against historical data - this kind of empirical grounding is rare in the literature. However, the section ends abruptly mid-sentence, which significantly undermines the manuscript's completeness. Finally, while the manuscript acknowledges formal verification limitations, it could more explicitly address the practical reality that most smart contract vulnerabilities in production have been in code that was audited and sometimes formally verified, suggesting the need for defense-in-depth approaches that the manuscript hints at but doesn't fully develop.",
+          "tokens": 9346
+        }
+      ],
+      "overall_average": 7.2,
+      "moderator_decision": {
+        "decision": "MINOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive survey of blockchain testing methodologies that demonstrates solid technical depth and practical utility. The reviewer highlights several notable strengths: a systematic methodology with reproducible evaluation criteria, strong practical orientation with implementable code examples, and thoughtful treatment of often-overlooked challenges like the specification gap in formal verification. The coverage of economic testing with agent-based modeling addresses a genuine gap in existing literature, making this a valuable contribution to the field.\n\nHowever, the submission has significant structural and methodological issues that must be addressed before publication. Most critically, the manuscript appears truncated at Section 6.4, leaving the economic testing section incomplete and omitting promised content on AI-assisted verification and future projections. This incompleteness undermines the manuscript's stated objectives. Additionally, the tool evaluation lacks statistical rigor\u2014presenting detection rates without confidence intervals or significance testing limits the reliability of comparative claims. The practical implications of tool limitations (e.g., the 32.8% miss rate for Slither) deserve more thorough discussion to guide practitioners appropriately.\n\nWith one revision round remaining, these issues are addressable but require focused attention. The core contribution is sound, and the manuscript merits publication once completeness and methodological concerns are resolved.",
+        "key_strengths": [
+          "Systematic methodology with clear inclusion/exclusion criteria and reproducible tool evaluation against established benchmarks",
+          "Strong practical orientation with concrete, implementable code examples across multiple languages (Solidity, Python, CVL)",
+          "Comprehensive coverage including economic testing and agent-based modeling, addressing critical gaps in existing survey literature"
+        ],
+        "key_weaknesses": [
+          "Manuscript is truncated at Section 6.4, missing promised sections on AI-assisted verification and 5-year projections",
+          "Tool evaluation lacks statistical rigor\u2014no confidence intervals, significance tests, or discussion of benchmark representativeness",
+          "Insufficient critical analysis of testing approach limitations and practical implications for practitioners when tools fail"
+        ],
+        "required_changes": [
+          "Complete all truncated sections including economic testing, AI-assisted verification analysis, and future projections as outlined in the manuscript's stated objectives",
+          "Add statistical analysis to tool comparisons including confidence intervals and discuss external validity of SmartBugs benchmark results for production contracts",
+          "Include a practitioner-oriented decision framework or flowchart for selecting testing methodologies based on contract complexity, value at risk, and development constraints"
+        ],
+        "recommendation": "The manuscript makes a valuable contribution to blockchain testing literature but requires completion and methodological strengthening before acceptance. Authors should prioritize: (1) completing all missing sections to fulfill stated objectives, (2) adding statistical rigor to tool evaluations, and (3) providing clearer practical guidance on methodology selection and tool limitations. Given this is round 2 of 3, authors have one final opportunity to address these concerns. A thorough revision addressing all points should position this work for acceptance.",
+        "round": 2,
+        "overall_average": 7.2,
+        "tokens": 1643
+      },
+      "manuscript_diff": {
+        "words_added": 556,
+        "previous_version": "v1",
+        "current_version": "v2"
+      },
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-06T00:02:03.635703"
+    },
+    {
+      "round": 3,
+      "manuscript_version": "v3",
+      "word_count": 4267,
+      "reviews": [
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Test Expert",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive survey of blockchain testing methodologies that demonstrates solid technical understanding and provides practical guidance. The manuscript has improved significantly with the addition of statistical rigor, benchmark limitations acknowledgment, and the specification gap discussion, though some sections remain incomplete and certain claims would benefit from additional empirical support.",
+          "strengths": [
+            "Excellent systematic methodology with clear inclusion/exclusion criteria, statistical approach using Wilson score intervals and McNemar's test, and transparent acknowledgment of benchmark limitations",
+            "Strong treatment of the specification gap problem in formal verification, including real-world evidence from exploited contracts that had undergone verification - this addresses a critical but often overlooked limitation",
+            "Practical decision framework elements throughout, including specific recommendations for when formal verification is/isn't appropriate and mutation score targets for critical financial logic"
+          ],
+          "weaknesses": [
+            "Section 6 on Economic and Game-Theoretic Testing is truncated mid-code, leaving a critical section incomplete - this is particularly problematic given the manuscript's own finding that 34% of exploits involved oracle manipulation and 22% involved economic mechanism flaws",
+            "The tool evaluation relies heavily on SmartBugs benchmark despite acknowledged limitations; the supplementary analysis of 25 real-world exploited contracts is mentioned but results are not presented, weakening claims about tool effectiveness on production systems",
+            "Missing coverage of several important testing domains: cross-chain bridge testing (responsible for >$2B in losses), MEV-related testing, and governance attack testing - these represent significant gaps given current threat landscape"
+          ],
+          "suggestions": [
+            "Complete Section 6 with the agent-based modeling code example and add substantive coverage of game-theoretic analysis methods, mechanism design testing, and economic simulation validation approaches",
+            "Present the results from the 25 real-world exploited contracts analysis, even with appropriate caveats about sample size - this would significantly strengthen the practical applicability claims",
+            "Add a dedicated subsection on cross-chain and bridge testing methodologies, as this represents one of the highest-risk areas in current blockchain infrastructure and is conspicuously absent"
+          ],
+          "detailed_feedback": "This revision shows substantial improvement in methodological rigor, particularly in the statistical treatment of tool comparisons and the honest acknowledgment of limitations. The addition of confidence intervals, McNemar's test for significance, and explicit discussion of the SmartBugs benchmark's representativeness issues demonstrates mature scientific thinking. The specification gap discussion in Section 3.4 is particularly valuable - the finding that 80% of exploited formally-verified contracts had vulnerabilities outside verified properties is an important contribution that practitioners need to understand.\n\nHowever, the manuscript suffers from an incomplete Section 6, which is especially problematic given that your own data shows economic vulnerabilities account for the majority of DeFi exploits. The agent-based modeling code cuts off mid-implementation, and there's no discussion of how to validate economic models against historical data, how to parameterize agent strategies, or how to interpret simulation results. This section needs substantial expansion.\n\nThe differential testing discussion appropriately notes the specification oracle problem, but could be strengthened with more examples of how this manifests in practice. The mutation testing coverage is good but would benefit from discussion of equivalent mutant detection strategies and how to prioritize mutants for large codebases.\n\nFor the tool evaluation, while I appreciate the transparency about SmartBugs limitations, the promised supplementary analysis of real-world exploited contracts is mentioned but never delivered. Either present these results or remove the reference. Additionally, the claim that Echidna detected 43% of vulnerabilities missed by static analysis needs more context - what types of vulnerabilities, and how does this translate to practical recommendations for tool selection?\n\nThe manuscript would also benefit from a consolidated decision framework or flowchart that synthesizes the various recommendations scattered throughout into actionable guidance for practitioners with different risk profiles and resource constraints.",
+          "tokens": 9439
+        }
+      ],
+      "overall_average": 7.2,
+      "moderator_decision": {
+        "decision": "MINOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive survey of blockchain testing methodologies that has evolved substantially through the review process. The reviewer acknowledges significant improvements in statistical rigor, including the adoption of Wilson score intervals and McNemar's test, as well as thoughtful treatment of the specification gap problem in formal verification\u2014a nuanced issue that many surveys overlook. The systematic methodology with clear inclusion/exclusion criteria and the practical decision framework elements represent genuine contributions to the field.\n\nHowever, several issues prevent immediate acceptance. Most critically, Section 6 on Economic and Game-Theoretic Testing is truncated mid-code, leaving a substantively important section incomplete. This is particularly concerning given the manuscript's own empirical finding that 34% of exploits involved oracle manipulation and 22% involved economic mechanism flaws\u2014the incomplete section directly addresses the testing approaches most relevant to these dominant attack vectors. Additionally, the absence of cross-chain bridge testing coverage represents a significant gap given that bridge exploits have caused over $2 billion in losses. The supplementary analysis of 25 real-world exploited contracts is mentioned but results are not presented, which undermines claims about practical applicability.\n\nDespite these issues, the manuscript demonstrates clear scientific merit and the required changes are well-defined and achievable. The core contributions\u2014the systematic methodology, specification gap analysis, and practical decision frameworks\u2014are sound. Given this is the final review round and the issues are specific and addressable rather than fundamental, a minor revision is appropriate to allow the authors to complete the truncated section and address the coverage gaps.",
+        "key_strengths": [
+          "Rigorous systematic methodology with transparent statistical approaches (Wilson score intervals, McNemar's test) and explicit acknowledgment of benchmark limitations",
+          "Insightful treatment of the specification gap problem in formal verification, supported by real-world evidence from exploited contracts that had undergone verification",
+          "Practical decision framework with actionable guidance on when formal verification is appropriate and specific mutation score targets for critical financial logic"
+        ],
+        "key_weaknesses": [
+          "Section 6 on Economic and Game-Theoretic Testing is truncated mid-code, leaving critical content incomplete despite the manuscript's own evidence that 56% of exploits involve economic/oracle vulnerabilities",
+          "Missing coverage of cross-chain bridge testing methodologies, a conspicuous gap given bridges represent one of the highest-loss attack surfaces in blockchain infrastructure",
+          "Results from the 25 real-world exploited contracts analysis are mentioned but not presented, weakening empirical support for practical applicability claims"
+        ],
+        "required_changes": [
+          "Complete Section 6 with the agent-based modeling code example and substantive coverage of game-theoretic analysis methods, mechanism design testing, and economic simulation validation",
+          "Add a dedicated subsection (even if brief) on cross-chain and bridge testing methodologies, acknowledging this as an emerging area if comprehensive coverage is not yet possible",
+          "Present the results from the 25 real-world exploited contracts analysis with appropriate caveats about sample size, or remove references to this unpresented analysis"
+        ],
+        "recommendation": "The manuscript is close to acceptance but requires completion of the truncated Section 6 and addressing the identified coverage gaps. Authors should prioritize: (1) finishing the economic/game-theoretic testing section with the promised code example and substantive methodological content, (2) adding at minimum a discussion of cross-chain testing challenges and emerging approaches, and (3) either presenting the real-world exploit analysis results or removing references to unpresented data. These are bounded, achievable revisions that would bring the manuscript to publication quality. The core contributions are solid\u2014focus the revision on completeness rather than restructuring.",
+        "round": 3,
+        "overall_average": 7.2,
+        "tokens": 1878
+      },
+      "manuscript_diff": {
+        "words_added": 258,
+        "previous_version": "v2",
+        "current_version": "v3"
+      },
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-06T00:05:12.337309"
+    }
+  ],
+  "final_score": 7.2,
+  "passed": false,
+  "total_rounds": 3,
+  "performance": {
+    "workflow_start": "2026-02-05T23:56:37.650916",
+    "workflow_end": "2026-02-06T00:05:12.339742",
+    "total_duration": 514.69,
+    "initial_draft_time": 110.59,
+    "initial_draft_tokens": 0,
+    "team_composition_time": 0.0,
+    "team_composition_tokens": 0,
+    "rounds": [
+      {
+        "round_number": 1,
+        "review_start": "2026-02-05T23:58:28.245313",
+        "review_end": "2026-02-05T23:59:04.789074",
+        "review_duration": 36.54,
+        "reviewer_times": {
+          "expert-1": 20.86
+        },
+        "moderator_time": 15.66,
+        "revision_time": null,
+        "round_tokens": 7833
+      },
+      {
+        "round_number": 2,
+        "review_start": "2026-02-06T00:01:28.080119",
+        "review_end": "2026-02-06T00:02:03.635561",
+        "review_duration": 35.56,
+        "reviewer_times": {
+          "expert-1": 22.1
+        },
+        "moderator_time": 13.43,
+        "revision_time": null,
+        "round_tokens": 9346
+      },
+      {
+        "round_number": 3,
+        "review_start": "2026-02-06T00:04:33.035588",
+        "review_end": "2026-02-06T00:05:12.337165",
+        "review_duration": 39.3,
+        "reviewer_times": {
+          "expert-1": 23.01
+        },
+        "moderator_time": 16.27,
+        "revision_time": null,
+        "round_tokens": 9439
+      }
+    ],
+    "total_tokens": 26618,
+    "estimated_cost": 0.08
+  },
+  "timestamp": "2026-02-06T00:05:12.340943"
+}
