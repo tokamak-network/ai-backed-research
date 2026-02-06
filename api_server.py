@@ -277,6 +277,76 @@ async def get_workflow_activity(project_id: str, limit: int = 50):
     return {"activity": logs[-limit:][::-1]}
 
 
+@app.post("/api/workflows/{project_id}/resume")
+async def resume_workflow(project_id: str, background_tasks: BackgroundTasks):
+    """Resume a workflow from checkpoint."""
+    try:
+        from pathlib import Path
+
+        # Find project directory
+        results_dir = Path("results")
+        project_dir = None
+
+        for dir_path in results_dir.iterdir():
+            if dir_path.is_dir() and dir_path.name == project_id:
+                project_dir = dir_path
+                break
+
+        if not project_dir:
+            raise HTTPException(status_code=404, detail=f"Project directory not found: {project_id}")
+
+        # Check for checkpoint
+        checkpoint_file = project_dir / "workflow_checkpoint.json"
+        if not checkpoint_file.exists():
+            raise HTTPException(status_code=400, detail="No checkpoint found for this workflow")
+
+        # Load checkpoint to get info
+        import json
+        with open(checkpoint_file) as f:
+            checkpoint = json.load(f)
+
+        # Initialize workflow status if not exists
+        if project_id not in workflow_status:
+            workflow_status[project_id] = {
+                "project_id": project_id,
+                "status": "queued",
+                "current_round": checkpoint["current_round"],
+                "total_rounds": checkpoint["max_rounds"],
+                "progress_percentage": int((checkpoint["current_round"] / checkpoint["max_rounds"]) * 100),
+                "message": f"Resuming from Round {checkpoint['current_round']}...",
+                "error": None,
+                "expert_status": [],
+                "cost_estimate": None,
+                "start_time": datetime.now().isoformat(),
+                "elapsed_time_seconds": 0,
+                "estimated_time_remaining_seconds": (checkpoint["max_rounds"] - checkpoint["current_round"]) * 180
+            }
+
+        # Initialize activity log
+        if project_id not in activity_logs:
+            activity_logs[project_id] = []
+
+        add_activity_log(project_id, "info", f"Resuming workflow from Round {checkpoint['current_round']}")
+
+        # Start resume task in background
+        background_tasks.add_task(
+            resume_workflow_background,
+            project_id=project_id,
+            project_dir=project_dir
+        )
+
+        return {
+            "project_id": project_id,
+            "status": "queued",
+            "message": f"Workflow resumed from Round {checkpoint['current_round']}"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to resume workflow: {str(e)}")
+
+
 def add_activity_log(project_id: str, level: str, message: str, details: dict = None):
     """Add entry to activity log."""
     if project_id not in activity_logs:
@@ -316,6 +386,34 @@ def calculate_cost_estimate(input_tokens: int, output_tokens: int, model: str = 
             }
         }
     }
+
+
+async def resume_workflow_background(project_id: str, project_dir: Path):
+    """Resume workflow from checkpoint in background."""
+    try:
+        from research_cli.workflow.orchestrator import WorkflowOrchestrator
+
+        # Status callback
+        def status_update(status: str, round_num: int, message: str):
+            update_workflow_status(project_id, status, round_num, 0, message)
+
+        # Resume from checkpoint
+        result = await WorkflowOrchestrator.resume_from_checkpoint(
+            output_dir=project_dir,
+            status_callback=status_update
+        )
+
+        # Mark as completed
+        update_workflow_status(project_id, "completed", result["total_rounds"], result["total_rounds"], "Workflow completed successfully")
+        add_activity_log(project_id, "success", f"Workflow completed with score {result['final_score']}/10")
+
+    except Exception as e:
+        error_msg = f"Workflow failed: {str(e)}"
+        update_workflow_status(project_id, "failed", 0, 0, error_msg)
+        add_activity_log(project_id, "error", error_msg, {"error": str(e)})
+
+        if project_id in workflow_status:
+            workflow_status[project_id]["error"] = error_msg
 
 
 async def run_workflow_background(

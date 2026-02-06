@@ -493,6 +493,9 @@ class WorkflowOrchestrator:
 
             all_rounds.append(round_data)
 
+            # Save checkpoint for resume capability
+            self._save_checkpoint(round_num, current_manuscript, all_rounds)
+
             # Check if passed
             if moderator_decision["decision"] == "ACCEPT":
                 console.print(f"\n[bold green]✓ ACCEPTED BY MODERATOR[/bold green]")
@@ -645,4 +648,322 @@ class WorkflowOrchestrator:
 
         console.print(f"[bold green]✓ Complete workflow saved:[/bold green] {workflow_file}\n")
 
+        # Remove checkpoint file on successful completion
+        checkpoint_file = self.output_dir / "workflow_checkpoint.json"
+        if checkpoint_file.exists():
+            checkpoint_file.unlink()
+
         return workflow_data
+
+    def _save_checkpoint(self, round_num: int, current_manuscript: str, all_rounds: List[dict]):
+        """Save checkpoint for resume capability.
+
+        Args:
+            round_num: Current round number
+            current_manuscript: Current manuscript text
+            all_rounds: All round data so far
+        """
+        checkpoint = {
+            "topic": self.topic,
+            "current_round": round_num,
+            "max_rounds": self.max_rounds,
+            "threshold": self.threshold,
+            "current_manuscript": current_manuscript,
+            "all_rounds": all_rounds,
+            "expert_configs": [config.to_dict() for config in self.expert_configs],
+            "checkpoint_time": datetime.now().isoformat(),
+            "status": "in_progress"
+        }
+
+        checkpoint_file = self.output_dir / "workflow_checkpoint.json"
+        with open(checkpoint_file, "w") as f:
+            json.dump(checkpoint, f, indent=2)
+
+    @classmethod
+    async def resume_from_checkpoint(cls, output_dir: Path, status_callback=None) -> dict:
+        """Resume workflow from checkpoint.
+
+        Args:
+            output_dir: Directory containing checkpoint
+            status_callback: Optional status callback function
+
+        Returns:
+            Workflow results dictionary
+
+        Raises:
+            FileNotFoundError: If no checkpoint found
+            ValueError: If checkpoint is invalid
+        """
+        checkpoint_file = output_dir / "workflow_checkpoint.json"
+
+        if not checkpoint_file.exists():
+            raise FileNotFoundError(f"No checkpoint found in {output_dir}")
+
+        console.print(f"\n[cyan]Resuming workflow from checkpoint...[/cyan]")
+
+        # Load checkpoint
+        with open(checkpoint_file) as f:
+            checkpoint = json.load(f)
+
+        # Reconstruct expert configs
+        from ..models.expert import ExpertConfig
+        expert_configs = [ExpertConfig.from_dict(cfg) for cfg in checkpoint["expert_configs"]]
+
+        # Create orchestrator
+        orchestrator = cls(
+            expert_configs=expert_configs,
+            topic=checkpoint["topic"],
+            max_rounds=checkpoint["max_rounds"],
+            threshold=checkpoint["threshold"],
+            output_dir=output_dir,
+            status_callback=status_callback
+        )
+
+        # Restore state
+        current_round = checkpoint["current_round"]
+        current_manuscript = checkpoint["current_manuscript"]
+        all_rounds = checkpoint["all_rounds"]
+
+        console.print(f"[green]✓ Loaded checkpoint from Round {current_round}[/green]")
+        console.print(f"[cyan]Continuing from Round {current_round + 1}...[/cyan]\n")
+
+        # Resume from next round
+        return await orchestrator._resume_workflow(
+            current_round,
+            current_manuscript,
+            all_rounds
+        )
+
+    async def _resume_workflow(
+        self,
+        start_round: int,
+        current_manuscript: str,
+        all_rounds: List[dict]
+    ) -> dict:
+        """Continue workflow from a specific round.
+
+        Args:
+            start_round: Round number to resume from
+            current_manuscript: Current manuscript state
+            all_rounds: Round history
+
+        Returns:
+            Workflow results dictionary
+        """
+        self.tracker.start_workflow()
+
+        # Check last round's decision
+        last_round = all_rounds[-1]
+        last_decision = last_round["moderator_decision"]["decision"]
+
+        console.print(f"[cyan]Last decision: {last_decision}[/cyan]")
+
+        # If already accepted, finalize
+        if last_decision == "ACCEPT":
+            console.print(f"[green]✓ Paper already accepted in Round {start_round}[/green]")
+            return await self._finalize_workflow(all_rounds)
+
+        # If at max rounds, finalize
+        if start_round >= self.max_rounds:
+            console.print(f"[yellow]⚠ Already at max rounds ({self.max_rounds})[/yellow]")
+            return await self._finalize_workflow(all_rounds)
+
+        # Continue iteration from next round
+        previous_manuscript = current_manuscript
+
+        for round_num in range(start_round + 1, self.max_rounds + 1):
+            console.print("\n" + "="*80 + "\n")
+
+            # Run review
+            if self.status_callback:
+                self.status_callback("reviewing", round_num, f"Round {round_num}/{self.max_rounds}: Expert reviews in progress...")
+
+            # Get previous reviews and rebuttal
+            prev_reviews = all_rounds[-1]['reviews'] if all_rounds else None
+            prev_rebuttal = all_rounds[-1].get('author_rebuttal') if all_rounds else None
+
+            reviews, overall_average = await run_review_round(
+                current_manuscript,
+                round_num,
+                self.specialists,
+                self.tracker,
+                prev_reviews,
+                previous_manuscript,
+                prev_rebuttal
+            )
+
+            if self.status_callback:
+                self.status_callback("reviewing", round_num, f"Round {round_num}/{self.max_rounds}: Reviews complete, moderator evaluating...")
+
+            # Moderator decision
+            console.print("\n[cyan]Moderator evaluating reviews...[/cyan]")
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console
+            ) as progress:
+                task = progress.add_task("[cyan]Moderator making decision...", total=None)
+                self.tracker.start_operation("moderator")
+                moderator_decision = await self.moderator.make_decision(
+                    current_manuscript,
+                    reviews,
+                    round_num,
+                    self.max_rounds,
+                    previous_rounds=all_rounds
+                )
+                moderator_time = self.tracker.end_operation("moderator")
+                self.tracker.record_moderator_time(moderator_time)
+                progress.update(task, completed=True)
+
+            # Display decision
+            decision_color = {
+                "ACCEPT": "green",
+                "MINOR_REVISION": "yellow",
+                "MAJOR_REVISION": "yellow",
+                "REJECT": "red"
+            }.get(moderator_decision["decision"], "white")
+
+            console.print(Panel.fit(
+                f"[bold {decision_color}]Decision: {moderator_decision['decision']}[/bold {decision_color}]\n"
+                f"Confidence: {moderator_decision['confidence']}/5\n\n"
+                f"[bold]Meta-Review:[/bold]\n{moderator_decision['meta_review']}\n\n"
+                f"[bold]Required Changes:[/bold]\n" +
+                "\n".join(f"• {c}" for c in moderator_decision['required_changes']),
+                title="Moderator Decision",
+                border_style=decision_color
+            ))
+
+            # Author rebuttal
+            author_rebuttal = None
+            if moderator_decision["decision"] != "ACCEPT":
+                console.print("\n[cyan]Author writing rebuttal...[/cyan]")
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    console=console
+                ) as progress:
+                    task = progress.add_task("[cyan]Author responding to reviews...", total=None)
+                    self.tracker.start_operation("rebuttal")
+                    author_rebuttal = await self.writer.write_rebuttal(
+                        current_manuscript,
+                        reviews,
+                        round_num
+                    )
+                    rebuttal_time = self.tracker.end_operation("rebuttal")
+                    progress.update(task, completed=True)
+
+                console.print(f"[green]✓ Author rebuttal complete[/green]")
+
+                rebuttal_preview = author_rebuttal[:300] + "..." if len(author_rebuttal) > 300 else author_rebuttal
+                console.print(Panel.fit(
+                    rebuttal_preview,
+                    title="Author Rebuttal (preview)",
+                    border_style="cyan"
+                ))
+
+                rebuttal_file = self.output_dir / f"rebuttal_round_{round_num}.md"
+                rebuttal_file.write_text(author_rebuttal)
+                console.print(f"[dim]Saved: {rebuttal_file}[/dim]")
+
+            # Calculate diff
+            manuscript_diff = None
+            if previous_manuscript:
+                words_added = len(current_manuscript.split()) - len(previous_manuscript.split())
+                manuscript_diff = {
+                    "words_added": words_added,
+                    "previous_version": f"v{round_num-1}",
+                    "current_version": f"v{round_num}"
+                }
+
+            # End round tracking
+            self.tracker.end_round()
+
+            # Save round data
+            round_data = {
+                "round": round_num,
+                "manuscript_version": f"v{round_num}",
+                "word_count": len(current_manuscript.split()),
+                "reviews": reviews,
+                "overall_average": round(overall_average, 1),
+                "moderator_decision": moderator_decision,
+                "author_rebuttal": author_rebuttal,
+                "manuscript_diff": manuscript_diff,
+                "threshold": self.threshold,
+                "passed": moderator_decision["decision"] == "ACCEPT",
+                "timestamp": datetime.now().isoformat()
+            }
+
+            round_file = self.output_dir / f"round_{round_num}.json"
+            with open(round_file, "w") as f:
+                json.dump(round_data, f, indent=2)
+            console.print(f"[dim]Saved: {round_file}[/dim]")
+
+            all_rounds.append(round_data)
+
+            # Save checkpoint
+            self._save_checkpoint(round_num, current_manuscript, all_rounds)
+
+            # Check if passed
+            if moderator_decision["decision"] == "ACCEPT":
+                console.print(f"\n[bold green]✓ ACCEPTED BY MODERATOR[/bold green]")
+                console.print(f"[green]Manuscript accepted after {round_num} round(s) of review![/green]\n")
+
+                final_path = self.output_dir / "manuscript_final.md"
+                final_path.write_text(current_manuscript)
+                console.print(f"[green]Final manuscript saved:[/green] {final_path}")
+
+                if self.status_callback:
+                    self.status_callback("completed", round_num, f"Report completed successfully after {round_num} rounds")
+                break
+
+            # Check if max rounds reached
+            if round_num >= self.max_rounds:
+                console.print(f"\n[yellow]⚠ MAX ROUNDS REACHED[/yellow]")
+                console.print(f"[yellow]Final decision: {moderator_decision['decision']}[/yellow]\n")
+
+                final_path = self.output_dir / f"manuscript_final_v{round_num}.md"
+                final_path.write_text(current_manuscript)
+                console.print(f"[yellow]Best attempt saved:[/yellow] {final_path}")
+                break
+
+            # Need revision
+            revision_type = moderator_decision["decision"].replace("_", " ")
+            console.print(f"\n[yellow]⚠ {revision_type} REQUIRED[/yellow]")
+            console.print(f"[cyan]Round {round_num + 1}: Generating revision...[/cyan]\n")
+
+            previous_manuscript = current_manuscript
+
+            # Generate revision
+            if self.status_callback:
+                self.status_callback("revising", round_num, f"Round {round_num}: Revising manuscript based on feedback...")
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console
+            ) as progress:
+                task = progress.add_task("[cyan]Writer revising manuscript...", total=None)
+                self.tracker.start_operation("revision")
+                revised_manuscript = await self.writer.revise_manuscript(
+                    current_manuscript,
+                    reviews,
+                    round_num
+                )
+                revision_time = self.tracker.end_operation("revision")
+                self.tracker.record_revision_time(revision_time)
+                progress.update(task, completed=True)
+
+            new_word_count = len(revised_manuscript.split())
+            word_change = new_word_count - len(current_manuscript.split())
+            console.print(f"[green]✓ Revision complete[/green]")
+            console.print(f"New length: {new_word_count:,} words ([{word_change:+,}])\n")
+
+            # Save revised manuscript
+            manuscript_path_next = self.output_dir / f"manuscript_v{round_num + 1}.md"
+            manuscript_path_next.write_text(revised_manuscript)
+            console.print(f"[dim]Saved: {manuscript_path_next}[/dim]")
+
+            current_manuscript = revised_manuscript
+
+        # Generate summary and export
+        return await self._finalize_workflow(all_rounds)
