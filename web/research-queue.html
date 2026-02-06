@@ -759,6 +759,10 @@
                 const acceptedWorkflows = workflows.filter(wf => wf.status === 'completed');
                 const rejectedWorkflows = workflows.filter(wf => wf.status === 'rejected' || wf.status === 'failed');
 
+                console.log('Total workflows:', workflows.length);
+                console.log('Accepted:', acceptedWorkflows.length);
+                console.log('Rejected:', rejectedWorkflows.length);
+
                 displayWorkflows(acceptedWorkflows, rejectedWorkflows);
                 updateStats(workflows);
 
@@ -766,18 +770,23 @@
                 console.error('Error loading workflows:', error);
                 document.getElementById('refresh-status').innerHTML =
                     '<span style="color: var(--error);">Connection error</span>';
-                displayWorkflows([]);
+                displayWorkflows([], []);
                 updateStats([]);
             }
         }
 
         function displayWorkflows(acceptedWorkflows, rejectedWorkflows) {
+            console.log('displayWorkflows called:', {
+                accepted: acceptedWorkflows?.length,
+                rejected: rejectedWorkflows?.length
+            });
+
             const listDiv = document.getElementById('workflow-list');
             const rejectedListDiv = document.getElementById('rejected-list');
             const emptyDiv = document.getElementById('empty-state');
             const rejectedCountSpan = document.getElementById('rejected-count');
 
-            const allWorkflows = [...acceptedWorkflows, ...rejectedWorkflows];
+            const allWorkflows = [...(acceptedWorkflows || []), ...(rejectedWorkflows || [])];
 
             if (allWorkflows.length === 0) {
                 listDiv.innerHTML = '';
@@ -807,8 +816,13 @@
             rejectedListDiv.innerHTML = rejectedWorkflows.map(wf => createWorkflowCard(wf)).join('');
 
             // Update rejected count
-            rejectedCountSpan.textContent = rejectedWorkflows.length;
-            document.getElementById('toggle-rejected').style.display = rejectedWorkflows.length > 0 ? 'flex' : 'none';
+            const rejectedCount = rejectedWorkflows?.length || 0;
+            rejectedCountSpan.textContent = rejectedCount;
+            const toggleBtn = document.getElementById('toggle-rejected');
+            if (toggleBtn) {
+                toggleBtn.style.display = rejectedCount > 0 ? 'flex' : 'none';
+                console.log('Rejected button display:', rejectedCount > 0 ? 'flex' : 'none', 'Count:', rejectedCount);
+            }
 
             // Scroll to highlighted workflow
             const urlParams = new URLSearchParams(window.location.search);
