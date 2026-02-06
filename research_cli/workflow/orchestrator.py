@@ -360,7 +360,8 @@ class WorkflowOrchestrator:
                     current_manuscript,
                     reviews,
                     round_num,
-                    self.max_rounds
+                    self.max_rounds,
+                    previous_rounds=all_rounds  # Pass previous rounds for trajectory analysis
                 )
                 moderator_time = self.tracker.end_operation("moderator")
                 self.tracker.record_moderator_time(moderator_time)
