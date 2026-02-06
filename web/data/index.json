@@ -1,6 +1,18 @@
 {
   "projects": [
     {
+      "id": "ai-+-crypto-financial-impact-20260206-165504",
+      "topic": "AI + Crypto Financial Impact",
+      "final_score": 7.0,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "timestamp": "2026-02-06T19:50:46.282349",
+      "data_file": "data/ai-+-crypto-financial-impact-20260206-165504.json",
+      "elapsed_time_seconds": 139,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
       "id": "efficient-and-realistic-secure-voting-mechanism-for-blockchain-based-dao-20260206-155500",
       "topic": "efficient and realistic secure voting mechanism for blockchain based DAO",
       "final_score": 6.9,
@@ -241,5 +253,5 @@
       "final_decision": "PENDING"
     }
   ],
-  "updated_at": "2026-02-06T16:06:51.291229"
+  "updated_at": "2026-02-06T19:56:36.714027"
 }
