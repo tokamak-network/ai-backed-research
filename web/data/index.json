@@ -1,6 +1,70 @@
 {
   "projects": [
     {
+      "id": "expectation-on-changes-in-crypto-industry-by-the-recent-ai-innovation-(2026-feb.)-20260207-021056",
+      "topic": "Expectation on Changes in Crypto industry by the recent AI innovation (2026 Feb.)",
+      "final_score": 7.9,
+      "passed": true,
+      "status": "completed",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 5.8,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.0,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.9,
+          "decision": "ACCEPT",
+          "passed": true
+        }
+      ],
+      "timestamp": "2026-02-07T02:25:15.022667",
+      "data_file": "data/expectation-on-changes-in-crypto-industry-by-the-recent-ai-innovation-(2026-feb.)-20260207-021056.json",
+      "elapsed_time_seconds": 858,
+      "final_decision": "ACCEPT"
+    },
+    {
+      "id": "under-recent-ai-discuption-(2026-feb),-crypto's-change-(e.g.-ai+crypto,-instant-finality-and-etc)-20260207-005433",
+      "topic": "Under recent AI discuption (2026 Feb), Crypto's change (e.g. AI+Crypto, Instant finality and etc)",
+      "final_score": 6.8,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.0,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.0,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 6.8,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-07T01:48:04.524198",
+      "data_file": "data/under-recent-ai-discuption-(2026-feb),-crypto's-change-(e.g.-ai+crypto,-instant-finality-and-etc)-20260207-005433.json",
+      "elapsed_time_seconds": 118,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
       "id": "ethereum-layer-2's-slow-developments-to-rollup-stage-2-20260206-221218",
       "topic": "Ethereum Layer 2's slow developments to Rollup Stage 2",
       "final_score": 7.5,
@@ -707,5 +771,5 @@
       "final_decision": "PENDING"
     }
   ],
-  "updated_at": "2026-02-07T01:04:51.165355"
+  "updated_at": "2026-02-07T02:25:15.096341"
 }

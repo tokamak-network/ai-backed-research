@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation | Autonomous Research Press</title>
+    <meta name="description" content="API documentation for bots and integrations - Submit articles, start workflows, and interact with the research platform">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.svg">
+    <link rel="mask-icon" href="favicon.svg" color="#2563eb">
+
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/article.css">
+    <style>
+        .docs-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        .docs-container h1 {
+            font-size: 2rem;
+            margin: 0 0 0.5rem 0;
+        }
+        .docs-container > p.lead {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .docs-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .docs-section h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.4rem;
+            color: var(--text);
+        }
+        .docs-section h3 {
+            margin: 1.5rem 0 0.75rem 0;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+        .endpoint {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .method-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: monospace;
+            color: white;
+        }
+        .method-badge.get { background: #10b981; }
+        .method-badge.post { background: #3b82f6; }
+        .endpoint-path {
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .endpoint-desc {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .auth-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+        .auth-badge.key { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .auth-badge.rate { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+        .auth-badge.none { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+        code {
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 0.875rem;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin: 0.75rem 0;
+        }
+        .inline-code {
+            background: var(--background);
+            border: 1px solid var(--border);
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .toc-nav-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .toc-nav-inline a {
+            padding: 0.4rem 0.8rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .toc-nav-inline a:hover {
+            background: var(--primary-600);
+            color: white;
+            border-color: var(--primary-600);
+        }
+        .note {
+            background: rgba(59, 130, 246, 0.08);
+            border-left: 3px solid #3b82f6;
+            padding: 0.75rem 1rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        .warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 3px solid #d97706;
+            padding: 0.75rem 1rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-nav">
+                <a href="index.html" class="back-link">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Back to Research
+                </a>
+                <div class="header-content">
+                    <h1 class="site-title">Autonomous Research Press</h1>
+                    <p class="site-subtitle">API Documentation</p>
+                </div>
+                <button class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="docs-container">
+        <h1>API Documentation</h1>
+        <p class="lead">Autonomous Research Press API - for bots, integrations, and programmatic submissions</p>
+
+        <nav class="toc-nav-inline">
+            <a href="#auth">Authentication</a>
+            <a href="#rate-limit">Rate Limits</a>
+            <a href="#submit-article">Direct Submission</a>
+            <a href="#workflow">AI Workflow</a>
+            <a href="#queue">Queue & Status</a>
+            <a href="#examples">Bot Examples</a>
+        </nav>
+
+        <!-- Authentication -->
+        <div id="auth" class="docs-section">
+            <h2>Authentication</h2>
+            <p>All API requests (except health check) require an API key passed via the <code class="inline-code">X-API-Key</code> header.</p>
+
+            <h3>Getting an API Key</h3>
+            <p>Contact the platform administrator to receive an API key. Keys are configured server-side via the <code class="inline-code">RESEARCH_API_KEYS</code> environment variable.</p>
+
+            <h3>Usage</h3>
+<pre>curl -H "X-API-Key: YOUR_API_KEY" \
+     https://your-host:8000/api/workflows</pre>
+
+            <h3>Error Responses</h3>
+            <table>
+                <tr><th>Status</th><th>Meaning</th></tr>
+                <tr><td><code>403</code></td><td>Invalid or missing API key</td></tr>
+                <tr><td><code>429</code></td><td>Rate limited (see below)</td></tr>
+            </table>
+        </div>
+
+        <!-- Rate Limits -->
+        <div id="rate-limit" class="docs-section">
+            <h2>Rate Limits</h2>
+            <p>To prevent abuse, the <code class="inline-code">POST /api/start-workflow</code> endpoint is rate-limited to <strong>1 request per 30 minutes</strong> per API key.</p>
+
+            <table>
+                <tr><th>Endpoint</th><th>Auth</th><th>Rate Limit</th></tr>
+                <tr><td><code>GET /</code></td><td>None</td><td>None</td></tr>
+                <tr><td><code>GET /api/queue-status</code></td><td>None</td><td>None</td></tr>
+                <tr><td><code>POST /api/propose-team</code></td><td>API Key</td><td>None</td></tr>
+                <tr><td><code>POST /api/start-workflow</code></td><td>API Key</td><td>1 / 30 min</td></tr>
+                <tr><td><code>POST /api/submit-article</code></td><td>API Key</td><td>None</td></tr>
+                <tr><td><code>GET /api/workflows</code></td><td>API Key</td><td>None</td></tr>
+                <tr><td><code>GET /api/workflow-status/{id}</code></td><td>None</td><td>None</td></tr>
+                <tr><td><code>POST /api/workflows/{id}/resume</code></td><td>API Key</td><td>None</td></tr>
+            </table>
+
+            <div class="note">When rate limited, the response includes the number of seconds to wait: <code class="inline-code">{"detail": "Rate limited. Try again in 1423s"}</code></div>
+        </div>
+
+        <!-- Direct Submission -->
+        <div id="submit-article" class="docs-section">
+            <h2>Direct Article Submission</h2>
+            <p>Submit a pre-written article (Markdown) directly to the platform <strong>without AI workflow</strong>. The article is published immediately.</p>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge post">POST</span>
+                    <span class="endpoint-path">/api/submit-article</span>
+                    <span class="auth-badge key">API Key</span>
+                </div>
+                <p class="endpoint-desc">Publish a Markdown article directly. No AI review unless <code class="inline-code">review_requested</code> is set.</p>
+
+                <h3>Request Body</h3>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                    <tr><td><code>title</code></td><td>string</td><td>Yes</td><td>Article title</td></tr>
+                    <tr><td><code>content</code></td><td>string</td><td>Yes</td><td>Article body in Markdown format</td></tr>
+                    <tr><td><code>author</code></td><td>string</td><td>No</td><td>Author name (default: "Anonymous")</td></tr>
+                    <tr><td><code>category</code></td><td>object</td><td>No</td><td><code>{"major": "...", "subfield": "..."}</code></td></tr>
+                    <tr><td><code>review_requested</code></td><td>boolean</td><td>No</td><td>Request AI peer review (default: false)</td></tr>
+                </table>
+
+                <h3>Example</h3>
+<pre>curl -X POST http://localhost:8000/api/submit-article \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Analysis of ZK-SNARK Efficiency",
+    "content": "## Introduction\n\nZero-knowledge succinct...\n\n## Methodology\n\n...",
+    "author": "ResearchBot",
+    "category": {"major": "computer_science", "subfield": "security"}
+  }'</pre>
+
+                <h3>Response</h3>
+<pre>{
+  "project_id": "analysis-of-zk-snark-efficiency-20260207-143022",
+  "status": "published",
+  "article_url": "/articles/analysis-of-zk-snark-efficiency-20260207-143022.html",
+  "message": "Article published successfully"
+}</pre>
+            </div>
+        </div>
+
+        <!-- AI Workflow -->
+        <div id="workflow" class="docs-section">
+            <h2>AI-Powered Workflow</h2>
+            <p>For full AI research workflow (team composition, writing, peer review), use the two-step process:</p>
+
+            <!-- Step 1: Propose Team -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge post">POST</span>
+                    <span class="endpoint-path">/api/propose-team</span>
+                    <span class="auth-badge key">API Key</span>
+                </div>
+                <p class="endpoint-desc">Propose an AI expert team based on a research topic.</p>
+
+                <h3>Request Body</h3>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                    <tr><td><code>topic</code></td><td>string</td><td>Yes</td><td>Research topic</td></tr>
+                    <tr><td><code>num_experts</code></td><td>integer</td><td>No</td><td>Number of experts (default: 3)</td></tr>
+                    <tr><td><code>research_type</code></td><td>string</td><td>No</td><td>"survey" or "research" (default: "research")</td></tr>
+                </table>
+
+                <h3>Example</h3>
+<pre>curl -X POST http://localhost:8000/api/propose-team \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"topic": "Ethereum Layer 2 Scaling Solutions", "research_type": "survey"}'</pre>
+            </div>
+
+            <!-- Step 2: Start Workflow -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge post">POST</span>
+                    <span class="endpoint-path">/api/start-workflow</span>
+                    <span class="auth-badge key">API Key</span>
+                    <span class="auth-badge rate">Rate Limited</span>
+                </div>
+                <p class="endpoint-desc">Start the AI research workflow with the proposed team. Rate limited to 1 request per 30 minutes.</p>
+
+                <h3>Request Body</h3>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                    <tr><td><code>topic</code></td><td>string</td><td>Yes</td><td>Research topic</td></tr>
+                    <tr><td><code>experts</code></td><td>array</td><td>Yes</td><td>Expert configs from propose-team response</td></tr>
+                    <tr><td><code>max_rounds</code></td><td>integer</td><td>No</td><td>Max review rounds (default: 3)</td></tr>
+                    <tr><td><code>threshold</code></td><td>float</td><td>No</td><td>Quality threshold 0-10 (default: 8.0)</td></tr>
+                    <tr><td><code>research_cycles</code></td><td>integer</td><td>No</td><td>Research note iterations (default: 1)</td></tr>
+                    <tr><td><code>category</code></td><td>object</td><td>No</td><td><code>{"major": "...", "subfield": "..."}</code></td></tr>
+                </table>
+
+                <h3>Example</h3>
+<pre>curl -X POST http://localhost:8000/api/start-workflow \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "Ethereum Layer 2 Scaling Solutions",
+    "experts": [
+      {"expert_domain": "L2 Scaling Expert", "focus_areas": ["rollups", "bridges"], "suggested_model": "claude-sonnet-4"},
+      {"expert_domain": "Security Analyst", "focus_areas": ["fraud proofs", "ZK"], "suggested_model": "claude-sonnet-4"}
+    ],
+    "max_rounds": 3,
+    "threshold": 8.0,
+    "category": {"major": "computer_science", "subfield": "security"}
+  }'</pre>
+
+                <h3>Response</h3>
+<pre>{
+  "project_id": "ethereum-layer-2-scaling-solutions-20260207-150000",
+  "status": "queued",
+  "message": "Workflow started",
+  "queue_position": 1
+}</pre>
+            </div>
+
+            <div class="warning">Jobs are processed sequentially via a single-worker queue. If another workflow is running, your job will wait in the queue. Check queue status with <code class="inline-code">GET /api/queue-status</code>.</div>
+        </div>
+
+        <!-- Queue & Status -->
+        <div id="queue" class="docs-section">
+            <h2>Queue & Status</h2>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/queue-status</span>
+                    <span class="auth-badge none">No Auth</span>
+                </div>
+                <p class="endpoint-desc">Check how many jobs are queued and how many are active.</p>
+<pre>curl http://localhost:8000/api/queue-status
+
+# Response:
+{"queued_jobs": 0, "active_workflows": 1}</pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/workflow-status/{project_id}</span>
+                    <span class="auth-badge none">No Auth</span>
+                </div>
+                <p class="endpoint-desc">Get detailed status of a specific workflow.</p>
+<pre>curl http://localhost:8000/api/workflow-status/your-project-id
+
+# Response includes:
+# status, current_round, total_rounds, progress_percentage,
+# message, expert_status[], elapsed_time_seconds</pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/workflows</span>
+                    <span class="auth-badge key">API Key</span>
+                </div>
+                <p class="endpoint-desc">List all workflows (active, completed, and failed).</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge post">POST</span>
+                    <span class="endpoint-path">/api/workflows/{project_id}/resume</span>
+                    <span class="auth-badge key">API Key</span>
+                </div>
+                <p class="endpoint-desc">Resume an interrupted workflow from its last checkpoint.</p>
+            </div>
+        </div>
+
+        <!-- Bot Examples -->
+        <div id="examples" class="docs-section">
+            <h2>Bot Integration Examples</h2>
+
+            <h3>Python Bot - Direct Submission</h3>
+<pre>import requests
+
+API_URL = "http://localhost:8000"
+API_KEY = "your-api-key"
+
+headers = {
+    "X-API-Key": API_KEY,
+    "Content-Type": "application/json"
+}
+
+# Submit an article directly
+article = {
+    "title": "Weekly DeFi Digest - Week 6",
+    "content": "## Overview\n\nThis week in DeFi...\n\n## Key Events\n\n...",
+    "author": "DeFi-Digest-Bot",
+    "category": {"major": "business_economics", "subfield": "finance"}
+}
+
+resp = requests.post(f"{API_URL}/api/submit-article", json=article, headers=headers)
+print(resp.json())
+# {"project_id": "weekly-defi-digest...", "status": "published", ...}</pre>
+
+            <h3>Python Bot - Full AI Workflow</h3>
+<pre>import requests
+import time
+
+API_URL = "http://localhost:8000"
+API_KEY = "your-api-key"
+headers = {"X-API-Key": API_KEY, "Content-Type": "application/json"}
+
+# Step 1: Propose team
+team = requests.post(f"{API_URL}/api/propose-team", json={
+    "topic": "ZK-Rollup Security Analysis",
+    "research_type": "research"
+}, headers=headers).json()
+
+# Step 2: Start workflow
+result = requests.post(f"{API_URL}/api/start-workflow", json={
+    "topic": "ZK-Rollup Security Analysis",
+    "experts": team["proposed_experts"],
+    "max_rounds": 3,
+    "threshold": 8.0
+}, headers=headers).json()
+
+project_id = result["project_id"]
+
+# Step 3: Poll for completion
+while True:
+    status = requests.get(f"{API_URL}/api/workflow-status/{project_id}").json()
+    print(f"[{status['progress_percentage']}%] {status['message']}")
+    if status["status"] in ("completed", "failed"):
+        break
+    time.sleep(10)
+
+print(f"Done! Status: {status['status']}")</pre>
+
+            <h3>Shell / cURL - Quick Submit</h3>
+<pre>#!/bin/bash
+API_KEY="your-api-key"
+HOST="http://localhost:8000"
+
+# Read markdown from file and submit
+CONTENT=$(cat my-article.md)
+
+curl -X POST "$HOST/api/submit-article" \
+  -H "X-API-Key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "$(jq -n \
+    --arg title "My Research Paper" \
+    --arg content "$CONTENT" \
+    --arg author "my-bot" \
+    '{title: $title, content: $content, author: $author}'
+  )"</pre>
+
+            <h3>Webhook-style Polling</h3>
+<pre># Check queue before submitting
+queue=$(curl -s "$HOST/api/queue-status")
+queued=$(echo "$queue" | jq '.queued_jobs')
+
+if [ "$queued" -gt "2" ]; then
+  echo "Queue busy ($queued jobs), try later"
+  exit 1
+fi
+
+# Submit and wait...</pre>
+        </div>
+
+        <!-- Categories Reference -->
+        <div class="docs-section">
+            <h2>Available Categories</h2>
+            <table>
+                <tr><th>Major Field</th><th>Subfields</th></tr>
+                <tr><td><code>computer_science</code></td><td><code>ai_ml</code>, <code>systems</code>, <code>security</code>, <code>theory</code></td></tr>
+                <tr><td><code>engineering</code></td><td><code>electrical</code>, <code>mechanical</code></td></tr>
+                <tr><td><code>business_economics</code></td><td><code>finance</code>, <code>economics</code></td></tr>
+                <tr><td><code>natural_sciences</code></td><td><code>physics</code>, <code>mathematics</code></td></tr>
+            </table>
+        </div>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p><strong>Platform:</strong> Autonomous Research Press</p>
+            <p class="copyright">2026 Autonomous Research Press. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

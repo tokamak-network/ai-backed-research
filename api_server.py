@@ -3,12 +3,14 @@
 
 import asyncio
 import json
+import os
+import time
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Callable
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -30,10 +32,65 @@ app.add_middleware(
 )
 
 
+# --- Job Queue ---
+job_queue: asyncio.Queue = asyncio.Queue()
+
+
+async def job_worker():
+    """Single worker: pull jobs from queue and execute sequentially."""
+    while True:
+        job = await job_queue.get()
+        try:
+            job_fn = job.pop("_fn")
+            await job_fn(**job)
+        except Exception as e:
+            # Error handling is inside run_workflow_background / resume_workflow_background
+            print(f"Job worker error: {e}")
+        finally:
+            job_queue.task_done()
+
+
+# --- API Key Auth ---
+ALLOWED_API_KEYS: set = set()
+_raw_keys = os.environ.get("RESEARCH_API_KEYS", "")
+if _raw_keys:
+    ALLOWED_API_KEYS = {k.strip() for k in _raw_keys.split(",") if k.strip()}
+
+
+async def verify_api_key(request: Request) -> str:
+    """FastAPI dependency: validate X-API-Key header."""
+    key = request.headers.get("X-API-Key")
+    if not ALLOWED_API_KEYS:
+        # No keys configured → auth disabled (dev mode)
+        return key or "anonymous"
+    if not key or key not in ALLOWED_API_KEYS:
+        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+    return key
+
+
+# --- Rate Limit (per API key, 30 min = 1800s) ---
+RATE_LIMIT_SECONDS = 1800
+rate_limit_store: Dict[str, float] = {}  # api_key → last_request_timestamp
+
+
+async def check_rate_limit(api_key: str):
+    """Enforce 1 request per RATE_LIMIT_SECONDS per API key."""
+    last = rate_limit_store.get(api_key, 0)
+    now = time.time()
+    if now - last < RATE_LIMIT_SECONDS:
+        remaining = int(RATE_LIMIT_SECONDS - (now - last))
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limited. Try again in {remaining}s"
+        )
+    rate_limit_store[api_key] = now
+
+
 @app.on_event("startup")
 async def startup_event():
-    """Scan for interrupted workflows on startup."""
+    """Scan for interrupted workflows and start job worker on startup."""
     await scan_interrupted_workflows()
+    asyncio.create_task(job_worker())
 
 
 async def scan_interrupted_workflows():
@@ -151,6 +208,14 @@ class StartWorkflowRequest(BaseModel):
     category: Optional[CategoryInfo] = None  # Academic category
 
 
+class SubmitArticleRequest(BaseModel):
+    title: str
+    content: str  # Markdown content
+    author: Optional[str] = "Anonymous"
+    category: Optional[CategoryInfo] = None
+    review_requested: Optional[bool] = False
+
+
 class ExpertStatus(BaseModel):
     expert_id: str
     expert_name: str
@@ -214,8 +279,20 @@ def suggest_category_from_topic(topic: str) -> dict:
     return {"major": "computer_science", "subfield": "theory"}
 
 
+@app.get("/api/queue-status")
+async def queue_status():
+    """Return current job queue size and running job info."""
+    return {
+        "queued_jobs": job_queue.qsize(),
+        "active_workflows": sum(
+            1 for s in workflow_status.values()
+            if s["status"] in ("queued", "composing_team", "writing", "reviewing", "revising")
+        )
+    }
+
+
 @app.post("/api/propose-team", response_model=TeamProposalResponse)
-async def propose_team(request: ProposeTeamRequest):
+async def propose_team(request: ProposeTeamRequest, api_key: str = Depends(verify_api_key)):
     """Propose expert team based on research topic."""
     try:
         # Use TeamComposer to generate proposals
@@ -295,8 +372,11 @@ async def propose_team(request: ProposeTeamRequest):
 
 
 @app.post("/api/start-workflow")
-async def start_workflow(request: StartWorkflowRequest, background_tasks: BackgroundTasks):
-    """Start workflow in background."""
+async def start_workflow(request: StartWorkflowRequest, api_key: str = Depends(verify_api_key)):
+    """Start workflow via job queue (sequential execution)."""
+    # Rate limit check
+    await check_rate_limit(api_key)
+
     try:
         # Generate unique project ID
         project_id = request.topic.lower().replace(" ", "-")
@@ -309,7 +389,7 @@ async def start_workflow(request: StartWorkflowRequest, background_tasks: Backgr
             "current_round": 0,
             "total_rounds": request.max_rounds,
             "progress_percentage": 0,
-            "message": "Workflow queued",
+            "message": f"Workflow queued (position {job_queue.qsize() + 1})",
             "error": None,
             "expert_status": [
                 {
@@ -332,23 +412,26 @@ async def start_workflow(request: StartWorkflowRequest, background_tasks: Backgr
         activity_logs[project_id] = []
         add_activity_log(project_id, "info", f"Workflow created for topic: {request.topic[:50]}...")
 
-        # Start workflow in background
-        background_tasks.add_task(
-            run_workflow_background,
-            project_id=project_id,
-            topic=request.topic,
-            experts=request.experts,
-            max_rounds=request.max_rounds,
-            threshold=request.threshold,
-            research_cycles=request.research_cycles,
-            category=request.category.dict() if request.category else None
-        )
+        # Enqueue job (worker will execute it)
+        await job_queue.put({
+            "_fn": run_workflow_background,
+            "project_id": project_id,
+            "topic": request.topic,
+            "experts": request.experts,
+            "max_rounds": request.max_rounds,
+            "threshold": request.threshold,
+            "research_cycles": request.research_cycles,
+            "category": request.category.dict() if request.category else None,
+        })
 
         return {
             "project_id": project_id,
             "status": "queued",
-            "message": "Workflow started"
+            "message": "Workflow started",
+            "queue_position": job_queue.qsize()
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to start workflow: {str(e)}")
 
@@ -381,7 +464,7 @@ async def get_workflow_status(project_id: str):
 
 
 @app.get("/api/workflows")
-async def list_workflows():
+async def list_workflows(api_key: str = Depends(verify_api_key)):
     """List all workflows."""
     return {"workflows": [
         {"project_id": pid, **status}
@@ -401,11 +484,9 @@ async def get_workflow_activity(project_id: str, limit: int = 50):
 
 
 @app.post("/api/workflows/{project_id}/resume")
-async def resume_workflow(project_id: str, background_tasks: BackgroundTasks):
-    """Resume a workflow from checkpoint."""
+async def resume_workflow(project_id: str, api_key: str = Depends(verify_api_key)):
+    """Resume a workflow from checkpoint via job queue."""
     try:
-        from pathlib import Path
-
         # Find project directory
         results_dir = Path("results")
         project_dir = None
@@ -424,7 +505,6 @@ async def resume_workflow(project_id: str, background_tasks: BackgroundTasks):
             raise HTTPException(status_code=400, detail="No checkpoint found for this workflow")
 
         # Load checkpoint to get info
-        import json
         with open(checkpoint_file) as f:
             checkpoint = json.load(f)
 
@@ -451,17 +531,18 @@ async def resume_workflow(project_id: str, background_tasks: BackgroundTasks):
 
         add_activity_log(project_id, "info", f"Resuming workflow from Round {checkpoint['current_round']}")
 
-        # Start resume task in background
-        background_tasks.add_task(
-            resume_workflow_background,
-            project_id=project_id,
-            project_dir=project_dir
-        )
+        # Enqueue resume job
+        await job_queue.put({
+            "_fn": resume_workflow_background,
+            "project_id": project_id,
+            "project_dir": project_dir,
+        })
 
         return {
             "project_id": project_id,
             "status": "queued",
-            "message": f"Workflow resumed from Round {checkpoint['current_round']}"
+            "message": f"Workflow resumed from Round {checkpoint['current_round']}",
+            "queue_position": job_queue.qsize()
         }
 
     except HTTPException:
@@ -697,6 +778,164 @@ def update_workflow_status(project_id: str, status: str, round_num: int, total_r
         "message": message,
         "estimated_time_remaining_seconds": estimated_remaining
     })
+
+
+@app.post("/api/submit-article")
+async def submit_article(request: SubmitArticleRequest, api_key: str = Depends(verify_api_key)):
+    """Direct article submission (no AI workflow). Saves article to web/articles/ and updates index.json."""
+    try:
+        # Generate project ID from title
+        project_id = request.title.lower().replace(" ", "-")
+        project_id = f"{project_id}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+
+        # Escape markdown for JS embedding
+        escaped_markdown = (
+            request.content
+            .replace('\\', '\\\\')
+            .replace('`', '\\`')
+            .replace('$', '\\$')
+        )
+
+        # Extract headings for TOC
+        import re
+        headings = []
+        for line in request.content.split('\n'):
+            match = re.match(r'^##\s+(.+)', line)
+            if match:
+                title = match.group(1).strip()
+                slug = re.sub(r'[^\w\s-]', '', title.lower()).replace(' ', '-')
+                headings.append({"title": title, "slug": slug})
+
+        toc_items = '\n'.join([
+            f'                        <li><a href="#{h["slug"]}">{h["title"]}</a></li>'
+            for h in headings[:10]
+        ])
+
+        # Generate HTML article (same template as export_to_web.py)
+        html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{request.title} | Autonomous Research Press</title>
+    <meta name="description" content="{request.title} - Direct submission">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/article.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-nav">
+                <a href="../index.html" class="back-link">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Back to Research
+                </a>
+                <div class="header-content">
+                    <h1 class="site-title">Autonomous Research Press</h1>
+                    <p class="site-subtitle">AI-Powered Publication Platform</p>
+                </div>
+                <button class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="article-layout">
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <h3 class="toc-title">On This Page</h3>
+                <nav class="toc-nav">
+                    <ul>
+{toc_items}
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+        <article class="research-report">
+            <header class="article-header">
+                <h1 class="article-title">{request.title}</h1>
+                <div class="article-meta">
+                    <span class="meta-item"><strong>Author:</strong> {request.author}</span>
+                    <span class="meta-item"><strong>Source:</strong> Direct Submission</span>
+                    <span class="meta-item"><strong>Date:</strong> {datetime.now().strftime("%Y-%m-%d")}</span>
+                    {"<span class='meta-item'><strong>Review:</strong> Requested</span>" if request.review_requested else ""}
+                </div>
+            </header>
+            <div id="article-content"></div>
+        </article>
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <p><strong>Platform:</strong> Autonomous Research Press</p>
+            <p class="copyright">2026 Autonomous Research Press. All rights reserved.</p>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        const rawMarkdown = `{escaped_markdown}`;
+        document.getElementById('article-content').innerHTML = marked.parse(rawMarkdown);
+    </script>
+</body>
+</html>'''
+
+        # Save article HTML
+        articles_dir = Path("web/articles")
+        articles_dir.mkdir(parents=True, exist_ok=True)
+        article_path = articles_dir / f"{project_id}.html"
+        article_path.write_text(html, encoding="utf-8")
+
+        # Update index.json
+        index_path = Path("web/data/index.json")
+        index_data = {"projects": [], "updated_at": datetime.now().isoformat()}
+        if index_path.exists():
+            with open(index_path) as f:
+                index_data = json.load(f)
+
+        new_entry = {
+            "id": project_id,
+            "topic": request.title,
+            "final_score": None,
+            "passed": True,
+            "status": "completed",
+            "total_rounds": 0,
+            "rounds": [],
+            "timestamp": datetime.now().isoformat(),
+            "data_file": None,
+            "elapsed_time_seconds": 0,
+            "final_decision": "DIRECT_SUBMISSION",
+            "source": "direct_submission",
+            "author": request.author,
+            "review_requested": request.review_requested,
+        }
+
+        index_data["projects"].insert(0, new_entry)
+        index_data["updated_at"] = datetime.now().isoformat()
+
+        with open(index_path, "w") as f:
+            json.dump(index_data, f, indent=2)
+
+        return {
+            "project_id": project_id,
+            "status": "published",
+            "article_url": f"/articles/{project_id}.html",
+            "message": "Article published successfully"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to submit article: {str(e)}")
 
 
 if __name__ == "__main__":

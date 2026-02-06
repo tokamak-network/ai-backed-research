@@ -558,6 +558,16 @@
     </header>
 
     <main class="create-report-container">
+        <!-- API Key -->
+        <div class="form-section" style="margin-bottom: 1rem; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem;">
+            <label for="api-key" style="font-weight: 600; white-space: nowrap;">API Key</label>
+            <input type="password" id="api-key" placeholder="Enter your API key"
+                   style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--background); color: var(--text); font-size: 0.875rem;">
+            <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;" onclick="saveApiKey()">Save</button>
+            <span id="api-key-status" style="font-size: 0.75rem; color: var(--text-secondary);"></span>
+        </div>
+        <div id="rate-limit-warning" class="error-box" style="margin-bottom: 1rem;"></div>
+
         <!-- Step 1: Topic & Category -->
         <div id="step-topic" class="form-section">
             <h2><span class="step-badge">1</span> Research Topic</h2>
@@ -727,6 +737,47 @@
     <script>
         const API_BASE = 'http://localhost:8000';
 
+        // --- API Key helpers ---
+        function getApiKey() {
+            return localStorage.getItem('research_api_key') || '';
+        }
+        function saveApiKey() {
+            const key = document.getElementById('api-key').value.trim();
+            localStorage.setItem('research_api_key', key);
+            document.getElementById('api-key-status').textContent = key ? 'Saved' : 'Cleared';
+            setTimeout(() => document.getElementById('api-key-status').textContent = '', 2000);
+        }
+        function apiHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            const key = getApiKey();
+            if (key) headers['X-API-Key'] = key;
+            return headers;
+        }
+        function handleApiError(response, errorDiv) {
+            if (response.status === 403) {
+                errorDiv.textContent = 'Invalid or missing API key. Please enter a valid key above.';
+                errorDiv.style.display = 'block';
+                return true;
+            }
+            if (response.status === 429) {
+                response.json().then(data => {
+                    const warningDiv = document.getElementById('rate-limit-warning');
+                    warningDiv.textContent = data.detail || 'Rate limited. Please wait before submitting again.';
+                    warningDiv.style.display = 'block';
+                });
+                return true;
+            }
+            return false;
+        }
+        // Load saved key on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = getApiKey();
+            if (saved) {
+                document.getElementById('api-key').value = saved;
+                document.getElementById('api-key-status').textContent = 'Loaded from saved';
+            }
+        });
+
         // Academic categories (loaded from backend or defined here)
         const ACADEMIC_CATEGORIES = {
             "computer_science": {
@@ -877,7 +928,7 @@
             try {
                 const response = await fetch(`${API_BASE}/api/propose-team`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: apiHeaders(),
                     body: JSON.stringify({
                         topic: topic,
                         research_type: researchType
@@ -885,6 +936,7 @@
                 });
 
                 if (!response.ok) {
+                    if (handleApiError(response, errorDiv)) return;
                     throw new Error(`HTTP ${response.status}: ${await response.text()}`);
                 }
 
@@ -1114,7 +1166,7 @@
             try {
                 const response = await fetch(`${API_BASE}/api/start-workflow`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: apiHeaders(),
                     body: JSON.stringify({
                         topic: currentProposal.topic,
                         experts: currentProposal.proposed_experts,
@@ -1126,6 +1178,7 @@
                 });
 
                 if (!response.ok) {
+                    if (handleApiError(response, errorDiv)) return;
                     throw new Error(`HTTP ${response.status}: ${await response.text()}`);
                 }
 

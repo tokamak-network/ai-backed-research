@@ -642,6 +642,15 @@
             <p>Monitor the status of all research report generation workflows</p>
         </div>
 
+        <!-- API Key -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
+            <label for="api-key" style="font-weight: 600; white-space: nowrap; font-size: 0.875rem;">API Key</label>
+            <input type="password" id="api-key" placeholder="Enter your API key"
+                   style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--background); color: var(--text); font-size: 0.875rem;">
+            <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;" onclick="saveApiKey()">Save</button>
+            <span id="api-key-status" style="font-size: 0.75rem; color: var(--text-secondary);"></span>
+        </div>
+
         <div class="auto-refresh">
             <input type="checkbox" id="auto-refresh" checked>
             <label for="auto-refresh">Auto-refresh every 3 seconds</label>
@@ -709,10 +718,35 @@
         const API_BASE = 'http://localhost:8000';
         let autoRefreshInterval = null;
 
+        // --- API Key helpers ---
+        function getApiKey() {
+            return localStorage.getItem('research_api_key') || '';
+        }
+        function saveApiKey() {
+            const key = document.getElementById('api-key').value.trim();
+            localStorage.setItem('research_api_key', key);
+            document.getElementById('api-key-status').textContent = key ? 'Saved' : 'Cleared';
+            setTimeout(() => document.getElementById('api-key-status').textContent = '', 2000);
+        }
+        function apiHeaders() {
+            const headers = {};
+            const key = getApiKey();
+            if (key) headers['X-API-Key'] = key;
+            return headers;
+        }
+        // Load saved key on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = getApiKey();
+            if (saved) {
+                document.getElementById('api-key').value = saved;
+                document.getElementById('api-key-status').textContent = 'Loaded from saved';
+            }
+        });
+
         async function loadWorkflows() {
             try {
                 // Try API first (for live/in-progress workflows)
-                const apiResponse = await fetch(`${API_BASE}/api/workflows`).catch(() => null);
+                const apiResponse = await fetch(`${API_BASE}/api/workflows`, { headers: apiHeaders() }).catch(() => null);
 
                 if (apiResponse && apiResponse.ok) {
                     const apiData = await apiResponse.json();
@@ -1072,7 +1106,7 @@
 
         async function loadActivityLog(projectId) {
             try {
-                const response = await fetch(`${API_BASE}/api/workflow-activity/${projectId}`);
+                const response = await fetch(`${API_BASE}/api/workflow-activity/${projectId}`, { headers: apiHeaders() });
                 if (!response.ok) throw new Error('Failed to load activity log');
 
                 const data = await response.json();
@@ -1288,7 +1322,8 @@
                 btn.textContent = 'Resuming...';
 
                 const response = await fetch(`${API_BASE}/api/workflows/${encodeURIComponent(projectId)}/resume`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: apiHeaders()
                 });
 
                 if (!response.ok) {
