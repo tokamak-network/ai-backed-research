@@ -86,6 +86,9 @@ class CollaborativeWorkflowOrchestrator:
         console.print(f"[bold]Reviewers:[/bold] {len(self.reviewer_configs)} external reviewers\n")
 
         # Phase 1: Collaborative Research
+        if self.status_callback:
+            self.status_callback("research", 0, "Phase 1: Collaborative research in progress...")
+
         research_phase = CollaborativeResearchPhase(
             topic=self.topic,
             category=self.category,
@@ -98,6 +101,9 @@ class CollaborativeWorkflowOrchestrator:
         research_notes = await research_phase.run()
 
         # Phase 2: Manuscript Writing
+        if self.status_callback:
+            self.status_callback("writing_sections", 0, "Phase 2: Writing manuscript sections...")
+
         writing_phase = ManuscriptWritingPhase(
             topic=self.topic,
             category=self.category,

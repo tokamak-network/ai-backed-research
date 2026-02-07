@@ -147,7 +147,23 @@
             color: #4338ca;
         }
 
-        .status-badge.writing {
+        .status-badge.searching {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .status-badge.research {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .status-badge.writing_sections {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .status-badge.writing,
+        .status-badge.desk_screening {
             background: #dbeafe;
             color: #1d4ed8;
         }
@@ -784,7 +800,7 @@
                         const accepted = apiData.workflows.filter(wf =>
                             wf.status === 'completed' ||
                             wf.status === 'interrupted' ||
-                            ['queued', 'writing', 'reviewing', 'revising', 'composing_team'].includes(wf.status)
+                            ['queued', 'composing_team', 'searching', 'writing', 'desk_screening', 'reviewing', 'revising', 'research', 'writing_sections'].includes(wf.status)
                         );
                         const rejected = apiData.workflows.filter(wf =>
                             wf.status === 'failed' || wf.status === 'rejected'
@@ -880,7 +896,7 @@
 
             // Sort accepted workflows: interrupted first, then active, then by project_id desc
             acceptedWorkflows.sort((a, b) => {
-                const activeStatuses = ['queued', 'writing', 'reviewing', 'revising', 'interrupted'];
+                const activeStatuses = ['queued', 'composing_team', 'searching', 'writing', 'desk_screening', 'reviewing', 'revising', 'interrupted', 'research', 'writing_sections'];
                 const aInterrupted = a.status === 'interrupted';
                 const bInterrupted = b.status === 'interrupted';
                 const aActive = activeStatuses.includes(a.status);
@@ -924,9 +940,11 @@
         }
 
         function createWorkflowCard(wf) {
+            // Escape project_id for safe use in onclick attributes
+            const pid = escapeJsStr(wf.project_id);
             // Use topic from data if available, otherwise extract from project_id
             const topic = wf.topic || extractTopicFromId(wf.project_id);
-            const isActive = ['queued', 'writing', 'reviewing', 'revising', 'composing_team'].includes(wf.status);
+            const isActive = ['queued', 'composing_team', 'searching', 'writing', 'desk_screening', 'reviewing', 'revising', 'research', 'writing_sections'].includes(wf.status);
             const isInterrupted = wf.status === 'interrupted';
             const isCompleted = wf.status === 'completed';
             const isRejected = wf.status === 'rejected' || wf.status === 'failed';
@@ -944,7 +962,8 @@
             // Workflow steps
             const steps = [
                 { id: 'team', label: 'Team', statuses: ['composing_team'] },
-                { id: 'draft', label: 'Draft', statuses: ['writing'] },
+                { id: 'research', label: 'Research', statuses: ['searching', 'research'] },
+                { id: 'draft', label: 'Draft', statuses: ['writing', 'desk_screening', 'writing_sections'] },
                 { id: 'review', label: 'Review', statuses: ['reviewing'] },
                 { id: 'revise', label: 'Revise', statuses: ['revising'] }
             ];
@@ -1001,7 +1020,7 @@
                 `;
             }
 
-            const deleteBtn = isAdmin ? `<button class="btn btn-danger" onclick="deleteWorkflow('${wf.project_id}')">Delete</button>` : '';
+            const deleteBtn = isAdmin ? `<button class="btn btn-danger" onclick="deleteWorkflow('${pid}')">Delete</button>` : '';
 
             let actions = '';
             if (isCompleted) {
@@ -1018,12 +1037,12 @@
                 `;
             } else if (wf.status === 'interrupted') {
                 actions = `
-                    <button class="btn btn-primary" onclick="resumeWorkflow('${wf.project_id}')">▶ Resume Workflow</button>
-                    <button class="btn btn-secondary" onclick="toggleActivityFeed('${wf.project_id}')">View Activity Log</button>
+                    <button class="btn btn-primary" onclick="resumeWorkflow('${pid}')">▶ Resume Workflow</button>
+                    <button class="btn btn-secondary" onclick="toggleActivityFeed('${pid}')">View Activity Log</button>
                     ${deleteBtn}
                 `;
             } else if (isActive) {
-                actions = `<button class="btn btn-secondary" onclick="toggleActivityFeed('${wf.project_id}')">View Activity Log</button>`;
+                actions = `<button class="btn btn-secondary" onclick="toggleActivityFeed('${pid}')">View Activity Log</button>`;
             }
 
             const errorHtml = wf.error ? `<div class="error-message">Error: ${escapeHtml(wf.error)}</div>` : '';
@@ -1100,7 +1119,7 @@
                     ` : ''}
                     ${isDone ? `
                         <div style="margin-top: 1rem;">
-                            <button class="btn btn-secondary" style="width: 100%; font-size: 0.875rem;" onclick="toggleDetailedLog('${wf.project_id}')">
+                            <button class="btn btn-secondary" style="width: 100%; font-size: 0.875rem;" onclick="toggleDetailedLog('${pid}')">
                                 📋 View Detailed Log
                             </button>
                             <div id="detailed-log-${wf.project_id}" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem;">
@@ -1206,7 +1225,7 @@
 
         function updateStats(workflows) {
             const total = workflows.length;
-            const active = workflows.filter(w => ['queued', 'writing', 'reviewing', 'revising', 'composing_team'].includes(w.status)).length;
+            const active = workflows.filter(w => ['queued', 'composing_team', 'searching', 'writing', 'desk_screening', 'reviewing', 'revising', 'research', 'writing_sections'].includes(w.status)).length;
             const interrupted = workflows.filter(w => w.status === 'interrupted').length;
             const completed = workflows.filter(w => w.status === 'completed').length;
             const rejected = workflows.filter(w => w.status === 'failed' || w.status === 'rejected').length;
@@ -1232,6 +1251,10 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function escapeJsStr(str) {
+            return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
 
         async function toggleDetailedLog(projectId) {

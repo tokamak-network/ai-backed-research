@@ -273,13 +273,15 @@ async def _test_providers():
 @click.option("--max-rounds", type=int, default=3, help="Maximum review rounds")
 @click.option("--threshold", type=float, default=8.0, help="Score threshold for acceptance")
 @click.option("--manuscript", type=click.Path(exists=True), help="Path to existing manuscript (skip generation)")
+@click.option("--article-length", type=click.Choice(["short", "full"]), default="full", help="Article length: short (1,500-2,500 words) or full (3,000-5,000 words)")
 def run(
     topic: str,
     num_experts: int,
     auto_accept_team: bool,
     max_rounds: int,
     threshold: float,
-    manuscript: Optional[str]
+    manuscript: Optional[str],
+    article_length: str,
 ):
     """Run complete research workflow with AI team composition.
 
@@ -301,7 +303,8 @@ def run(
         auto_accept_team,
         max_rounds,
         threshold,
-        manuscript
+        manuscript,
+        article_length,
     ))
 
 
@@ -311,7 +314,8 @@ async def _run_workflow(
     auto_accept_team: bool,
     max_rounds: int,
     threshold: float,
-    manuscript_path: Optional[str]
+    manuscript_path: Optional[str],
+    article_length: str = "full",
 ):
     """Run the complete workflow asynchronously."""
     from .agents import TeamComposerAgent
@@ -415,6 +419,7 @@ async def _run_workflow(
         max_rounds=max_rounds,
         threshold=threshold,
         category=category,
+        article_length=article_length,
     )
 
     try:
@@ -560,39 +565,22 @@ async def _run_collaborative_workflow(
     # Step 2: Compose reviewer pool (external, not writers)
     console.print("[bold cyan]Step 2: Composing Reviewer Pool[/bold cyan]\n")
 
-    # Get expert pool from category
+    # Get expert pool from category and generate reviewer configs dynamically
     expert_pool = get_expert_pool(major_field, subfield)
 
-    # Create reviewer configs (different from writers)
-    reviewer_configs = [
-        ExpertConfig(
-            id="reviewer_1",
-            name="Network Security Expert",
-            domain="Network Security",
-            focus_areas=["network protocols", "security analysis", "attack vectors"],
-            system_prompt="You are a network security expert reviewing blockchain protocols.",
+    reviewer_configs = []
+    for i, expert_id in enumerate(expert_pool[:3]):
+        name = expert_id.replace("_expert", "").replace("_", " ").title() + " Expert"
+        domain = expert_id.replace("_expert", "").replace("_", " ").title()
+        reviewer_configs.append(ExpertConfig(
+            id=f"reviewer_{i+1}",
+            name=name,
+            domain=domain,
+            focus_areas=[],
+            system_prompt="",  # SpecialistFactory will auto-generate
             provider="anthropic",
-            model="claude-opus-4.5"
-        ),
-        ExpertConfig(
-            id="reviewer_2",
-            name="Formal Methods Expert",
-            domain="Formal Methods",
-            focus_areas=["security proofs", "formal verification", "correctness proofs"],
-            system_prompt="You are a formal methods expert reviewing security proofs.",
-            provider="anthropic",
-            model="claude-opus-4.5"
-        ),
-        ExpertConfig(
-            id="reviewer_3",
-            name="Applied Cryptography Expert",
-            domain="Applied Cryptography",
-            focus_areas=["cryptographic implementations", "protocol security", "cryptographic primitives"],
-            system_prompt="You are an applied cryptography expert reviewing cryptographic implementations.",
-            provider="anthropic",
-            model="claude-opus-4.5"
-        )
-    ]
+            model="claude-sonnet-4"
+        ))
 
     console.print(f"  ✓ {len(reviewer_configs)} external reviewers assigned from {get_category_name(major_field, subfield)}")
     console.print("  (Reviewer names hidden to ensure objectivity)\n")

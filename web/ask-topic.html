@@ -670,6 +670,36 @@
         <div id="step-settings" class="form-section" style="display: none;">
             <h2><span class="step-badge">3</span> Workflow Settings</h2>
 
+            <!-- Workflow Mode -->
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label>Workflow Mode</label>
+                <div class="research-type-selector" id="workflow-mode-selector">
+                    <div class="research-type-option selected" data-mode="standard" onclick="selectWorkflowMode('standard')">
+                        <div class="type-title">Standard</div>
+                        <div class="type-description">Single AI writer drafts the manuscript. Proposed experts serve as peer reviewers.</div>
+                    </div>
+                    <div class="research-type-option" data-mode="collaborative" onclick="selectWorkflowMode('collaborative')">
+                        <div class="type-title">Collaborative</div>
+                        <div class="type-description">Lead author + co-authors research and write together. Category experts provide peer review.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Article Length -->
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label>Article Length</label>
+                <div class="research-type-selector" id="article-length-selector">
+                    <div class="research-type-option" data-length="short" onclick="selectArticleLength('short')">
+                        <div class="type-title">Short</div>
+                        <div class="type-description">1,500 - 2,500 words. Concise overview focused on key insights.</div>
+                    </div>
+                    <div class="research-type-option selected" data-length="full" onclick="selectArticleLength('full')">
+                        <div class="type-title">Full</div>
+                        <div class="type-description">3,000 - 5,000 words. In-depth analysis with comprehensive coverage.</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="settings-grid">
                 <div class="setting-item">
                     <label for="research-cycles">Research Note Cycles</label>
@@ -933,6 +963,46 @@
                 .split('_')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ') + ' Expert';
+        }
+
+        // Workflow mode selection
+        function selectWorkflowMode(mode) {
+            document.querySelectorAll('#workflow-mode-selector .research-type-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector(`#workflow-mode-selector .research-type-option[data-mode="${mode}"]`).classList.add('selected');
+
+            // Update team labels based on mode
+            const leadHeader = document.querySelector('#step-team .team-group:first-of-type .team-group-header h3');
+            const leadBadge = document.querySelector('#step-team .team-group:first-of-type .team-group-badge');
+            const coauthorHeader = document.querySelector('#step-team .team-group:nth-of-type(2) .team-group-header h3');
+            const coauthorBadge = document.querySelector('#step-team .team-group:nth-of-type(2) .team-group-badge');
+            const reviewerHeader = document.querySelector('#step-team .team-group:nth-of-type(3) .team-group-header h3');
+            const reviewerBadge = document.querySelector('#step-team .team-group:nth-of-type(3) .team-group-badge');
+
+            if (mode === 'collaborative') {
+                if (leadHeader) leadHeader.textContent = 'Lead Author';
+                if (leadBadge) leadBadge.textContent = 'Plans, coordinates, writes';
+                if (coauthorHeader) coauthorHeader.textContent = 'Co-Authors';
+                if (coauthorBadge) coauthorBadge.textContent = 'Research, feedback, review sections';
+                if (reviewerHeader) reviewerHeader.textContent = 'Peer Reviewers';
+                if (reviewerBadge) reviewerBadge.textContent = 'From category expert pool';
+            } else {
+                if (leadHeader) leadHeader.textContent = 'Primary Expert';
+                if (leadBadge) leadBadge.textContent = 'Leads research direction';
+                if (coauthorHeader) coauthorHeader.textContent = 'Additional Experts';
+                if (coauthorBadge) coauthorBadge.textContent = 'Supporting research perspectives';
+                if (reviewerHeader) reviewerHeader.textContent = 'Expert Reviewers';
+                if (reviewerBadge) reviewerBadge.textContent = 'All proposed experts review the draft';
+            }
+        }
+
+        // Article length selection
+        function selectArticleLength(length) {
+            document.querySelectorAll('#article-length-selector .research-type-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector(`#article-length-selector .research-type-option[data-length="${length}"]`).classList.add('selected');
         }
 
         // Research type selection
@@ -1199,6 +1269,9 @@
             errorDiv.style.display = 'none';
 
             try {
+                const articleLength = document.querySelector('#article-length-selector .research-type-option.selected')?.dataset.length || 'full';
+                const workflowMode = document.querySelector('#workflow-mode-selector .research-type-option.selected')?.dataset.mode || 'standard';
+
                 const response = await fetch(`${API_BASE}/api/start-workflow`, {
                     method: 'POST',
                     headers: apiHeaders(),
@@ -1208,7 +1281,9 @@
                         max_rounds: maxRounds,
                         threshold: threshold,
                         research_cycles: researchCycles,
-                        category: selectedCategory
+                        category: selectedCategory,
+                        article_length: articleLength,
+                        workflow_mode: workflowMode
                     })
                 });
 

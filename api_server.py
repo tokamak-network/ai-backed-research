@@ -18,9 +18,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from research_cli.agents.team_composer import TeamComposerAgent
-from research_cli.categories import suggest_category_from_topic
+from research_cli.categories import suggest_category_from_topic, get_expert_pool
 from research_cli.workflow.orchestrator import WorkflowOrchestrator
+from research_cli.workflow.collaborative_workflow import CollaborativeWorkflowOrchestrator
 from research_cli.models.expert import ExpertConfig
+from research_cli.models.author import AuthorRole, WriterTeam
 
 
 app = FastAPI(title="AI-Backed Research API")
@@ -257,6 +259,8 @@ class StartWorkflowRequest(BaseModel):
     threshold: float = 8.0
     research_cycles: int = 1  # Number of research note iterations
     category: Optional[CategoryInfo] = None  # Academic category
+    article_length: Optional[str] = "full"  # "full" or "short"
+    workflow_mode: Optional[str] = "standard"  # "standard" or "collaborative"
 
 
 class SubmitArticleRequest(BaseModel):
@@ -313,7 +317,7 @@ async def queue_status():
         "queued_jobs": job_queue.qsize(),
         "active_workflows": sum(
             1 for s in workflow_status.values()
-            if s["status"] in ("queued", "composing_team", "writing", "desk_screening", "reviewing", "revising")
+            if s["status"] in ("queued", "composing_team", "writing", "desk_screening", "reviewing", "revising", "research", "writing_sections")
         )
     }
 
@@ -449,6 +453,8 @@ async def start_workflow(request: StartWorkflowRequest, api_key: str = Depends(v
             "threshold": request.threshold,
             "research_cycles": request.research_cycles,
             "category": request.category.dict() if request.category else None,
+            "article_length": request.article_length or "full",
+            "workflow_mode": request.workflow_mode or "standard",
         })
 
         return {
@@ -655,6 +661,43 @@ async def resume_workflow_background(project_id: str, project_dir: Path):
             workflow_status[project_id]["error"] = error_msg
 
 
+def _generate_reviewers_from_category(category: dict, topic: str) -> List[ExpertConfig]:
+    """Generate reviewer ExpertConfigs from category expert pool.
+
+    Args:
+        category: Dict with 'major' and 'subfield' keys.
+        topic: Research topic (for context in domain description).
+
+    Returns:
+        List of up to 3 ExpertConfig reviewer objects.
+    """
+    if not category or not category.get("major") or not category.get("subfield"):
+        return []
+
+    pool = get_expert_pool(category["major"], category["subfield"])
+    if not pool:
+        return []
+
+    reviewers = []
+    for i, expert_id in enumerate(pool[:3]):
+        # Convert snake_case ID to human-readable name
+        name = expert_id.replace("_expert", "").replace("_", " ").title() + " Expert"
+        domain = expert_id.replace("_expert", "").replace("_", " ").title()
+
+        config = ExpertConfig(
+            id=f"reviewer-{i+1}",
+            name=name,
+            domain=domain,
+            focus_areas=[],
+            system_prompt="",  # SpecialistFactory will auto-generate
+            provider="anthropic",
+            model="claude-sonnet-4"
+        )
+        reviewers.append(config)
+
+    return reviewers
+
+
 async def run_workflow_background(
     project_id: str,
     topic: str,
@@ -662,7 +705,9 @@ async def run_workflow_background(
     max_rounds: int,
     threshold: float,
     research_cycles: int = 1,
-    category: Optional[dict] = None
+    category: Optional[dict] = None,
+    article_length: str = "full",
+    workflow_mode: str = "standard",
 ):
     """Run workflow in background and update status."""
     try:
@@ -672,7 +717,7 @@ async def run_workflow_background(
             "progress_percentage": 5,
             "message": "Composing expert team..."
         })
-        add_activity_log(project_id, "info", "Starting expert team composition")
+        add_activity_log(project_id, "info", f"Starting {workflow_mode} workflow - team composition")
 
         # Convert expert dicts to ExpertConfig objects
         expert_configs = []
@@ -694,23 +739,94 @@ async def run_workflow_background(
                 {"model": config.model, "focus_areas": config.focus_areas}
             )
 
-        # Create orchestrator with status callback
-        orchestrator = WorkflowOrchestrator(
-            expert_configs=expert_configs,
-            topic=topic,
-            max_rounds=max_rounds,
-            threshold=threshold,
-            output_dir=Path(f"results/{project_id}"),
-            status_callback=lambda status, round_num, msg: update_workflow_status(
-                project_id, status, round_num, max_rounds, msg
-            ),
-            category=category,
+        status_callback = lambda status, round_num, msg: update_workflow_status(
+            project_id, status, round_num, max_rounds, msg
         )
 
-        # Run workflow
-        add_activity_log(project_id, "info", "Starting workflow execution")
-        await orchestrator.run()
-        add_activity_log(project_id, "success", "Workflow execution completed")
+        if workflow_mode == "collaborative":
+            # --- Collaborative workflow ---
+            add_activity_log(project_id, "info", "Using collaborative workflow mode")
+
+            # Build WriterTeam from experts: first = lead, rest = coauthors
+            lead_exp = expert_configs[0]
+            lead_author = AuthorRole(
+                id=lead_exp.id,
+                name=lead_exp.name,
+                role="lead",
+                expertise=lead_exp.domain,
+                focus_areas=lead_exp.focus_areas,
+                model=lead_exp.model,
+            )
+
+            coauthors = []
+            for exp in expert_configs[1:]:
+                coauthor = AuthorRole(
+                    id=exp.id,
+                    name=exp.name,
+                    role="coauthor",
+                    expertise=exp.domain,
+                    focus_areas=exp.focus_areas,
+                    model=exp.model,
+                )
+                coauthors.append(coauthor)
+
+            writer_team = WriterTeam(lead_author=lead_author, coauthors=coauthors)
+
+            add_activity_log(project_id, "info", f"Lead author: {lead_author.name}")
+            for ca in coauthors:
+                add_activity_log(project_id, "info", f"Co-author: {ca.name}")
+
+            # Generate reviewers from category expert pool
+            reviewer_configs = _generate_reviewers_from_category(category, topic)
+            if not reviewer_configs:
+                add_activity_log(project_id, "warning", "No category reviewers found, using default reviewers")
+                # Fallback: use first 2 expert configs as reviewers
+                reviewer_configs = expert_configs[:2]
+
+            for rc in reviewer_configs:
+                add_activity_log(project_id, "info", f"Reviewer: {rc.name}")
+
+            # Map article_length to target_manuscript_length
+            length_map = {"short": 2000, "full": 4000}
+            target_manuscript_length = length_map.get(article_length, 4000)
+
+            major_field = category.get("major", "computer_science") if category else "computer_science"
+            subfield = category.get("subfield", "theory") if category else "theory"
+
+            orchestrator = CollaborativeWorkflowOrchestrator(
+                topic=topic,
+                major_field=major_field,
+                subfield=subfield,
+                writer_team=writer_team,
+                reviewer_configs=reviewer_configs,
+                output_dir=Path(f"results/{project_id}"),
+                max_rounds=max_rounds,
+                threshold=threshold,
+                target_manuscript_length=target_manuscript_length,
+                research_cycles=research_cycles,
+                status_callback=status_callback,
+            )
+
+            add_activity_log(project_id, "info", "Starting collaborative workflow execution")
+            await orchestrator.run()
+            add_activity_log(project_id, "success", "Collaborative workflow completed")
+
+        else:
+            # --- Standard workflow (unchanged) ---
+            orchestrator = WorkflowOrchestrator(
+                expert_configs=expert_configs,
+                topic=topic,
+                max_rounds=max_rounds,
+                threshold=threshold,
+                output_dir=Path(f"results/{project_id}"),
+                status_callback=status_callback,
+                category=category,
+                article_length=article_length,
+            )
+
+            add_activity_log(project_id, "info", "Starting standard workflow execution")
+            await orchestrator.run()
+            add_activity_log(project_id, "success", "Workflow execution completed")
 
         # Calculate final cost estimate
         # TODO: Get actual token counts from orchestrator
@@ -766,7 +882,13 @@ def update_workflow_status(project_id: str, status: str, round_num: int, total_r
         return
 
     # Calculate progress
-    if status == "writing":
+    if status == "research":
+        progress = 8
+        add_activity_log(project_id, "info", message)
+    elif status == "writing_sections":
+        progress = 15
+        add_activity_log(project_id, "info", message)
+    elif status == "writing":
         progress = 10
         add_activity_log(project_id, "info", message)
     elif status == "desk_screening":
