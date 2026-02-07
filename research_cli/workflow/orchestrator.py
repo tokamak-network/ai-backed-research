@@ -17,7 +17,9 @@ from ..agents import WriterAgent, ModeratorAgent
 from ..agents.desk_editor import DeskEditorAgent
 from ..agents.specialist_factory import SpecialistFactory
 from ..models.expert import ExpertConfig
+from ..models.collaborative_research import Reference
 from ..performance import PerformanceTracker
+from ..utils.source_retriever import SourceRetriever
 
 console = Console()
 
@@ -123,7 +125,8 @@ Provide your review in the following JSON format:
     "completeness": <1-10>,
     "clarity": <1-10>,
     "novelty": <1-10>,
-    "rigor": <1-10>
+    "rigor": <1-10>,
+    "citations": <1-10>
   }},
   "summary": "<2-3 sentence overall assessment>",
   "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
@@ -138,6 +141,16 @@ Scoring guide:
 - 5-6: Adequate, significant improvements needed
 - 3-4: Weak, major revisions required
 - 1-2: Poor, fundamental issues
+
+Citations scoring guide:
+- 9-10: All major claims properly cited with verifiable references
+- 7-8: Most claims cited, references are real and checkable
+- 5-6: Some citations present but gaps exist, or some references look dubious
+- 3-4: Few citations, many unsupported claims
+- 1-2: No citations or clearly fabricated references
+
+Penalize: unsupported claims, unverifiable references, hallucinated citations.
+Reward: inline citations [1], [2], proper References section, real DOIs/URLs.
 
 Be honest and constructive. Focus on your domain of expertise.
 {"Note: This is a revision - check if previous issues were addressed." if round_number > 1 else ""}"""
@@ -252,6 +265,7 @@ async def run_review_round(
     table.add_column("Clarity", justify="center")
     table.add_column("Novelty", justify="center")
     table.add_column("Rigor", justify="center")
+    table.add_column("Citations", justify="center")
     table.add_column("Average", justify="center", style="bold")
 
     for review in reviews:
@@ -263,6 +277,7 @@ async def run_review_round(
             str(scores["clarity"]),
             str(scores["novelty"]),
             str(scores["rigor"]),
+            str(scores.get("citations", "-")),
             f"{review['average']:.1f}"
         )
 
@@ -316,6 +331,9 @@ class WorkflowOrchestrator:
         self.writer = WriterAgent(model="claude-opus-4.5")
         self.moderator = ModeratorAgent(model="claude-opus-4.5")
         self.desk_editor = DeskEditorAgent(model="claude-haiku-4")
+
+        # Sources retrieved before writing (populated in _generate_initial_manuscript)
+        self.sources: List[Reference] = []
 
     async def run(self, initial_manuscript: Optional[str] = None) -> dict:
         """Run the complete workflow.
@@ -595,7 +613,8 @@ class WorkflowOrchestrator:
                 revised_manuscript = await self.writer.revise_manuscript(
                     current_manuscript,
                     reviews,
-                    round_num
+                    round_num,
+                    references=self.sources if self.sources else None,
                 )
                 revision_time = self.tracker.end_operation("revision")
                 self.tracker.record_revision_time(revision_time)
@@ -617,7 +636,33 @@ class WorkflowOrchestrator:
         return await self._finalize_workflow(all_rounds)
 
     async def _generate_initial_manuscript(self) -> str:
-        """Generate initial manuscript from topic."""
+        """Generate initial manuscript from topic with real source retrieval."""
+
+        # --- Source retrieval ---
+        console.print("\n[cyan]Searching academic databases for sources...[/cyan]\n")
+        if self.status_callback:
+            self.status_callback("searching", 0, "Searching academic databases for real sources...")
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("[cyan]Retrieving sources (OpenAlex, arXiv, ...)...", total=None)
+            retriever = SourceRetriever()
+            self.sources = await retriever.search_all(self.topic)
+            progress.update(task, completed=True)
+
+        if self.sources:
+            console.print(f"[green]✓ Found {len(self.sources)} verified sources[/green]")
+            for ref in self.sources[:5]:
+                console.print(f"  [{ref.id}] {ref.title[:70]}{'...' if len(ref.title) > 70 else ''} ({ref.year})")
+            if len(self.sources) > 5:
+                console.print(f"  ... and {len(self.sources) - 5} more")
+        else:
+            console.print("[yellow]No external sources found, proceeding without citations[/yellow]")
+
+        # --- Manuscript generation ---
         console.print("\n[cyan]Generating initial manuscript...[/cyan]\n")
 
         with Progress(
@@ -627,10 +672,11 @@ class WorkflowOrchestrator:
         ) as progress:
             task = progress.add_task("[cyan]Writer generating manuscript...", total=None)
             self.tracker.start_operation("initial_draft")
-            manuscript = await self.writer.write_manuscript(self.topic)
+            manuscript = await self.writer.write_manuscript(
+                self.topic,
+                references=self.sources if self.sources else None,
+            )
             duration = self.tracker.end_operation("initial_draft")
-            # Note: we don't track tokens here as WriterAgent doesn't return them
-            # Could be enhanced in the future
             self.tracker.record_initial_draft(duration, 0)
             progress.update(task, completed=True)
 
@@ -1002,7 +1048,8 @@ class WorkflowOrchestrator:
                 revised_manuscript = await self.writer.revise_manuscript(
                     current_manuscript,
                     reviews,
-                    round_num
+                    round_num,
+                    references=self.sources if self.sources else None,
                 )
                 revision_time = self.tracker.end_operation("revision")
                 self.tracker.record_revision_time(revision_time)

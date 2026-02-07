@@ -4,6 +4,8 @@ from typing import Optional, List, Dict
 from ..llm import ClaudeLLM
 from ..config import get_config
 from ..models.section import WritingContext, SectionOutput
+from ..models.collaborative_research import Reference
+from ..utils.source_retriever import SourceRetriever
 
 
 class WriterAgent:
@@ -28,12 +30,18 @@ class WriterAgent:
         )
         self.model = model
 
-    async def write_manuscript(self, topic: str, profile: str = "academic") -> str:
+    async def write_manuscript(
+        self,
+        topic: str,
+        profile: str = "academic",
+        references: Optional[List[Reference]] = None,
+    ) -> str:
         """Write initial research manuscript.
 
         Args:
             topic: Research topic
             profile: Writing profile (academic, technical, etc.)
+            references: Optional list of real references to cite
 
         Returns:
             Manuscript text in markdown format
@@ -53,12 +61,29 @@ Write comprehensive research reports that are:
 - Accessible to experts in the field
 - Grounded in current literature and data"""
 
+        # Build references block for injection
+        refs_block = ""
+        if references:
+            refs_text = SourceRetriever.format_for_prompt(references)
+            refs_block = f"""
+VERIFIED SOURCES (use these as primary citations):
+{refs_text}
+
+CITATION RULES:
+- You MUST cite these sources using [1], [2], etc. inline where relevant
+- Integrate citations naturally into the text (e.g., "Recent work [1] shows...")
+- Every major claim should be backed by at least one citation
+- You may combine citations like [1,3] when multiple sources support a claim
+- At the end of the manuscript, include a "## References" section listing all cited sources
+- You may also add well-known references beyond this list, but prioritize these verified sources
+"""
+
         prompt = f"""Write a comprehensive research report on the following topic:
 
 TOPIC: {topic}
 
 PROFILE: {profile}
-
+{refs_block}
 Requirements:
 - 3,000-5,000 words
 - Include executive summary
@@ -67,6 +92,7 @@ Requirements:
 - Cite specific examples, protocols, and data
 - Include practical implications
 - Forward-looking analysis of trends
+{"- Include inline citations [1], [2] and a References section at the end" if references else ""}
 
 Format: Markdown with proper headings, lists, code blocks where appropriate.
 
@@ -182,7 +208,8 @@ Write the complete rebuttal now."""
         self,
         manuscript: str,
         reviews: List[Dict],
-        round_number: int
+        round_number: int,
+        references: Optional[List[Reference]] = None,
     ) -> str:
         """Revise manuscript based on specialist feedback.
 
@@ -190,6 +217,7 @@ Write the complete rebuttal now."""
             manuscript: Current manuscript text
             reviews: List of review dictionaries from specialists
             round_number: Current revision round (1, 2, 3, etc.)
+            references: Optional list of real references available for citation
 
         Returns:
             Revised manuscript text
@@ -212,6 +240,20 @@ Do not:
 - Change topics or scope dramatically
 - Lose valuable existing content unnecessarily"""
 
+        # Build references block for revision
+        refs_block = ""
+        if references:
+            refs_text = SourceRetriever.format_for_prompt(references)
+            refs_block = f"""
+VERIFIED SOURCES (available for citation):
+{refs_text}
+
+CITATION RULES FOR REVISION:
+- Use [1], [2], etc. to cite these sources inline
+- If reviewers noted weak/missing citations, add more from this list
+- Ensure the References section at the end is complete and accurate
+"""
+
         prompt = f"""REVISION ROUND {round_number}
 
 You are revising a research manuscript based on specialist peer reviews.
@@ -224,7 +266,7 @@ CURRENT MANUSCRIPT:
 SPECIALIST REVIEWS:
 
 {feedback_summary}
-
+{refs_block}
 ---
 
 REVISION INSTRUCTIONS:
@@ -276,6 +318,7 @@ Focus on substantive improvements that address reviewer concerns."""
             scores = review["scores"]
             avg = review["average"]
 
+            citations_line = f"\n- Citations: {scores['citations']}/10" if 'citations' in scores else ""
             part = f"""
 ## {specialist} (Average: {avg}/10)
 
@@ -284,7 +327,7 @@ Focus on substantive improvements that address reviewer concerns."""
 - Completeness: {scores['completeness']}/10
 - Clarity: {scores['clarity']}/10
 - Novelty: {scores['novelty']}/10
-- Rigor: {scores['rigor']}/10
+- Rigor: {scores['rigor']}/10{citations_line}
 
 **Summary:**
 {review['summary']}
