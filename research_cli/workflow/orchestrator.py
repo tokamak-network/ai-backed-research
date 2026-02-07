@@ -467,6 +467,7 @@ class WorkflowOrchestrator:
                     domain=self.domain_desc,
                 )
                 cv_time = self.tracker.end_operation("citation_verification")
+                self.tracker.record_citation_verification(**self.light_writer.get_last_token_usage())
                 progress.update(task, completed=True)
 
             console.print(f"[green]✓ Citation verification complete[/green]")
@@ -499,6 +500,7 @@ class WorkflowOrchestrator:
         ) as progress:
             task = progress.add_task("[cyan]Desk editor screening...", total=None)
             desk_result = await self.desk_editor.screen(current_manuscript, self.topic)
+            self.tracker.record_desk_editor(tokens=desk_result.get("tokens", 0))
             progress.update(task, completed=True)
 
         if desk_result["decision"] == "DESK_REJECT":
@@ -584,6 +586,7 @@ class WorkflowOrchestrator:
                 )
                 moderator_time = self.tracker.end_operation("moderator")
                 self.tracker.record_moderator_time(moderator_time)
+                self.tracker.record_moderator(tokens=result.get("tokens", 0))
                 return result
 
             async def _run_author_response():
@@ -594,6 +597,7 @@ class WorkflowOrchestrator:
                     round_num
                 )
                 response_time = self.tracker.end_operation("author_response")
+                self.tracker.record_author_response(**self.light_writer.get_last_token_usage())
                 return result
 
             with Progress(
@@ -745,6 +749,7 @@ class WorkflowOrchestrator:
                 )
                 revision_time = self.tracker.end_operation("revision")
                 self.tracker.record_revision_time(revision_time)
+                self.tracker.record_revision(**self.writer.get_last_token_usage())
                 progress.update(task, completed=True)
 
             new_word_count = len(revised_manuscript.split())
@@ -823,7 +828,7 @@ class WorkflowOrchestrator:
                 audience_level=self.audience_level,
             )
             duration = self.tracker.end_operation("initial_draft")
-            self.tracker.record_initial_draft(duration, 0)
+            self.tracker.record_initial_draft(duration, **self.writer.get_last_token_usage())
             progress.update(task, completed=True)
 
         console.print(f"[green]✓ Initial manuscript complete[/green]\n")
@@ -1051,6 +1056,7 @@ class WorkflowOrchestrator:
                 )
                 revision_time = self.tracker.end_operation("revision")
                 self.tracker.record_revision_time(revision_time)
+                self.tracker.record_revision(**self.writer.get_last_token_usage())
                 progress.update(task, completed=True)
 
             new_word_count = len(revised_manuscript.split())
@@ -1114,6 +1120,7 @@ class WorkflowOrchestrator:
                 )
                 moderator_time = self.tracker.end_operation("moderator")
                 self.tracker.record_moderator_time(moderator_time)
+                self.tracker.record_moderator(tokens=result.get("tokens", 0))
                 return result
 
             async def _run_author_response_resume():
@@ -1124,6 +1131,7 @@ class WorkflowOrchestrator:
                     round_num
                 )
                 response_time = self.tracker.end_operation("author_response")
+                self.tracker.record_author_response(**self.light_writer.get_last_token_usage())
                 return result
 
             with Progress(
@@ -1274,6 +1282,7 @@ class WorkflowOrchestrator:
                 )
                 revision_time = self.tracker.end_operation("revision")
                 self.tracker.record_revision_time(revision_time)
+                self.tracker.record_revision(**self.writer.get_last_token_usage())
                 progress.update(task, completed=True)
 
             new_word_count = len(revised_manuscript.split())

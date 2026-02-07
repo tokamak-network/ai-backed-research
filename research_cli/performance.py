@@ -6,6 +6,19 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from contextlib import contextmanager
 
+# Model pricing per 1M tokens (USD)
+MODEL_PRICING = {
+    "claude-opus-4-5": {"input": 15.0, "output": 75.0},
+    "claude-opus-4.5": {"input": 15.0, "output": 75.0},
+    "claude-sonnet-4-5": {"input": 3.0, "output": 15.0},
+    "claude-sonnet-4.5": {"input": 3.0, "output": 15.0},
+    "claude-sonnet-4": {"input": 3.0, "output": 15.0},
+    "gpt-4.1": {"input": 2.0, "output": 8.0},
+    "gpt-4.1-mini": {"input": 0.40, "output": 1.60},
+}
+# Fallback for unknown models
+_DEFAULT_PRICING = {"input": 3.0, "output": 15.0}
+
 
 @dataclass
 class RoundMetrics:
@@ -57,8 +70,18 @@ class PerformanceMetrics:
     team_composition_time: float = 0.0
     team_composition_tokens: int = 0
 
+    # Writer-side token tracking (previously missing)
+    citation_tokens: int = 0
+    revision_tokens: int = 0
+    author_response_tokens: int = 0
+    desk_editor_tokens: int = 0
+    moderator_tokens: int = 0
+
     # Per round metrics
     rounds: List[RoundMetrics] = field(default_factory=list)
+
+    # Model-level breakdown
+    tokens_by_model: Dict[str, dict] = field(default_factory=dict)
 
     # Totals
     total_tokens: int = 0
@@ -74,9 +97,15 @@ class PerformanceMetrics:
             "initial_draft_tokens": self.initial_draft_tokens,
             "team_composition_time": round(self.team_composition_time, 2),
             "team_composition_tokens": self.team_composition_tokens,
+            "citation_tokens": self.citation_tokens,
+            "revision_tokens": self.revision_tokens,
+            "author_response_tokens": self.author_response_tokens,
+            "desk_editor_tokens": self.desk_editor_tokens,
+            "moderator_tokens": self.moderator_tokens,
             "rounds": [r.to_dict() for r in self.rounds],
+            "tokens_by_model": self.tokens_by_model,
             "total_tokens": self.total_tokens,
-            "estimated_cost": round(self.estimated_cost, 2)
+            "estimated_cost": round(self.estimated_cost, 4)
         }
 
 
@@ -93,6 +122,25 @@ class PerformanceTracker:
         self._initial_draft_tokens: int = 0
         self._team_composition_time: float = 0.0
         self._team_composition_tokens: int = 0
+
+        # New cumulative token fields
+        self._citation_tokens: int = 0
+        self._revision_tokens: int = 0
+        self._author_response_tokens: int = 0
+        self._desk_editor_tokens: int = 0
+        self._moderator_tokens: int = 0
+
+        # Model-level input/output tracking for accurate cost calculation
+        self._tokens_by_model: Dict[str, dict] = {}
+
+    def _track_model_tokens(self, model: str, input_tokens: int, output_tokens: int):
+        """Track input/output tokens per model for cost calculation."""
+        if not model:
+            return
+        if model not in self._tokens_by_model:
+            self._tokens_by_model[model] = {"input": 0, "output": 0}
+        self._tokens_by_model[model]["input"] += input_tokens
+        self._tokens_by_model[model]["output"] += output_tokens
 
     def start_workflow(self):
         """Start tracking the entire workflow."""
@@ -147,15 +195,60 @@ class PerformanceTracker:
         self._team_composition_time = duration
         self._team_composition_tokens = tokens
 
-    def record_initial_draft(self, duration: float, tokens: int = 0):
+    def record_initial_draft(self, duration: float, tokens: int = 0,
+                             input_tokens: int = 0, output_tokens: int = 0,
+                             model: str = ""):
         """Record initial draft generation metrics.
 
         Args:
             duration: Time taken in seconds
-            tokens: Tokens used
+            tokens: Total tokens used
+            input_tokens: Input tokens used
+            output_tokens: Output tokens used
+            model: Model identifier
         """
         self._initial_draft_time = duration
         self._initial_draft_tokens = tokens
+        self._track_model_tokens(model, input_tokens, output_tokens)
+
+    def record_citation_verification(self, tokens: int = 0,
+                                     input_tokens: int = 0,
+                                     output_tokens: int = 0,
+                                     model: str = ""):
+        """Record citation verification token usage."""
+        self._citation_tokens += tokens
+        self._track_model_tokens(model, input_tokens, output_tokens)
+
+    def record_revision(self, tokens: int = 0,
+                        input_tokens: int = 0, output_tokens: int = 0,
+                        model: str = ""):
+        """Record manuscript revision token usage."""
+        self._revision_tokens += tokens
+        self._track_model_tokens(model, input_tokens, output_tokens)
+
+    def record_author_response(self, tokens: int = 0,
+                               input_tokens: int = 0,
+                               output_tokens: int = 0,
+                               model: str = ""):
+        """Record author response token usage."""
+        self._author_response_tokens += tokens
+        self._track_model_tokens(model, input_tokens, output_tokens)
+
+    def record_desk_editor(self, tokens: int = 0,
+                           input_tokens: int = 0,
+                           output_tokens: int = 0,
+                           model: str = ""):
+        """Record desk editor screening token usage."""
+        self._desk_editor_tokens += tokens
+        self._track_model_tokens(model, input_tokens, output_tokens)
+
+    def record_moderator(self, tokens: int = 0,
+                         input_tokens: int = 0,
+                         output_tokens: int = 0,
+                         model: str = ""):
+        """Record moderator decision token usage."""
+        self._moderator_tokens += tokens
+        self._track_model_tokens(model, input_tokens, output_tokens)
 
     def start_round(self, round_number: int):
         """Start tracking a review round.
@@ -218,6 +311,16 @@ class PerformanceTracker:
             self._rounds.append(self._current_round)
             self._current_round = None
 
+    def _calculate_cost(self) -> float:
+        """Calculate estimated cost from model-level token tracking."""
+        total_cost = 0.0
+        for model, usage in self._tokens_by_model.items():
+            pricing = MODEL_PRICING.get(model, _DEFAULT_PRICING)
+            input_cost = (usage["input"] / 1_000_000) * pricing["input"]
+            output_cost = (usage["output"] / 1_000_000) * pricing["output"]
+            total_cost += input_cost + output_cost
+        return total_cost
+
     def export_metrics(self) -> PerformanceMetrics:
         """Generate final performance metrics.
 
@@ -230,16 +333,24 @@ class PerformanceTracker:
         workflow_end = time.time()
         total_duration = workflow_end - self._workflow_start
 
-        # Calculate total tokens
+        # Calculate total tokens from all sources
         total_tokens = (
             self._initial_draft_tokens +
             self._team_composition_tokens +
+            self._citation_tokens +
+            self._revision_tokens +
+            self._author_response_tokens +
+            self._desk_editor_tokens +
+            self._moderator_tokens +
             sum(r.round_tokens for r in self._rounds)
         )
 
-        # Estimate cost (rough approximation)
-        # Assuming mixed usage of Claude Sonnet/Opus
-        estimated_cost = (total_tokens / 1000) * 0.003
+        # Calculate cost from model-level breakdown (accurate)
+        # Fall back to flat rate if no model data
+        if self._tokens_by_model:
+            estimated_cost = self._calculate_cost()
+        else:
+            estimated_cost = (total_tokens / 1_000_000) * 3.0  # fallback $3/M
 
         return PerformanceMetrics(
             workflow_start=datetime.fromtimestamp(self._workflow_start).isoformat(),
@@ -249,7 +360,13 @@ class PerformanceTracker:
             initial_draft_tokens=self._initial_draft_tokens,
             team_composition_time=self._team_composition_time,
             team_composition_tokens=self._team_composition_tokens,
+            citation_tokens=self._citation_tokens,
+            revision_tokens=self._revision_tokens,
+            author_response_tokens=self._author_response_tokens,
+            desk_editor_tokens=self._desk_editor_tokens,
+            moderator_tokens=self._moderator_tokens,
             rounds=self._rounds,
+            tokens_by_model=self._tokens_by_model,
             total_tokens=total_tokens,
             estimated_cost=estimated_cost
         )

@@ -685,8 +685,9 @@ async def resume_workflow_background(project_id: str, project_dir: Path):
             status_callback=status_update
         )
 
-        # Mark as completed with round/score data
-        update_workflow_status(project_id, "completed", result["total_rounds"], result["total_rounds"], "Workflow completed successfully")
+        # Mark as completed or rejected based on actual result
+        final_status = "completed" if result.get("passed") else "rejected"
+        update_workflow_status(project_id, final_status, result["total_rounds"], result["total_rounds"], "Workflow completed successfully")
         _enrich_completed_status(project_id)
         add_activity_log(project_id, "success", f"Workflow completed with score {result['final_score']}/10")
 
@@ -915,8 +916,10 @@ async def run_workflow_background(
         cost_info = calculate_cost_estimate(total_input, total_output, experts[0].get("suggested_model", "claude-opus-4.5"))
         workflow_status[project_id]["cost_estimate"] = cost_info
 
-        # Update status: completed (if not already done by callback)
-        if workflow_status[project_id]["status"] != "completed":
+        # Update status based on actual result (completed vs rejected)
+        _enrich_completed_status(project_id)
+        enriched_status = workflow_status.get(project_id, {}).get("status", "completed")
+        if enriched_status not in ("completed", "rejected"):
             workflow_status[project_id].update({
                 "status": "completed",
                 "progress_percentage": 100,
@@ -924,7 +927,6 @@ async def run_workflow_background(
                 "estimated_time_remaining_seconds": 0
             })
             add_activity_log(project_id, "success", "Workflow completed successfully")
-        _enrich_completed_status(project_id)
 
     except Exception as e:
         # Check if a checkpoint exists — if so, mark as "interrupted" (resumable)
@@ -977,10 +979,15 @@ def _enrich_completed_status(project_id: str):
                 "decision": r.get("final_decision", ""),
             })
 
+        passed = data.get("passed", False)
         workflow_status[project_id].update({
+            "status": "completed" if passed else "rejected",
+            "progress_percentage": 100,
+            "message": "Workflow completed successfully",
+            "estimated_time_remaining_seconds": 0,
             "rounds": rounds_summary,
             "final_score": data.get("final_score"),
-            "final_decision": "ACCEPT" if data.get("passed") else (
+            "final_decision": "ACCEPT" if passed else (
                 rounds_summary[-1]["decision"] if rounds_summary else "UNKNOWN"
             ),
             "total_rounds": data.get("total_rounds", len(rounds_summary)),

@@ -47,6 +47,25 @@ class WriterAgent:
             base_url=fallback_config.base_url
         )
 
+        # Token tracking for last LLM call
+        self._last_input_tokens: int = 0
+        self._last_output_tokens: int = 0
+        self._last_total_tokens: int = 0
+        self._last_model_used: str = model
+
+    def get_last_token_usage(self) -> dict:
+        """Return token usage from the most recent LLM call.
+
+        Returns:
+            Dict with tokens, input_tokens, output_tokens, model keys
+        """
+        return {
+            "tokens": self._last_total_tokens,
+            "input_tokens": self._last_input_tokens,
+            "output_tokens": self._last_output_tokens,
+            "model": self._last_model_used,
+        }
+
     async def _generate_with_fallback(
         self,
         prompt: str,
@@ -69,6 +88,10 @@ class WriterAgent:
                 ),
                 timeout=timeout,
             )
+            self._last_input_tokens = response.input_tokens or 0
+            self._last_output_tokens = response.output_tokens or 0
+            self._last_total_tokens = response.total_tokens or 0
+            self._last_model_used = response.model
             return response
         except (asyncio.TimeoutError, Exception) as e:
             is_timeout = isinstance(e, asyncio.TimeoutError)
@@ -99,6 +122,10 @@ class WriterAgent:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
+            self._last_input_tokens = response.input_tokens or 0
+            self._last_output_tokens = response.output_tokens or 0
+            self._last_total_tokens = response.total_tokens or 0
+            self._last_model_used = response.model
             return response
 
     async def write_manuscript(

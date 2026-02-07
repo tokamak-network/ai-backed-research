@@ -104,3 +104,29 @@ _(to be filled after completion)_
 - [ ] 리뷰어 피드백에 독자층 기준 반영 확인
 - [ ] index.html에 "Beginner-Friendly" 배지 표시 확인
 - [ ] article.html 메타데이터에 독자층 표시 확인
+
+---
+
+## Token Tracking Bug Fix + ask-topic.html UX Redesign
+
+### Part 1: Token Tracking — Fixed
+- [x] `research_cli/agents/writer.py`: Added `_last_*_tokens` attributes, token saving in `_generate_with_fallback()`, `get_last_token_usage()` method
+- [x] `research_cli/performance.py`: Added cumulative fields (`_citation_tokens`, `_revision_tokens`, `_author_response_tokens`, `_desk_editor_tokens`, `_moderator_tokens`), per-model tracking (`_tokens_by_model`), model-based cost calculation (`MODEL_PRICING`), new recording methods, extended `PerformanceMetrics` dataclass + `to_dict()`
+- [x] `research_cli/workflow/orchestrator.py`: Token recording after every writer/moderator/desk_editor call in `run()`, `_resume_workflow()`, and `_generate_initial_manuscript()`
+
+### Part 2: ask-topic.html UX — Fixed
+- [x] Moved Article Length + Workflow Mode from Step 3 to Step 1 (after Audience Level)
+- [x] Smart defaults: beginner/intermediate → short/standard; professional → full/collaborative
+- [x] Standard mode hides Co-Authors section; collaborative shows it
+- [x] Reviewer count limited to 3 (matching backend `pool[:3]`)
+- [x] Fixed `selectResearchType()` scoping bug (was deselecting all selectors)
+- [x] Team size estimate now uses actual reviewer count (3) and mode-aware author count
+
+### Verification
+- [ ] Python syntax checks: all 3 files pass `ast.parse()`
+- [ ] Integration test: `PerformanceTracker` accumulates tokens correctly (29500 total)
+- [ ] ask-topic.html: beginner → auto-selects short/standard
+- [ ] ask-topic.html: professional → auto-selects full/collaborative
+- [ ] ask-topic.html: standard mode → co-author section hidden
+- [ ] ask-topic.html: only 3 reviewers displayed
+- [ ] workflow_complete.json: `initial_draft_tokens > 0`, `revision_tokens > 0`, `tokens_by_model` populated

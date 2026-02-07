@@ -675,6 +675,36 @@
                 </div>
             </div>
 
+            <!-- Article Length -->
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Article Length</label>
+                <div class="research-type-selector" id="article-length-selector">
+                    <div class="research-type-option" data-length="short" onclick="selectArticleLength('short')">
+                        <div class="type-title">Short</div>
+                        <div class="type-description">1,500 - 2,500 words. Concise overview focused on key insights.</div>
+                    </div>
+                    <div class="research-type-option selected" data-length="full" onclick="selectArticleLength('full')">
+                        <div class="type-title">Full</div>
+                        <div class="type-description">3,000 - 5,000 words. In-depth analysis with comprehensive coverage.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Mode -->
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Workflow Mode</label>
+                <div class="research-type-selector" id="workflow-mode-selector">
+                    <div class="research-type-option selected" data-mode="standard" onclick="selectWorkflowMode('standard')">
+                        <div class="type-title">Standard</div>
+                        <div class="type-description">Single AI writer drafts the manuscript. Proposed experts serve as peer reviewers.</div>
+                    </div>
+                    <div class="research-type-option" data-mode="collaborative" onclick="selectWorkflowMode('collaborative')">
+                        <div class="type-title">Collaborative</div>
+                        <div class="type-description">Lead author + co-authors research and write together. Category experts provide peer review.</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="button-group">
                 <button id="analyze-btn" class="btn btn-primary" onclick="analyzeTopicAndProposeTeam()">
                     Analyze Topic & Propose Team
@@ -700,7 +730,7 @@
             </div>
 
             <!-- Co-Authors -->
-            <div class="team-group">
+            <div class="team-group" id="coauthors-group">
                 <div class="team-group-header">
                     <h3>Co-Authors</h3>
                     <span class="team-group-badge">Research, feedback, review sections</span>
@@ -729,36 +759,6 @@
         <!-- Step 3: Workflow Settings -->
         <div id="step-settings" class="form-section" style="display: none;">
             <h2><span class="step-badge">3</span> Workflow Settings</h2>
-
-            <!-- Workflow Mode -->
-            <div class="form-group" style="margin-bottom: 2rem;">
-                <label>Workflow Mode</label>
-                <div class="research-type-selector" id="workflow-mode-selector">
-                    <div class="research-type-option selected" data-mode="standard" onclick="selectWorkflowMode('standard')">
-                        <div class="type-title">Standard</div>
-                        <div class="type-description">Single AI writer drafts the manuscript. Proposed experts serve as peer reviewers.</div>
-                    </div>
-                    <div class="research-type-option" data-mode="collaborative" onclick="selectWorkflowMode('collaborative')">
-                        <div class="type-title">Collaborative</div>
-                        <div class="type-description">Lead author + co-authors research and write together. Category experts provide peer review.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Article Length -->
-            <div class="form-group" style="margin-bottom: 2rem;">
-                <label>Article Length</label>
-                <div class="research-type-selector" id="article-length-selector">
-                    <div class="research-type-option" data-length="short" onclick="selectArticleLength('short')">
-                        <div class="type-title">Short</div>
-                        <div class="type-description">1,500 - 2,500 words. Concise overview focused on key insights.</div>
-                    </div>
-                    <div class="research-type-option selected" data-length="full" onclick="selectArticleLength('full')">
-                        <div class="type-title">Full</div>
-                        <div class="type-description">3,000 - 5,000 words. In-depth analysis with comprehensive coverage.</div>
-                    </div>
-                </div>
-            </div>
 
             <div class="settings-grid">
                 <div class="setting-item">
@@ -1003,10 +1003,10 @@
         function updateReviewerPool() {
             if (!selectedCategory.major || !selectedCategory.subfield) return;
 
-            const pool = ACADEMIC_CATEGORIES[selectedCategory.major].subfields[selectedCategory.subfield].expert_pool;
+            const pool = ACADEMIC_CATEGORIES[selectedCategory.major].subfields[selectedCategory.subfield].expert_pool.slice(0, 3);
             const container = document.getElementById('reviewers-container');
 
-            // Show static fallback immediately
+            // Show static fallback immediately (3 reviewers, matching backend)
             container.innerHTML = pool.map((expert, idx) => `
                 <div class="author-card reviewer">
                     <div class="author-header">
@@ -1092,23 +1092,20 @@
             // Update team labels based on mode
             const leadHeader = document.querySelector('#step-team .team-group:first-of-type .team-group-header h3');
             const leadBadge = document.querySelector('#step-team .team-group:first-of-type .team-group-badge');
-            const coauthorHeader = document.querySelector('#step-team .team-group:nth-of-type(2) .team-group-header h3');
-            const coauthorBadge = document.querySelector('#step-team .team-group:nth-of-type(2) .team-group-badge');
+            const coauthorsGroup = document.getElementById('coauthors-group');
             const reviewerHeader = document.querySelector('#step-team .team-group:nth-of-type(3) .team-group-header h3');
             const reviewerBadge = document.querySelector('#step-team .team-group:nth-of-type(3) .team-group-badge');
 
             if (mode === 'collaborative') {
                 if (leadHeader) leadHeader.textContent = 'Lead Author';
                 if (leadBadge) leadBadge.textContent = 'Plans, coordinates, writes';
-                if (coauthorHeader) coauthorHeader.textContent = 'Co-Authors';
-                if (coauthorBadge) coauthorBadge.textContent = 'Research, feedback, review sections';
+                if (coauthorsGroup) coauthorsGroup.style.display = '';
                 if (reviewerHeader) reviewerHeader.textContent = 'Peer Reviewers';
                 if (reviewerBadge) reviewerBadge.textContent = 'From category expert pool';
             } else {
                 if (leadHeader) leadHeader.textContent = 'Primary Expert';
                 if (leadBadge) leadBadge.textContent = 'Leads research direction';
-                if (coauthorHeader) coauthorHeader.textContent = 'Additional Experts';
-                if (coauthorBadge) coauthorBadge.textContent = 'Supporting research perspectives';
+                if (coauthorsGroup) coauthorsGroup.style.display = 'none';
                 if (reviewerHeader) reviewerHeader.textContent = 'Expert Reviewers';
                 if (reviewerBadge) reviewerBadge.textContent = 'All proposed experts review the draft';
             }
@@ -1122,17 +1119,26 @@
             document.querySelector(`#article-length-selector .research-type-option[data-length="${length}"]`).classList.add('selected');
         }
 
-        // Audience level selection
+        // Audience level selection with smart defaults
         function selectAudienceLevel(level) {
             document.querySelectorAll('.audience-option').forEach(opt => {
                 opt.classList.remove('selected');
             });
             document.querySelector(`.audience-option[data-level="${level}"]`).classList.add('selected');
+
+            // Smart defaults based on audience level
+            if (level === 'beginner' || level === 'intermediate') {
+                selectArticleLength('short');
+                selectWorkflowMode('standard');
+            } else {
+                selectArticleLength('full');
+                selectWorkflowMode('collaborative');
+            }
         }
 
         // Research type selection
         function selectResearchType(type) {
-            document.querySelectorAll('.research-type-option').forEach(opt => {
+            document.querySelectorAll('.research-type-option[data-type]').forEach(opt => {
                 opt.classList.remove('selected');
             });
             document.querySelector(`.research-type-option[data-type="${type}"]`).classList.add('selected');
@@ -1197,6 +1203,10 @@
 
                 // Display team
                 displayTeam(proposal);
+
+                // Apply current workflow mode visibility (co-authors hidden in standard)
+                const currentMode = document.querySelector('#workflow-mode-selector .research-type-option.selected')?.dataset.mode || 'standard';
+                selectWorkflowMode(currentMode);
 
                 // Enrich reviewer profiles with AI if category is set
                 if (selectedCategory.major && selectedCategory.subfield) {
@@ -1364,9 +1374,13 @@
         }
 
         function goToSettings() {
-            // Update estimates
-            const teamSize = currentProposal.proposed_experts.length +
-                (selectedCategory.subfield ? ACADEMIC_CATEGORIES[selectedCategory.major].subfields[selectedCategory.subfield].expert_pool.length : 3);
+            // Update estimates (reviewers capped at 3 to match backend)
+            const reviewerCount = selectedCategory.subfield
+                ? Math.min(ACADEMIC_CATEGORIES[selectedCategory.major].subfields[selectedCategory.subfield].expert_pool.length, 3)
+                : 3;
+            const workflowMode = document.querySelector('#workflow-mode-selector .research-type-option.selected')?.dataset.mode || 'standard';
+            const authorCount = workflowMode === 'standard' ? 1 : currentProposal.proposed_experts.length;
+            const teamSize = authorCount + reviewerCount;
             const cycles = parseInt(document.getElementById('research-cycles')?.value || 1);
             const rounds = parseInt(document.getElementById('max-rounds')?.value || 3);
 
