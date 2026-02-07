@@ -23,7 +23,7 @@
         .form-section {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 2px;
             padding: 2rem;
             margin-bottom: 2rem;
         }
@@ -45,7 +45,7 @@
             height: 28px;
             background: var(--primary-600);
             color: white;
-            border-radius: 50%;
+            border-radius: 2px;
             font-size: 0.875rem;
             font-weight: 700;
         }
@@ -67,7 +67,7 @@
             width: 100%;
             padding: 0.75rem;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 2px;
             background: var(--background);
             color: var(--text);
             font-size: 1rem;
@@ -102,7 +102,7 @@
         .btn {
             padding: 0.875rem 1.5rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 0;
             font-weight: 600;
             font-size: 1rem;
             cursor: pointer;
@@ -157,7 +157,7 @@
             padding: 1.5rem;
             background: var(--background);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 2px;
         }
 
         .category-section.active {
@@ -184,7 +184,7 @@
             padding: 0.5rem 1rem;
             background: rgba(59, 130, 246, 0.1);
             color: #3b82f6;
-            border-radius: 6px;
+            border-radius: 0;
             font-size: 0.875rem;
             font-weight: 600;
         }
@@ -237,14 +237,14 @@
             padding: 0.25rem 0.5rem;
             background: var(--background);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 2px;
             color: var(--text-secondary);
         }
 
         .author-card {
             background: var(--background);
             border: 2px solid var(--border);
-            border-radius: 8px;
+            border-radius: 2px;
             padding: 1.25rem;
             margin-bottom: 1rem;
             position: relative;
@@ -265,7 +265,7 @@
             font-size: 0.7rem;
             font-weight: 700;
             padding: 2px 8px;
-            border-radius: 4px;
+            border-radius: 0;
         }
 
         .author-card.reviewer {
@@ -292,7 +292,7 @@
             padding: 0.25rem 0.5rem;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 2px;
             color: var(--text-secondary);
         }
 
@@ -314,7 +314,7 @@
             padding: 0.25rem 0.5rem;
             background: rgba(59, 130, 246, 0.1);
             color: #3b82f6;
-            border-radius: 4px;
+            border-radius: 0;
         }
 
         .author-actions {
@@ -330,7 +330,7 @@
             padding: 0.375rem 0.75rem;
             background: transparent;
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 0;
             color: var(--text-secondary);
             cursor: pointer;
             transition: all 0.2s;
@@ -349,7 +349,7 @@
             padding: 1rem;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 2px;
         }
 
         .customization-panel.active {
@@ -367,7 +367,7 @@
             padding: 0.5rem;
             background: transparent;
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 0;
             font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
@@ -415,7 +415,7 @@
         .estimate-box {
             background: var(--background);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 2px;
             padding: 1.5rem;
             margin-top: 2rem;
         }
@@ -454,7 +454,7 @@
             border: 1px solid #fca5a5;
             color: #991b1b;
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 2px;
             margin-top: 1rem;
             display: none;
         }
@@ -464,7 +464,7 @@
             border: 1px solid #6ee7b7;
             color: #065f46;
             padding: 1.5rem;
-            border-radius: 8px;
+            border-radius: 2px;
             text-align: center;
         }
 
@@ -477,7 +477,7 @@
 
         .research-type-option {
             border: 2px solid var(--border);
-            border-radius: 8px;
+            border-radius: 2px;
             padding: 1.25rem;
             cursor: pointer;
             transition: all 0.2s;
@@ -491,12 +491,6 @@
         .research-type-option.selected {
             border-color: var(--primary-600);
             background: rgba(59, 130, 246, 0.05);
-        }
-
-        .research-type-option input[type="radio"] {
-            position: absolute;
-            top: 12px;
-            right: 12px;
         }
 
         .type-title {
@@ -562,7 +556,7 @@
         <div class="form-section" style="margin-bottom: 1rem; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem;">
             <label for="api-key" style="font-weight: 600; white-space: nowrap;">API Key</label>
             <input type="password" id="api-key" placeholder="Enter your API key"
-                   style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--background); color: var(--text); font-size: 0.875rem;">
+                   style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 2px; background: var(--background); color: var(--text); font-size: 0.875rem;">
             <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;" onclick="saveApiKey()">Save</button>
             <span id="api-key-status" style="font-size: 0.75rem; color: var(--text-secondary);"></span>
         </div>
@@ -576,13 +570,11 @@
             <div class="form-group">
                 <label>Research Type</label>
                 <div class="research-type-selector">
-                    <div class="research-type-option selected" onclick="selectResearchType('survey')">
-                        <input type="radio" name="research-type" value="survey" checked>
+                    <div class="research-type-option selected" data-type="survey" onclick="selectResearchType('survey')">
                         <div class="type-title">Survey / Literature Review</div>
                         <div class="type-description">Comprehensive review of existing research and state-of-the-art</div>
                     </div>
-                    <div class="research-type-option" onclick="selectResearchType('research')">
-                        <input type="radio" name="research-type" value="research">
+                    <div class="research-type-option" data-type="research" onclick="selectResearchType('research')">
                         <div class="type-title">Original Research</div>
                         <div class="type-description">In-depth analysis with novel insights and conclusions</div>
                     </div>
@@ -784,34 +776,80 @@
                 "name": "Computer Science",
                 "icon": "computer",
                 "subfields": {
-                    "ai_ml": { "name": "AI & Machine Learning", "expert_pool": ["deep_learning_expert", "nlp_expert", "computer_vision_expert"] },
-                    "systems": { "name": "Systems & Distributed Computing", "expert_pool": ["distributed_systems_expert", "database_expert", "networking_expert"] },
-                    "security": { "name": "Security & Cryptography", "expert_pool": ["cryptography_expert", "blockchain_expert", "network_security_expert", "privacy_expert"] },
-                    "theory": { "name": "Theory & Algorithms", "expert_pool": ["algorithms_expert", "complexity_theory_expert", "formal_methods_expert"] }
+                    "ai_ml": { "name": "AI & Machine Learning", "expert_pool": ["deep_learning_expert", "nlp_expert", "computer_vision_expert", "reinforcement_learning_expert"] },
+                    "systems": { "name": "Systems & Distributed Computing", "expert_pool": ["distributed_systems_expert", "os_expert", "networking_expert", "database_expert"] },
+                    "theory": { "name": "Theory & Algorithms", "expert_pool": ["algorithms_expert", "complexity_theory_expert", "formal_methods_expert", "computational_theory_expert"] },
+                    "security": { "name": "Security & Cryptography", "expert_pool": ["cryptography_expert", "network_security_expert", "blockchain_expert", "privacy_expert"] },
+                    "software_eng": { "name": "Software Engineering", "expert_pool": ["software_architecture_expert", "programming_languages_expert", "testing_expert", "devops_expert"] },
+                    "hci": { "name": "Human-Computer Interaction", "expert_pool": ["ux_expert", "interaction_design_expert", "accessibility_expert", "visualization_expert"] }
                 }
             },
             "engineering": {
-                "name": "Engineering",
+                "name": "Engineering & Technology",
                 "icon": "build",
                 "subfields": {
-                    "electrical": { "name": "Electrical Engineering", "expert_pool": ["circuits_expert", "signal_processing_expert", "embedded_systems_expert"] },
-                    "mechanical": { "name": "Mechanical Engineering", "expert_pool": ["thermodynamics_expert", "robotics_expert", "materials_expert"] }
-                }
-            },
-            "business_economics": {
-                "name": "Business & Economics",
-                "icon": "trending_up",
-                "subfields": {
-                    "finance": { "name": "Finance", "expert_pool": ["financial_markets_expert", "corporate_finance_expert", "risk_management_expert"] },
-                    "economics": { "name": "Economics", "expert_pool": ["microeconomics_expert", "macroeconomics_expert", "game_theory_expert"] }
+                    "electrical": { "name": "Electrical & Electronics Engineering", "expert_pool": ["circuits_expert", "signal_processing_expert", "embedded_systems_expert", "power_systems_expert"] },
+                    "mechanical": { "name": "Mechanical Engineering", "expert_pool": ["thermodynamics_expert", "fluid_mechanics_expert", "materials_expert", "robotics_expert"] },
+                    "civil": { "name": "Civil & Structural Engineering", "expert_pool": ["structural_analysis_expert", "geotechnical_expert", "transportation_expert", "construction_expert"] },
+                    "materials": { "name": "Materials Science", "expert_pool": ["nanomaterials_expert", "polymers_expert", "metallurgy_expert", "composites_expert"] }
                 }
             },
             "natural_sciences": {
                 "name": "Natural Sciences",
                 "icon": "science",
                 "subfields": {
-                    "physics": { "name": "Physics", "expert_pool": ["quantum_physics_expert", "particle_physics_expert"] },
-                    "mathematics": { "name": "Mathematics", "expert_pool": ["number_theory_expert", "topology_expert", "analysis_expert"] }
+                    "physics": { "name": "Physics & Astronomy", "expert_pool": ["quantum_physics_expert", "particle_physics_expert", "astrophysics_expert", "condensed_matter_expert"] },
+                    "chemistry": { "name": "Chemistry", "expert_pool": ["organic_chemistry_expert", "inorganic_chemistry_expert", "physical_chemistry_expert", "analytical_chemistry_expert"] },
+                    "biology": { "name": "Biology & Life Sciences", "expert_pool": ["molecular_biology_expert", "genetics_expert", "ecology_expert", "evolutionary_biology_expert"] },
+                    "earth_science": { "name": "Earth & Environmental Sciences", "expert_pool": ["climate_science_expert", "geology_expert", "oceanography_expert", "environmental_science_expert"] },
+                    "mathematics": { "name": "Pure Mathematics", "expert_pool": ["number_theory_expert", "topology_expert", "analysis_expert", "algebra_expert"] }
+                }
+            },
+            "social_sciences": {
+                "name": "Social Sciences",
+                "icon": "groups",
+                "subfields": {
+                    "economics": { "name": "Economics", "expert_pool": ["microeconomics_expert", "macroeconomics_expert", "econometrics_expert", "game_theory_expert"] },
+                    "sociology": { "name": "Sociology", "expert_pool": ["social_theory_expert", "urban_sociology_expert", "social_networks_expert", "demography_expert"] },
+                    "political_science": { "name": "Political Science", "expert_pool": ["political_theory_expert", "comparative_politics_expert", "international_relations_expert", "public_policy_expert"] },
+                    "psychology": { "name": "Psychology", "expert_pool": ["cognitive_psychology_expert", "behavioral_economics_expert", "social_psychology_expert", "neuroscience_expert"] },
+                    "anthropology": { "name": "Anthropology", "expert_pool": ["cultural_anthropology_expert", "archaeology_expert", "linguistic_anthropology_expert", "biological_anthropology_expert"] }
+                }
+            },
+            "humanities": {
+                "name": "Humanities",
+                "icon": "menu_book",
+                "subfields": {
+                    "philosophy": { "name": "Philosophy", "expert_pool": ["ethics_expert", "epistemology_expert", "metaphysics_expert", "logic_expert"] },
+                    "history": { "name": "History", "expert_pool": ["ancient_history_expert", "modern_history_expert", "historiography_expert", "social_history_expert"] },
+                    "literature": { "name": "Literature & Literary Studies", "expert_pool": ["literary_theory_expert", "comparative_literature_expert", "poetry_expert", "narrative_studies_expert"] },
+                    "linguistics": { "name": "Linguistics", "expert_pool": ["syntax_expert", "semantics_expert", "phonology_expert", "sociolinguistics_expert"] }
+                }
+            },
+            "business_economics": {
+                "name": "Business & Economics",
+                "icon": "trending_up",
+                "subfields": {
+                    "finance": { "name": "Finance & Accounting", "expert_pool": ["corporate_finance_expert", "financial_markets_expert", "accounting_expert", "risk_management_expert"] },
+                    "management": { "name": "Management & Strategy", "expert_pool": ["strategic_management_expert", "organizational_behavior_expert", "leadership_expert", "innovation_management_expert"] },
+                    "marketing": { "name": "Marketing", "expert_pool": ["consumer_behavior_expert", "digital_marketing_expert", "brand_management_expert", "market_research_expert"] }
+                }
+            },
+            "medicine_health": {
+                "name": "Medicine & Health Sciences",
+                "icon": "local_hospital",
+                "subfields": {
+                    "clinical": { "name": "Clinical Medicine", "expert_pool": ["internal_medicine_expert", "surgery_expert", "diagnostics_expert", "therapeutics_expert"] },
+                    "public_health": { "name": "Public Health & Epidemiology", "expert_pool": ["epidemiology_expert", "health_policy_expert", "disease_prevention_expert", "global_health_expert"] },
+                    "pharmacology": { "name": "Pharmacology", "expert_pool": ["drug_discovery_expert", "pharmacokinetics_expert", "clinical_trials_expert", "toxicology_expert"] }
+                }
+            },
+            "law_policy": {
+                "name": "Law & Public Policy",
+                "icon": "gavel",
+                "subfields": {
+                    "law": { "name": "Law & Legal Studies", "expert_pool": ["constitutional_law_expert", "international_law_expert", "corporate_law_expert", "legal_theory_expert"] },
+                    "policy": { "name": "Public Policy & Administration", "expert_pool": ["policy_analysis_expert", "public_administration_expert", "governance_expert", "regulatory_policy_expert"] }
                 }
             }
         };
@@ -901,17 +939,14 @@
         function selectResearchType(type) {
             document.querySelectorAll('.research-type-option').forEach(opt => {
                 opt.classList.remove('selected');
-                opt.querySelector('input').checked = false;
             });
-            const selected = document.querySelector(`.research-type-option input[value="${type}"]`);
-            selected.checked = true;
-            selected.closest('.research-type-option').classList.add('selected');
+            document.querySelector(`.research-type-option[data-type="${type}"]`).classList.add('selected');
         }
 
         // Analyze topic and propose team
         async function analyzeTopicAndProposeTeam() {
             const topic = document.getElementById('topic').value.trim();
-            const researchType = document.querySelector('input[name="research-type"]:checked').value;
+            const researchType = document.querySelector('.research-type-option.selected').dataset.type;
             const errorDiv = document.getElementById('topic-error');
             const btn = document.getElementById('analyze-btn');
 
