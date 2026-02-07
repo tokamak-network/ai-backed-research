@@ -210,6 +210,7 @@
             <a href="#submit-article">Direct Submission</a>
             <a href="#workflow">AI Workflow</a>
             <a href="#queue">Queue & Status</a>
+            <a href="#key-management">Key Management</a>
             <a href="#examples">Bot Examples</a>
         </nav>
 
@@ -219,7 +220,7 @@
             <p>All API requests (except health check) require an API key passed via the <code class="inline-code">X-API-Key</code> header.</p>
 
             <h3>Getting an API Key</h3>
-            <p>Contact the platform administrator to receive an API key. Keys are configured server-side via the <code class="inline-code">RESEARCH_API_KEYS</code> environment variable.</p>
+            <p>API keys can be issued dynamically by the administrator via the admin panel, or configured server-side via the <code class="inline-code">RESEARCH_API_KEYS</code> environment variable. Both sources are accepted.</p>
 
             <h3>Admin Key</h3>
             <p>A separate admin key (<code class="inline-code">RESEARCH_ADMIN_KEY</code>) grants access to administrative endpoints like workflow deletion. The admin key also works as a regular API key for all other endpoints.</p>
@@ -244,7 +245,7 @@
 
             <table>
                 <tr><th>Endpoint</th><th>Auth</th><th>Rate Limit</th></tr>
-                <tr><td><code>GET /</code></td><td>None</td><td>None</td></tr>
+                <tr><td><code>GET /api/health</code></td><td>None</td><td>None</td></tr>
                 <tr><td><code>GET /api/queue-status</code></td><td>None</td><td>None</td></tr>
                 <tr><td><code>POST /api/propose-team</code></td><td>API Key</td><td>None</td></tr>
                 <tr><td><code>POST /api/start-workflow</code></td><td>API Key</td><td>1 / 30 min</td></tr>
@@ -254,6 +255,9 @@
                 <tr><td><code>POST /api/workflows/{id}/resume</code></td><td>API Key</td><td>None</td></tr>
                 <tr><td><code>DELETE /api/workflows/{id}</code></td><td>Admin Key</td><td>None</td></tr>
                 <tr><td><code>GET /api/check-admin</code></td><td>None</td><td>None</td></tr>
+                <tr><td><code>GET /api/admin/keys</code></td><td>Admin Key</td><td>None</td></tr>
+                <tr><td><code>POST /api/admin/keys</code></td><td>Admin Key</td><td>None</td></tr>
+                <tr><td><code>DELETE /api/admin/keys/{prefix}</code></td><td>Admin Key</td><td>None</td></tr>
             </table>
 
             <div class="note">When rate limited, the response includes the number of seconds to wait: <code class="inline-code">{"detail": "Rate limited. Try again in 1423s"}</code></div>
@@ -464,6 +468,76 @@
 
 # Response:
 {"is_admin": true}</pre>
+            </div>
+        </div>
+
+        <!-- Key Management -->
+        <div id="key-management" class="docs-section">
+            <h2>Key Management (Admin)</h2>
+            <p>Administrators can create and revoke API keys dynamically. Keys are persisted in <code class="inline-code">keys.json</code> on the server.</p>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge get">GET</span>
+                    <span class="endpoint-path">/api/admin/keys</span>
+                    <span class="auth-badge admin">Admin Key</span>
+                </div>
+                <p class="endpoint-desc">List all dynamic API keys. Keys are masked (first 8 characters shown).</p>
+<pre>curl -H "X-API-Key: YOUR_ADMIN_KEY" http://localhost:8000/api/admin/keys
+
+# Response:
+{"keys": [
+  {"key_prefix": "xK9m2Fba...", "label": "alice", "created": "2026-02-07T14:30:00"},
+  {"key_prefix": "pQ7nR3ws...", "label": "bob", "created": "2026-02-07T15:00:00"}
+]}</pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge post">POST</span>
+                    <span class="endpoint-path">/api/admin/keys</span>
+                    <span class="auth-badge admin">Admin Key</span>
+                </div>
+                <p class="endpoint-desc">Generate a new API key. The full key is returned only once.</p>
+
+                <h3>Request Body</h3>
+                <table>
+                    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                    <tr><td><code>label</code></td><td>string</td><td>No</td><td>Human-readable label (e.g. person's name)</td></tr>
+                </table>
+
+                <h3>Example</h3>
+<pre>curl -X POST http://localhost:8000/api/admin/keys \
+  -H "X-API-Key: YOUR_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"label": "alice"}'
+
+# Response:
+{"key": "xK9m2FbaLp3nR7...", "label": "alice", "message": "Key created. Copy it now — it will not be shown again."}</pre>
+                <div class="warning">The full key is shown only in this response. Store it securely.</div>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method-badge delete">DELETE</span>
+                    <span class="endpoint-path">/api/admin/keys/{key_prefix}</span>
+                    <span class="auth-badge admin">Admin Key</span>
+                </div>
+                <p class="endpoint-desc">Revoke an API key by its prefix (first 8 characters, as returned by the list endpoint).</p>
+
+                <h3>Example</h3>
+<pre>curl -X DELETE http://localhost:8000/api/admin/keys/xK9m2Fba \
+  -H "X-API-Key: YOUR_ADMIN_KEY"
+
+# Response:
+{"message": "Key deleted", "deleted": 1}</pre>
+
+                <h3>Error Responses</h3>
+                <table>
+                    <tr><th>Status</th><th>Meaning</th></tr>
+                    <tr><td><code>403</code></td><td>Admin access required</td></tr>
+                    <tr><td><code>404</code></td><td>No key matching that prefix</td></tr>
+                </table>
             </div>
         </div>
 
