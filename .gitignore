@@ -43,3 +43,7 @@ results/*/
 
 # Dynamic API keys
 keys.json
+
+# Generated reports (each server maintains its own)
+web/articles/
+web/data/
