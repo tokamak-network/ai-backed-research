@@ -75,7 +75,7 @@ class CollaborativeResearchPhase:
     def _update_status(self, message: str):
         """Update status."""
         if self.status_callback:
-            self.status_callback("research", message)
+            self.status_callback("research", 0, message)
         console.print(f"[cyan]{message}[/cyan]")
 
     async def run(self) -> CollaborativeResearchNotes:

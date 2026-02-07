@@ -80,7 +80,7 @@ class ManuscriptWritingPhase:
     def _update_status(self, message: str):
         """Update status."""
         if self.status_callback:
-            self.status_callback("writing", message)
+            self.status_callback("writing_sections", 0, message)
         console.print(f"[cyan]{message}[/cyan]")
 
     async def run(self) -> Manuscript:
