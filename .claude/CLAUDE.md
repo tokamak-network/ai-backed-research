@@ -46,4 +46,4 @@ The platform supports 9 major academic fields defined in `research_cli/categorie
 8. Law & Public Policy (2 subfields)
 
 When adding new pages or modifying category-related code, ensure all 9 fields are represented.
-The JS `ACADEMIC_CATEGORIES` in `create-report.html` must mirror `categories.py`.
+The JS `ACADEMIC_CATEGORIES` in `ask-topic.html` must mirror `categories.py`.
