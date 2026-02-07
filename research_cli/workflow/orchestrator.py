@@ -330,7 +330,7 @@ class WorkflowOrchestrator:
         # Initialize agents
         self.writer = WriterAgent(model="claude-opus-4.5")
         self.moderator = ModeratorAgent(model="claude-opus-4.5")
-        self.desk_editor = DeskEditorAgent(model="claude-haiku-4")
+        self.desk_editor = DeskEditorAgent(model="claude-sonnet-4.5")
 
         # Sources retrieved before writing (populated in _generate_initial_manuscript)
         self.sources: List[Reference] = []
