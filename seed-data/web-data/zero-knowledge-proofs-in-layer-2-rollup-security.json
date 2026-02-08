@@ -1,0 +1,285 @@
+{
+  "topic": "Zero-Knowledge Proofs in Layer 2 Rollup Security",
+  "output_directory": "results/zero-knowledge-proofs-in-layer-2-rollup-security",
+  "max_rounds": 2,
+  "threshold": 8.0,
+  "expert_team": [
+    {
+      "id": "expert_1",
+      "name": "Zero-Knowledge Cryptography and Proof Systems",
+      "domain": "Zero-Knowledge Cryptography and Proof Systems",
+      "focus_areas": [
+        "Soundness and completeness of ZK proof constructions used in rollup validity proofs",
+        "Cryptographic assumptions and their implications for long-term security",
+        "Proof system efficiency: prover time, verifier time, and proof size tradeoffs",
+        "Trusted setup requirements and their security implications for rollup deployments"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    },
+    {
+      "id": "expert_2",
+      "name": "Blockchain Scalability and Layer 2 Architecture",
+      "domain": "Blockchain Scalability and Layer 2 Architecture",
+      "focus_areas": [
+        "Rollup security models: validity proofs vs. fraud proofs and their threat assumptions",
+        "Data availability guarantees and their impact on rollup security properties",
+        "Bridge security and cross-layer state verification mechanisms",
+        "Sequencer centralization risks and MEV implications for ZK-rollup security"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "manuscript_version": "v1",
+      "word_count": 4051,
+      "reviews": [
+        {
+          "specialist": "expert_2",
+          "specialist_name": "Blockchain Scalability and Layer 2 Architecture",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 6,
+            "citations": 5
+          },
+          "average": 6.3,
+          "summary": "This manuscript provides a well-structured overview of ZK-rollup security fundamentals, but lacks the technical depth and rigorous analysis expected for a comprehensive research report. While the coverage of rollup architectures and proof systems is adequate, the security analysis remains largely descriptive rather than analytical, and the treatment of critical topics like sequencer centralization and bridge security is superficial.",
+          "strengths": [
+            "Clear and well-organized presentation of the ZK-rollup taxonomy, distinguishing validity mechanisms and data availability strategies in an accessible manner",
+            "Comprehensive coverage of proof system trade-offs (SNARKs vs STARKs) with accurate characterization of their respective security assumptions and performance characteristics",
+            "Practical implementation landscape section provides useful context on production systems (zkSync Era, StarkNet, Polygon zkEVM) with reasonable performance metrics"
+          ],
+          "weaknesses": [
+            "The security analysis of sequencer centralization and MEV implications is superficial\u2014the manuscript mentions these risks but fails to quantify MEV extraction potential, analyze specific attack vectors, or evaluate proposed mitigation mechanisms (e.g., threshold encryption, commit-reveal schemes, shared sequencing) with any rigor",
+            "Bridge security and cross-layer state verification receive minimal treatment despite being critical attack surfaces; no analysis of historical bridge exploits, verification delay attacks, or the security assumptions underlying ZK light client bridges",
+            "Data availability guarantees are described taxonomically but the security implications are not rigorously analyzed\u2014no discussion of data withholding attack economics, reconstruction guarantees under adversarial conditions, or the trust assumptions of DACs versus decentralized DA layers"
+          ],
+          "suggestions": [
+            "Expand Section 4.2 to include formal threat models for sequencer misbehavior, quantitative analysis of MEV extraction in ZK-rollups versus optimistic rollups, and detailed evaluation of decentralized sequencing proposals (based sequencing, shared sequencing networks like Espresso)",
+            "Add a dedicated section on bridge security covering: (1) the security model differences between validity-proof bridges and fraud-proof bridges, (2) analysis of withdrawal delay attacks and liquidity provider risks, (3) case studies of bridge exploits and lessons learned",
+            "Strengthen the data availability analysis with formal security definitions, analysis of the economic security of DACs versus cryptoeconomic DA layers, and discussion of danksharding's impact on rollup security properties"
+          ],
+          "detailed_feedback": "From a Layer 2 architecture and scalability perspective, this manuscript covers the foundational concepts adequately but falls short of the analytical depth required for a research contribution. The treatment of rollup security models in Section 2.2 correctly identifies the fundamental distinction between cryptographic validity (ZK) and economic security (optimistic), but the analysis remains at a descriptive level. A rigorous treatment would formalize these security models, specify the exact cryptographic and game-theoretic assumptions, and analyze failure modes quantitatively.\n\nThe sequencer centralization discussion is particularly weak given its importance to practical rollup security. The manuscript acknowledges that 'centralized sequencers can censor transactions or extract MEV' but provides no analysis of: (1) the magnitude of MEV extraction in current ZK-rollups, (2) the effectiveness of forced inclusion mechanisms under various adversarial conditions, (3) the latency and cost implications of L1 forced inclusion, or (4) the security properties of proposed decentralized sequencing solutions. This is a significant gap given that sequencer behavior represents the primary trust assumption users must make when interacting with current ZK-rollups.\n\nThe bridge security treatment is essentially absent despite bridges being responsible for billions of dollars in historical exploits. The manuscript mentions 'ZK Light Clients' in Section 7.3 but provides no security analysis of how validity proofs interact with cross-chain verification, the trust assumptions of different bridge designs, or the implications of proof verification delays for bridge security.\n\nRegarding citations, the reliance on references [1] and [2] throughout the manuscript is problematic. Reference [1] on consortium blockchains for cross-border payments has tangential relevance to ZK-rollup security, and its repeated citation appears to artificially inflate its importance. Reference [2] on commit-and-proof NIZK arguments is more relevant but is cited without substantive engagement with its technical contributions. The manuscript would benefit from citing the primary literature on rollup security models (e.g., the original zkSync and StarkNet security analyses), formal treatments of data availability sampling, and the growing literature on MEV and sequencer design. References [3]-[12] appear reasonable but several are documentation links rather than peer-reviewed sources, and the Nova reference [8] appears to have incorrect attribution (Nova was developed by Kothapalli, Setty, and Tzialla, not Khovratovich).",
+          "tokens": 9032
+        },
+        {
+          "specialist": "expert_1",
+          "specialist_name": "Zero-Knowledge Cryptography and Proof Systems",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 6,
+            "clarity": 8,
+            "novelty": 4,
+            "rigor": 5,
+            "citations": 5
+          },
+          "average": 5.8,
+          "summary": "This manuscript provides a broad survey of ZK-rollup security but lacks the cryptographic depth expected for a research contribution in this domain. While the presentation is clear and well-organized, the treatment of proof system security properties remains superficial, and critical technical details regarding soundness guarantees, cryptographic assumptions, and trusted setup security are either missing or inadequately formalized.",
+          "strengths": [
+            "Clear taxonomic organization of rollup architectures and proof systems with accessible explanations of the fundamental trade-offs between SNARKs and STARKs",
+            "Comprehensive coverage of the practical implementation landscape including zkSync Era, StarkNet, and Polygon zkEVM with reasonable performance comparisons",
+            "Good identification of the security-cost trade-offs in data availability mechanisms and the distinction between cryptographic and economic security guarantees"
+          ],
+          "weaknesses": [
+            "Insufficient formal treatment of soundness and completeness properties - the manuscript states these properties but never provides formal definitions, security reductions, or analysis of concrete security bounds for any proof system",
+            "Cryptographic assumptions are mentioned but not rigorously analyzed - no discussion of the Knowledge of Exponent Assumption (KEA), Generic Group Model (GGM), Algebraic Group Model (AGM), or the specific hardness assumptions underlying KZG commitments and pairing-based SNARKs",
+            "Trusted setup security discussion is superficial - no analysis of the MPC protocols used in ceremonies, the security guarantees they provide, or the concrete implications of setup compromise (e.g., the ability to forge proofs without knowledge extraction)"
+          ],
+          "suggestions": [
+            "Add formal security definitions for knowledge soundness and zero-knowledge in the context of SNARKs/STARKs, including concrete security bounds and the relationship between computational and statistical soundness",
+            "Include a dedicated section analyzing the cryptographic assumptions underlying each proof system class, with discussion of assumption strength, relationships between assumptions, and implications for long-term security including quantum threats",
+            "Provide rigorous analysis of trusted setup security including: (1) formal description of the MPC ceremony structure, (2) the 1-of-N honesty assumption and its implications, (3) verification mechanisms for setup correctness, and (4) concrete attack scenarios if the setup is compromised"
+          ],
+          "detailed_feedback": "From a zero-knowledge cryptography perspective, this manuscript reads more as an industry survey than a rigorous research contribution. The most significant gap is the absence of formal cryptographic analysis. When discussing SNARK soundness, the paper should specify whether we're considering computational or statistical soundness, provide concrete security bounds (e.g., soundness error as a function of field size and number of constraints), and explain the knowledge extraction guarantees. The claim that 'violations of soundness would enable invalid state transitions' is correct but trivial - what's needed is analysis of how soundness is achieved and under what assumptions it holds.\n\nThe treatment of KZG commitments is particularly weak given their centrality to modern SNARK constructions. The paper states security 'relies on the hardness of the discrete logarithm problem in pairing-friendly elliptic curve groups' but this is imprecise - KZG security actually relies on the q-SDH assumption or variants thereof, which is stronger than discrete log. This distinction matters for understanding the concrete security of deployed systems.\n\nThe trusted setup discussion needs substantial expansion. The paper should explain that in Groth16, a compromised setup allows creation of proofs for false statements without possessing a valid witness - this is not merely 'a potential security vulnerability' but a complete break of soundness. The paper should also discuss the structure of powers-of-tau ceremonies, the verification procedures that allow public verification of ceremony correctness, and the practical security margins achieved by ceremonies with thousands of participants.\n\nFor STARKs, the claim of 'post-quantum security based on hash function collision resistance' needs qualification - STARKs actually rely on collision resistance for soundness and pseudorandomness properties of the hash function for zero-knowledge. The FRI protocol's security analysis involves subtle arguments about Reed-Solomon proximity testing that deserve mention.\n\nThe proof recursion and folding schemes section mentions Nova but doesn't explain the key innovation (relaxed R1CS and the folding operation) or the security implications of the accumulation scheme approach versus traditional recursive SNARKs. This is a missed opportunity given the importance of these techniques for rollup efficiency.\n\nFinally, the citations are problematic. References [1] and [2] are tangentially related to the core topic, while foundational works on SNARK security (e.g., Bitansky et al. on extractable collision-resistant hash functions, Groth-Maller on simulation extractability) are absent. The paper would benefit from citing the actual security proofs for the systems discussed rather than documentation pages.",
+          "tokens": 9039
+        }
+      ],
+      "overall_average": 6.0,
+      "moderator_decision": {
+        "decision": "MAJOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a well-organized survey of ZK-rollup security fundamentals with clear exposition and practical coverage of the implementation landscape. Both reviewers acknowledge the clarity of presentation and the useful taxonomic organization. However, I find the reviewers' core concerns substantive and appropriately calibrated for a research publication in this domain: the security analysis remains descriptive rather than analytical, and critical attack surfaces (sequencer centralization, bridge security, data availability economics) receive insufficient rigorous treatment.\n\nAssessing reviewer calibration: While Reviewer 2's demands for formal cryptographic definitions and security reductions may be somewhat ambitious for an industry-oriented research report, Reviewer 1's concerns about the superficial treatment of sequencer MEV, bridge security, and data availability attacks are entirely reasonable and represent genuine gaps rather than nitpicking. A security-focused research report on ZK-rollups that doesn't rigorously analyze the primary attack vectors falls short of its stated purpose. The novelty scores (4-5) reflect that this is a survey rather than original research, which is acceptable for this venue\u2014but surveys must compensate with depth and rigor, which is currently lacking.\n\nAt Round 1 of 2, there is meaningful opportunity for the author to address these concerns. The weaknesses identified are FIXABLE rather than fatal\u2014the manuscript's foundation is solid, and the requested additions (threat models for sequencer misbehavior, bridge security analysis, formal DA security treatment) are well-defined and achievable. A major revision is warranted because the changes required are substantial in scope, but the path to acceptance is clear if the author engages seriously with the feedback.",
+        "key_strengths": [
+          "Clear, well-organized taxonomic presentation of ZK-rollup architectures and proof system trade-offs that makes complex material accessible",
+          "Comprehensive and accurate coverage of the production implementation landscape (zkSync Era, StarkNet, Polygon zkEVM) with useful performance context",
+          "Sound foundational understanding of SNARK/STARK security assumptions and data availability mechanism trade-offs"
+        ],
+        "key_weaknesses": [
+          "Security analysis of sequencer centralization and MEV extraction is superficial\u2014lacks threat models, quantitative analysis, or rigorous evaluation of mitigation mechanisms",
+          "Bridge security and cross-layer state verification are critically underexplored despite being primary attack surfaces in production systems",
+          "Data availability security implications are described taxonomically but not analyzed rigorously (missing: attack economics, adversarial reconstruction guarantees, trust assumption comparisons)"
+        ],
+        "required_changes": [
+          "Expand sequencer security analysis to include formal threat models, quantitative MEV analysis comparing ZK-rollups to optimistic rollups, and substantive evaluation of decentralized sequencing proposals (based sequencing, shared sequencing networks)",
+          "Add dedicated bridge security section covering validity-proof vs. fraud-proof security models, withdrawal delay attack analysis, and at least 2-3 case studies of historical bridge exploits with lessons learned",
+          "Strengthen data availability analysis with formal security definitions, comparative analysis of DAC economic security vs. cryptoeconomic DA layers, and discussion of how danksharding affects rollup security properties"
+        ],
+        "recommendation": "This manuscript has a solid foundation but currently reads as an introductory overview rather than a rigorous security research report. For acceptance, the author must transform the descriptive security sections into analytical ones. Focus the revision on depth over breadth: the three required changes above represent the minimum necessary to meet publication standards. The cryptographic formalism requested by Reviewer 2 (formal soundness definitions, detailed assumption analysis) would strengthen the work but should be considered secondary to addressing the practical security analysis gaps identified by Reviewer 1. A well-executed revision addressing these concerns should be acceptable in Round 2.",
+        "round": 1,
+        "overall_average": 6.0,
+        "tokens": 3005
+      },
+      "author_rebuttal": "## Author Rebuttal - Round 1\n\n### Overview\n\nWe sincerely thank both reviewers for their thorough and constructive evaluation of our manuscript on ZK-rollup security. The feedback has identified important gaps in our treatment of several critical topics, and we appreciate the time and expertise invested in providing such detailed technical guidance.\n\nBoth reviewers converge on several key themes: (1) insufficient formal rigor in our security analysis, particularly regarding cryptographic assumptions and soundness guarantees; (2) superficial treatment of sequencer centralization, MEV implications, and bridge security; (3) inadequate engagement with the data availability security model; and (4) problematic citation practices, especially the over-reliance on tangentially related references. We acknowledge these criticisms as largely valid and outline below a comprehensive revision strategy that will substantially strengthen the manuscript's technical depth and scholarly contribution.\n\nOur revision plan prioritizes three major additions: a new section providing formal security definitions and cryptographic assumption analysis, a significantly expanded treatment of sequencer security with quantitative MEV analysis, and a dedicated bridge security section with case studies of historical exploits. We will also substantially revise our citation approach to engage more substantively with the primary cryptographic literature.\n\n---\n\n### Response to Reviewer 1 (Blockchain Scalability and Layer 2 Architecture)\n\n**Overall Assessment**: We thank Reviewer 1 for the balanced evaluation (6.3/10 average) and acknowledge that the manuscript's primary weakness lies in its descriptive rather than analytical approach to security. The reviewer correctly identifies that while our taxonomic organization is sound, we have not provided the rigorous threat modeling and quantitative analysis expected of a research contribution.\n\n**Major Points**:\n\n1. **Superficial treatment of sequencer centralization and MEV implications**\n   - **Our response**: We fully agree that this represents a significant gap. The current manuscript identifies risks without quantifying them or analyzing mitigation mechanisms in depth. This is particularly problematic given that sequencer behavior constitutes the primary trust assumption for users of current ZK-rollups.\n   - **Action taken**: We will expand Section 4.2 to include: (a) a formal threat model for sequencer misbehavior specifying adversarial capabilities, attack surfaces, and security objectives; (b) quantitative analysis of MEV extraction in ZK-rollups drawing on empirical data from Flashbots and MEV-Boost research, with comparison to optimistic rollup MEV dynamics; (c) detailed evaluation of decentralized sequencing proposals including based sequencing (as proposed by Justin Drake), shared sequencing networks (Espresso Systems, Astria), and threshold encryption schemes; (d) analysis of forced inclusion mechanisms including L1 escape hatch latency (typically 12-24 hours), gas costs under congestion, and effectiveness under various censorship scenarios.\n\n2. **Minimal treatment of bridge security and cross-layer state verification**\n   - **Our response**: The reviewer is correct that bridge security is essentially absent from our manuscript despite bridges representing critical attack surfaces responsible for over $2 billion in historical exploits. This omission is indefensible given our focus on security.\n   - **Action taken**: We will add a dedicated Section 6 on bridge security covering: (a) security model comparison between validity-proof bridges (immediate finality upon proof verification) and fraud-proof bridges (challenge period requirements); (b) analysis of withdrawal delay attacks and their implications for liquidity providers, including the economic dynamics of fast withdrawal services; (c) case studies of major bridge exploits (Ronin, Wormhole, Nomad) with analysis of root causes and lessons for ZK bridge design; (d) security analysis of ZK light client bridges including proof verification delay implications and the trust assumptions of different verification strategies.\n\n3. **Taxonomic but not rigorous data availability analysis**\n   - **Our response**: We acknowledge that our DA discussion lacks formal security definitions and economic analysis. The distinction between cryptographic guarantees (DAS) and economic guarantees (DACs) deserves more rigorous treatment.\n   - **Action taken**: We will strengthen the data availability section with: (a) formal security definitions for data availability including reconstruction guarantees and the adversarial threshold assumptions; (b) economic security analysis comparing DAC collateral requirements versus cryptoeconomic DA layers (EigenDA, Celestia); (c) analysis of data withholding attack economics including the cost-benefit calculus for sequencers and the effectiveness of slashing mechanisms; (d) discussion of EIP-4844 and danksharding's impact on rollup security properties, including blob retention periods and their implications for state reconstruction.\n\n4. **Problematic citation practices**\n   - **Our response**: The reviewer's criticism regarding References [1] and [2] is well-founded. Reference [1] on consortium blockchains has limited relevance to ZK-rollup security, and its repeated citation does not reflect substantive engagement. We also thank the reviewer for identifying the incorrect attribution for Nova (Reference [8]).\n   - **Action taken**: We will: (a) remove or substantially reduce citations to Reference [1], retaining it only where genuinely relevant; (b) engage substantively with Reference [2]'s technical contributions where cited; (c) correct the Nova attribution to Kothapalli, Setty, and Tzialla; (d) add citations to primary literature including the original zkSync and StarkNet security analyses, formal treatments of data availability sampling (particularly the work by Mustafa Al-Bassam et al.), and the MEV/sequencer design literature (Flashbots research, Babel et al. on censorship resistance); (e) replace documentation links with peer-reviewed sources where available, or clearly distinguish between peer-reviewed and grey literature.\n\n**Minor Points**: We will address the reviewer's suggestion to formalize security models in Section 2.2 by specifying exact cryptographic assumptions (knowledge soundness, collision resistance) and game-theoretic assumptions (rational sequencers, honest minority for DA) with explicit failure mode analysis.\n\n---\n\n### Response to Reviewer 2 (Zero-Knowledge Cryptography and Proof Systems)\n\n**Overall Assessment**: We thank Reviewer 2 for the detailed cryptographic critique (5.8/10 average). The reviewer correctly identifies that our treatment of proof system security properties lacks the formal rigor expected of a research contribution. We acknowledge that the manuscript reads more as an industry survey than a rigorous cryptographic analysis, and we commit to addressing this fundamental weakness.\n\n**Major Points**:\n\n1. **Insufficient formal treatment of soundness and completeness properties**\n   - **Our response**: The reviewer is correct that stating security properties without formal definitions, security reductions, or concrete bounds is inadequate. Our claim that \"violations of soundness would enable invalid state transitions\" is indeed trivially true and provides no analytical value.\n   - **Action taken**: We will add a new Section 3 (Formal Security Framework) providing: (a) formal definitions of knowledge soundness distinguishing computational soundness (negligible probability of convincing verifier of false statement) from statistical soundness (information-theoretic guarantee); (b) concrete security bounds expressed as functions of field size, number of constraints, and security parameter\u2014for example, Groth16 achieves soundness error 1/|F| for field F under the q-SDH assumption; (c) formal definition of zero-knowledge (simulation-based) and the distinction between perfect, statistical, and computational zero-knowledge achieved by different systems; (d) the relationship between knowledge extraction and soundness, explaining why knowledge soundness (existence of extractor) is stronger than standard soundness.\n\n2. **Cryptographic assumptions mentioned but not rigorously analyzed**\n   - **Our response**: We acknowledge the imprecision in our characterization of KZG security. The reviewer correctly notes that KZG relies on the q-SDH assumption (or q-SBDH in the type-3 pairing setting), which is indeed stronger than discrete logarithm. This distinction has practical implications for concrete security estimates.\n   - **Action taken**: We will add a dedicated subsection on cryptographic assumptions covering: (a) precise specification of assumptions underlying each proof system\u2014KEA and q-SDH for Groth16, AGM for PLONK-style systems, collision resistance and pseudorandomness for STARKs; (b) assumption hierarchy and relationships (e.g., q-SDH implies discrete log, but not vice versa); (c) concrete security analysis discussing known attacks and security margins; (d) quantum threat analysis\u2014pairing-based assumptions fall to Shor's algorithm while hash-based assumptions (STARKs) require only Grover resistance, providing quadratic rather than exponential speedup for attackers.\n\n3. **Superficial trusted setup security discussion**\n   - **Our response**: The reviewer correctly identifies that our characterization of setup compromise as \"a potential security vulnerability\" dramatically understates the severity. A compromised Groth16 setup enables creation of proofs for arbitrary false statements\u2014a complete soundness break, not merely a vulnerability.\n   - **Action taken**: We will substantially expand the trusted setup discussion to include: (a) formal description of powers-of-tau ceremony structure, explaining the sequential contribution model and the toxic waste that must be destroyed; (b) precise statement of the 1-of-N honesty assumption and its implications\u2014soundness holds if at least one participant honestly generates and destroys their randomness; (c) verification mechanisms allowing public verification of ceremony correctness through pairing checks on the structured reference string; (d) concrete attack scenarios under setup compromise, distinguishing between soundness breaks (forging proofs) and zero-knowledge breaks (extracting witnesses); (e) practical security margins achieved by ceremonies like Zcash Sapling (hundreds of participants) and Hermez (thousands of participants).\n\n4. **Inadequate treatment of STARK security and proof recursion**\n   - **Our response**: We accept the criticism that our STARK security characterization needs qualification, and that the Nova discussion misses the key technical innovations.\n   - **Action taken**: We will: (a) clarify that STARK soundness relies on collision resistance while zero-knowledge relies on pseudorandomness properties of the hash function; (b) add discussion of FRI protocol security including the proximity testing guarantees and the role of the blow-up factor in determining soundness error; (c) expand the Nova discussion to explain relaxed R1CS, the folding operation that avoids recursive SNARK verification, and the accumulation scheme approach; (d) analyze security implications of folding schemes including the distinction between IVC (incremental verifiable computation) security and traditional SNARK security.\n\n5. **Citation deficiencies in cryptographic literature**\n   - **Our response**: We agree that foundational cryptographic works are absent from our references. A rigorous treatment requires engagement with the primary security proofs.\n   - **Action taken**: We will add citations to: (a) Bitansky et al. on extractable collision-resistant hash functions and the foundations of SNARK security; (b) Groth-Maller on simulation extractability; (c) the original Groth16 paper with its security proof; (d) Ben-Sasson et al. on STARK security and FRI; (e) the PLONK paper (Gabizon, Williamson, Ciobotaru) for permutation argument security; (f) Kothapalli, Setty, and Tzialla on Nova. We will engage substantively with these works rather than merely listing them.\n\n**Minor Points**: We will qualify claims throughout the manuscript to reflect the precise cryptographic guarantees. For example, we will replace \"post-quantum security based on hash function collision resistance\" with \"conjectured post-quantum security based on the collision resistance of the hash function (for soundness) and its pseudorandomness properties (for zero-knowledge), requiring hash output size approximately 2\u03bb for \u03bb bits of post-quantum security against Grover's algorithm.\"\n\n---\n\n### Summary of Changes\n\n**Major Additions**:\n- New Section 3: Formal Security Framework with definitions of knowledge soundness, zero-knowledge, and concrete security bounds\n- New Section 3.X: Cryptographic Assumptions Analysis covering assumption hierarchies, concrete security, and quantum threats\n- Substantially expanded Section 4.2: Sequencer Security with formal threat model, quantitative MEV analysis, and evaluation of decentralized sequencing proposals\n- New Section 6: Bridge Security covering security models, withdrawal attacks, and case studies of historical exploits\n- Expanded trusted setup discussion with formal MPC ceremony analysis and concrete attack scenarios\n\n**Significant Revisions**:\n- Data availability section strengthened with formal security definitions and economic analysis\n- STARK security characterization qualified to distinguish soundness and zero-knowledge requirements\n- Nova/folding schemes discussion expanded to explain technical innovations and security implications\n- KZG security description corrected to reference q-SDH assumption rather than discrete log\n\n**Citation Improvements**:\n- Reduced reliance on tangentially related References [1] and [2]\n- Corrected Nova attribution (Reference [8])\n- Added foundational cryptographic literature (Groth16, PLONK, Bitansky et al., Ben-Sasson et al.)\n- Replaced documentation links with peer-reviewed sources where available\n- Clear distinction between peer-reviewed and grey literature throughout\n\nWe believe these revisions will address the reviewers' core concerns and transform the manuscript from an industry survey into a rigorous research contribution. We are grateful for the detailed feedback that has guided this improvement and welcome any additional suggestions during the revision process.",
+      "manuscript_diff": null,
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-07T12:04:26.686855"
+    },
+    {
+      "round": 2,
+      "manuscript_version": "v2",
+      "word_count": 5438,
+      "reviews": [
+        {
+          "specialist": "expert_1",
+          "specialist_name": "Zero-Knowledge Cryptography and Proof Systems",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 8,
+            "clarity": 9,
+            "novelty": 6,
+            "rigor": 8,
+            "citations": 8
+          },
+          "average": 7.8,
+          "summary": "This revision represents a substantial improvement over the original manuscript, with the authors having addressed most of my previous concerns regarding formal security definitions, cryptographic assumptions, and trusted setup analysis. The manuscript now provides rigorous treatment of knowledge soundness, concrete security bounds, and the cryptographic foundations underlying different proof systems, transforming it from an industry survey into a credible research contribution.",
+          "strengths": [
+            "Excellent addition of formal security definitions (Definitions 1-3) for interactive proofs, zero-knowledge, and knowledge soundness, with clear explanation of why knowledge soundness is essential for rollup applications",
+            "Rigorous treatment of cryptographic assumptions including precise specification of q-PKE, q-SDH, AGM, and their relationships, with appropriate discussion of assumption strength hierarchies and concrete security bounds",
+            "Substantially improved trusted setup analysis including formal description of powers-of-tau ceremony structure, the 1-of-N honesty assumption, verification mechanisms, and concrete attack scenarios distinguishing soundness breaks from zero-knowledge breaks"
+          ],
+          "weaknesses": [
+            "The FRI protocol security analysis, while improved, still lacks precise formalization of the proximity gap and the relationship between query complexity, soundness error, and the blow-up factor\u2014the soundness error formula provided is approximate and could be more rigorously derived",
+            "The discussion of simulation extractability (relevant for Groth16 in malicious verifier settings) is absent, which matters for applications where proofs may be reused or composed in adversarial contexts",
+            "While Nova is now correctly attributed and better explained, the security analysis of folding schemes remains somewhat superficial\u2014the accumulation of soundness errors and the specific extractability requirements deserve more formal treatment"
+          ],
+          "suggestions": [
+            "Add a more rigorous derivation of FRI soundness bounds, referencing Ben-Sasson et al.'s proximity gap analysis and explicitly stating the relationship between rate, field size, and query complexity in achieving target soundness error",
+            "Include discussion of simulation extractability and its relevance to rollup security, particularly for scenarios involving proof aggregation or where proofs serve as credentials that may be replayed",
+            "Expand the folding schemes section to formally define the accumulation scheme security game and provide concrete bounds on how soundness error accumulates across folding steps, referencing the Nova paper's formal treatment"
+          ],
+          "detailed_feedback": "The authors have made commendable progress in addressing my Round 1 concerns. The formal security framework in Section 3 now provides the rigorous foundations I requested, with proper definitions of knowledge soundness and zero-knowledge that correctly distinguish computational from statistical variants. The cryptographic assumptions section (3.2) is particularly well-executed, correctly identifying that KZG relies on q-SDH rather than discrete log, and providing appropriate discussion of the AGM for PLONK-style systems. The trusted setup analysis now includes the formal MPC ceremony description I requested, with clear explanation of the sequential contribution model and the critical 1-of-N honesty assumption. The distinction between soundness breaks and zero-knowledge breaks under setup compromise is correctly articulated.\n\nHowever, some cryptographic details warrant further attention. The FRI soundness analysis provides approximate bounds but doesn't fully capture the proximity gap argument that underlies STARK security. The formula given for soundness error per round is a reasonable approximation but obscures the dependence on the code rate and the number of queries in a way that could mislead readers about parameter selection. Additionally, the manuscript would benefit from discussing simulation extractability\u2014a stronger property than knowledge soundness that Groth16 achieves and that matters when proofs may be used in adversarial composition scenarios.\n\nThe Nova discussion is much improved with correct attribution, but the security treatment remains at a high level. The claim that 'soundness error accumulates additively with folding steps' is correct but deserves formal justification. The relationship between IVC security and traditional SNARK security mentioned in the rebuttal doesn't appear in the revised text. The concrete security bounds for recursive/folding constructions are non-trivial and would strengthen the analysis.\n\nThe citation improvements are substantial\u2014the addition of foundational works (Groth16, PLONK, Bitansky et al., Ben-Sasson et al.) addresses my previous concerns. The references now properly support the technical claims, though I note that some of the concrete security bound claims in the text could benefit from more specific citations to the relevant security proofs in the original papers.",
+          "tokens": 16318
+        },
+        {
+          "specialist": "expert_2",
+          "specialist_name": "Blockchain Scalability and Layer 2 Architecture",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 8,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7,
+            "citations": 7
+          },
+          "average": 7.3,
+          "summary": "This revision represents a substantial improvement over the original manuscript, with the authors addressing most of my major concerns regarding sequencer security, bridge vulnerabilities, and data availability analysis. The addition of formal threat models, quantitative MEV analysis, and dedicated bridge security coverage transforms this from a descriptive survey into a more rigorous research contribution, though some areas still warrant deeper treatment.",
+          "strengths": [
+            "Section 4.2 now provides a formal threat model for sequencer misbehavior with quantitative MEV analysis comparing ZK-rollups to optimistic rollups and L1, along with systematic evaluation of mitigation mechanisms (forced inclusion, encrypted mempools, shared sequencing, based sequencing) with clear trade-off analysis",
+            "The new bridge security analysis in Section 4.3 addresses my concerns comprehensively, including security model comparisons between validity-proof and fraud-proof bridges, historical exploit case studies (Ronin, Wormhole, Nomad) with lessons for ZK bridge design, and analysis of withdrawal delay attacks",
+            "Data availability analysis has been substantially strengthened with formal security definitions, economic attack cost analysis for different DA mechanisms (on-chain, DAC, decentralized DA layers), and concrete reconstruction guarantees under adversarial conditions"
+          ],
+          "weaknesses": [
+            "The evaluation of shared sequencing networks (Espresso, Astria) remains somewhat superficial\u2014while mentioned in the mitigation table, there is no detailed analysis of their specific security models, consensus mechanisms, or how they handle cross-rollup MEV atomicity, which is a key differentiator",
+            "The treatment of based sequencing could be expanded to address the nuanced trade-offs: while the manuscript notes MEV flows to L1 validators, it doesn't analyze the implications of L1 reorg risk on rollup security or the latency implications of waiting for L1 inclusion",
+            "The bridge security section, while much improved, lacks quantitative analysis of withdrawal delay attack economics\u2014specifically, the cost-benefit calculus for liquidity providers offering fast withdrawals and how this creates systemic risks during high-volatility periods"
+          ],
+          "suggestions": [
+            "Add a dedicated subsection analyzing shared sequencing architectures in detail, covering their consensus mechanisms (e.g., Espresso's HotShot), economic security models, and how they address cross-rollup MEV extraction while maintaining rollup sovereignty",
+            "Expand the based sequencing discussion to include analysis of L1 reorg implications for rollup state, the trade-offs between proposer-builder separation on L1 and rollup sequencing, and concrete latency measurements from existing implementations or simulations",
+            "Include quantitative modeling of fast withdrawal liquidity provider economics, including capital requirements, risk premiums during volatility, and potential cascade effects if major LPs exit during market stress\u2014this would strengthen the bridge security analysis significantly"
+          ],
+          "detailed_feedback": "The authors have made commendable progress in addressing my Round 1 concerns. The sequencer security section now provides the formal threat model I requested, with clear adversarial capability definitions and a useful comparative table of mitigation mechanisms. The quantitative MEV estimates, while necessarily approximate, provide valuable context for understanding the economic stakes involved. I particularly appreciate the inclusion of forced inclusion latency analysis (12-24 hours) and the honest acknowledgment that current ZK-rollup MEV is lower due to volume rather than architectural advantages.\n\nThe bridge security section is now substantive and addresses a critical gap in the original manuscript. The case studies of Ronin, Wormhole, and Nomad exploits with explicit lessons for ZK bridge design demonstrate good engagement with real-world security failures. The comparison table between ZK and optimistic bridge security models is clear and useful.\n\nThe data availability analysis has been transformed from taxonomic description to rigorous security analysis. The formal definition of data availability, the economic attack cost calculations for DACs (e.g., the 7-of-10 DAC example with $4M attack cost), and the DAS detection probability formula all add the quantitative rigor I requested.\n\nHowever, some gaps remain. The shared sequencing discussion, while present, doesn't go deep enough into the specific security models of systems like Espresso. How does their HotShot consensus achieve finality? What are the liveness assumptions? How do they handle the case where a rollup wants to exit the shared sequencing network? Similarly, based sequencing deserves more nuanced treatment\u2014the interaction between L1 MEV-Boost and rollup sequencing creates complex dynamics that aren't fully explored.\n\nThe decentralization roadmap table in Section 7.4 is useful but optimistic\u2014the 2024-2025 timeline for shared/based sequencing adoption may be aggressive given current testnet status. A more critical assessment of implementation challenges would strengthen this section.\n\nOverall, this revision successfully addresses my primary concerns and elevates the manuscript to a level appropriate for a research contribution. The remaining suggestions are refinements rather than fundamental gaps.",
+          "tokens": 16458
+        }
+      ],
+      "overall_average": 7.5,
+      "moderator_decision": {
+        "decision": "ACCEPT",
+        "confidence": 4,
+        "meta_review": "This manuscript has demonstrated substantial improvement across the revision cycle, moving from a score of 6.0 to 7.5\u2014a meaningful trajectory that reflects genuine engagement with reviewer feedback. The authors have transformed what was initially characterized as an 'industry survey' into a credible research contribution by adding formal security definitions, rigorous cryptographic treatment, quantitative MEV analysis, and comprehensive bridge security coverage. Both reviewers acknowledge this transformation explicitly, with Reviewer 1 noting the manuscript now provides 'rigorous treatment of knowledge soundness, concrete security bounds, and cryptographic foundations' and Reviewer 2 recognizing it has become 'a more rigorous research contribution.'\n\nExamining the remaining weaknesses, I find them to be refinements rather than fundamental flaws. Reviewer 1's concerns about FRI soundness derivation precision and simulation extractability are valid technical points, but they represent depth enhancements to an already solid treatment\u2014not gaps that undermine the paper's core contribution. Similarly, Reviewer 2's requests for deeper shared sequencing analysis and withdrawal delay economics modeling would strengthen the work but are not essential for publication. Notably, both reviewers score the paper at 7+ across all dimensions, with clarity and accuracy particularly strong. The novelty scores of 6/10 are appropriate for a systematization-of-knowledge style contribution, and reviewers appear calibrated to this\u2014they're not unfairly demanding breakthrough theoretical contributions.\n\nGiven this is the final round, the strong improvement trajectory, the substantive nature of the contribution to practitioners and researchers working on ZK-rollup systems, and the fact that remaining concerns are enhancements rather than corrections, I am exercising editorial judgment to accept this manuscript. The paper provides valuable, reliable analysis of an important and rapidly evolving area of blockchain infrastructure. Continuing to iterate on increasingly marginal improvements would yield diminishing returns.",
+        "key_strengths": [
+          "Rigorous formal treatment of cryptographic foundations including security definitions for interactive proofs, zero-knowledge, and knowledge soundness with clear relevance to rollup applications",
+          "Comprehensive threat modeling for sequencer misbehavior with quantitative MEV analysis and systematic evaluation of mitigation mechanisms across the design space",
+          "Substantially improved bridge security analysis incorporating historical exploit case studies, security model comparisons, and data availability economics under adversarial conditions"
+        ],
+        "key_weaknesses": [
+          "FRI protocol soundness analysis could benefit from more precise formalization of proximity gap relationships and rigorous derivation of soundness bounds",
+          "Shared sequencing architectures (Espresso, Astria) receive surface-level treatment without detailed analysis of their consensus mechanisms and cross-rollup MEV handling",
+          "Folding scheme security analysis remains somewhat superficial regarding accumulation of soundness errors across folding steps"
+        ],
+        "required_changes": [],
+        "recommendation": "Accept for publication. The manuscript has evolved into a valuable systematization of knowledge for ZK-rollup security that will serve both researchers and practitioners. The remaining reviewer suggestions\u2014while technically valid\u2014represent opportunities for future work or extended versions rather than deficiencies requiring correction before publication. The authors have demonstrated strong responsiveness to feedback and produced a rigorous, well-structured contribution to an important and rapidly developing field.",
+        "round": 2,
+        "overall_average": 7.5,
+        "tokens": 3047
+      },
+      "author_rebuttal": null,
+      "manuscript_diff": {
+        "words_added": 1387,
+        "previous_version": "v1",
+        "current_version": "v2"
+      },
+      "threshold": 8.0,
+      "passed": true,
+      "timestamp": "2026-02-07T12:08:53.627225"
+    }
+  ],
+  "final_score": 7.5,
+  "passed": true,
+  "total_rounds": 2,
+  "performance": {
+    "workflow_start": "2026-02-07T12:00:04.946051",
+    "workflow_end": "2026-02-07T12:08:53.630592",
+    "total_duration": 528.68,
+    "initial_draft_time": 135.21,
+    "initial_draft_tokens": 0,
+    "team_composition_time": 0.0,
+    "team_composition_tokens": 0,
+    "rounds": [
+      {
+        "round_number": 1,
+        "review_start": "2026-02-07T12:02:38.983968",
+        "review_end": "2026-02-07T12:04:26.686646",
+        "review_duration": 107.7,
+        "reviewer_times": {
+          "expert_2": 28.31,
+          "expert_1": 29.46
+        },
+        "moderator_time": 19.66,
+        "revision_time": null,
+        "round_tokens": 18071
+      },
+      {
+        "round_number": 2,
+        "review_start": "2026-02-07T12:08:06.905273",
+        "review_end": "2026-02-07T12:08:53.626856",
+        "review_duration": 46.72,
+        "reviewer_times": {
+          "expert_1": 27.29,
+          "expert_2": 29.08
+        },
+        "moderator_time": 17.62,
+        "revision_time": null,
+        "round_tokens": 32776
+      }
+    ],
+    "total_tokens": 50847,
+    "estimated_cost": 0.15
+  },
+  "timestamp": "2026-02-07T12:08:53.631709"
+}

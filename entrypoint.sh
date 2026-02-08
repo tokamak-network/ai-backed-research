@@ -10,6 +10,22 @@ if [ -d "/app/persistent" ]; then
   mkdir -p /app/persistent/web-data
   mkdir -p /app/persistent/web-articles
 
+  # Seed: if volume is empty (first deploy), copy bundled data
+  if [ -d "/app/seed-data" ]; then
+    if [ -z "$(ls -A /app/persistent/web-articles 2>/dev/null)" ]; then
+      echo "[seed] Populating web-articles from seed data..."
+      cp -r /app/seed-data/web-articles/* /app/persistent/web-articles/ 2>/dev/null || true
+    fi
+    if [ -z "$(ls -A /app/persistent/web-data 2>/dev/null)" ]; then
+      echo "[seed] Populating web-data from seed data..."
+      cp -r /app/seed-data/web-data/* /app/persistent/web-data/ 2>/dev/null || true
+    fi
+    if [ -z "$(ls -A /app/persistent/data 2>/dev/null)" ]; then
+      echo "[seed] Populating database from seed data..."
+      cp /app/seed-data/data/research.db /app/persistent/data/ 2>/dev/null || true
+    fi
+  fi
+
   # Remove empty dirs created during build, replace with symlinks
   rm -rf /app/data /app/results /app/web/data /app/web/articles
   ln -sf /app/persistent/data /app/data

@@ -1,0 +1,289 @@
+{
+  "topic": "Bitcoin Lightning Network Overview",
+  "output_directory": "results/bitcoin-lightning-network-overview",
+  "max_rounds": 2,
+  "threshold": 7.5,
+  "expert_team": [
+    {
+      "id": "expert_1",
+      "name": "Payment Channel Cryptography and Bitcoin Protocol",
+      "domain": "Payment Channel Cryptography and Bitcoin Protocol",
+      "focus_areas": [
+        "HTLC construction and atomic swap security properties",
+        "Commitment transaction structure and revocation mechanisms",
+        "Bitcoin script constraints and SegWit dependencies"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    },
+    {
+      "id": "expert_2",
+      "name": "Distributed Network Systems and Payment Routing",
+      "domain": "Distributed Network Systems and Payment Routing",
+      "focus_areas": [
+        "Source-based onion routing and pathfinding algorithms",
+        "Channel liquidity management and rebalancing strategies",
+        "Fee market dynamics and routing node incentive structures"
+      ],
+      "provider": "anthropic",
+      "model": "claude-sonnet-4.5"
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "manuscript_version": "v1",
+      "word_count": 4497,
+      "reviews": [
+        {
+          "specialist": "expert_1",
+          "specialist_name": "Payment Channel Cryptography and Bitcoin Protocol",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 6,
+            "clarity": 8,
+            "novelty": 4,
+            "rigor": 5
+          },
+          "average": 6.0,
+          "summary": "This manuscript provides a competent high-level overview of the Lightning Network suitable for general technical audiences, but lacks the cryptographic depth and protocol-level precision expected for a comprehensive technical analysis. The treatment of HTLC construction, commitment transaction mechanics, and revocation schemes remains superficial, omitting critical security properties and edge cases that define the protocol's actual security guarantees.",
+          "strengths": [
+            "Clear exposition of the basic payment channel lifecycle and state update model that accurately conveys the conceptual framework to non-specialists",
+            "Appropriate acknowledgment of the asymmetric commitment transaction structure and its role in enabling the punishment mechanism",
+            "Reasonable coverage of the HTLC timeout decrement requirement for maintaining atomicity across multi-hop payments"
+          ],
+          "weaknesses": [
+            "The revocation mechanism description omits the actual cryptographic construction using revocation basepoints, per-commitment points, and the derivation of revocation keys via SHA256(revocation_basepoint || per_commitment_point), leaving readers without understanding of how revocation actually works",
+            "No discussion of SegWit's essential role in enabling Lightning\u2014specifically how transaction malleability of pre-SegWit transactions would allow funding transaction ID modification, invalidating pre-signed commitment transactions and enabling fund theft",
+            "HTLC script construction is entirely absent: no mention of HASH160 vs SHA256 usage, the actual script opcodes (OP_IF/OP_ELSE branches), CLTV vs CSV timelocks in HTLC outputs, or the distinction between offered and received HTLCs in commitment transactions"
+          ],
+          "suggestions": [
+            "Add a dedicated subsection on SegWit dependency explaining: (1) transaction malleability problem, (2) how witness segregation fixes it, (3) why this is prerequisite for safe channel funding, and (4) implications for channel capacity via witness discount",
+            "Expand the revocation mechanism section to include the actual key derivation: revocation_key = revocation_basepoint * SHA256(revocation_basepoint || per_commitment_point) + per_commitment_point * SHA256(per_commitment_point || revocation_basepoint), explaining why this construction ensures only the counterparty can derive the key after disclosure",
+            "Provide actual Bitcoin Script for HTLC outputs showing both success and timeout paths, including the specific use of OP_CHECKLOCKTIMEVERIFY, OP_CHECKSIG, OP_HASH160, and the witness structure required to satisfy each branch"
+          ],
+          "detailed_feedback": "From a payment channel cryptography perspective, this manuscript exhibits significant gaps that undermine its claim to be a 'comprehensive technical analysis.' The commitment transaction structure discussion correctly identifies the to-local/to-remote asymmetry and timelock purpose, but fails to explain the actual script construction. The to-local output uses a specific script pattern: `OP_IF <revocationpubkey> OP_ELSE <to_self_delay> OP_CHECKSEQUENCEVERIFY OP_DROP <local_delayedpubkey> OP_ENDIF OP_CHECKSIG`. Without this detail, readers cannot understand how the punishment mechanism is actually enforced on-chain.\n\nThe HTLC treatment is particularly deficient. The paper describes HTLCs conceptually but omits that Lightning uses HASH160 (SHA256 followed by RIPEMD160) for payment hashes, not raw SHA256 as stated. More critically, there's no discussion of how HTLCs are embedded in commitment transactions as separate outputs with their own complex scripts, how HTLC-success and HTLC-timeout transactions work as second-stage transactions, or why the CLTV delta between hops must account for both the HTLC timeout and the to-self-delay to prevent race conditions.\n\nThe complete omission of SegWit's role is a fundamental oversight. The paper mentions SegWit only in passing regarding block capacity, but SegWit is architecturally essential to Lightning's security model. Pre-SegWit, a malicious miner or network participant could modify the funding transaction's witness data, changing its txid while keeping it valid. This would invalidate all pre-signed commitment transactions referencing the original txid, potentially trapping funds permanently. This isn't a minor detail\u2014it's why Lightning wasn't practically deployable before SegWit activation in August 2017.\n\nThe Taproot/PTLC discussion mentions 'adaptor signatures' without explaining the construction or why PTLCs provide better privacy than HTLCs (specifically: payment correlation across hops via hash reuse). The eltoo/LN-Symmetry section similarly lacks depth on why SIGHASH_ANYPREVOUT enables the construction and what security properties change.\n\nFor a paper targeting technical audiences, I would expect formal or semi-formal security arguments for key claims: why is broadcasting old state economically irrational? Under what assumptions? What happens if fee markets spike during the justice transaction window? These adversarial considerations are mentioned but not rigorously analyzed.",
+          "tokens": 9201
+        },
+        {
+          "specialist": "expert_2",
+          "specialist_name": "Distributed Network Systems and Payment Routing",
+          "provider": "anthropic",
+          "model": "claude-sonnet-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 6,
+            "clarity": 8,
+            "novelty": 4,
+            "rigor": 6
+          },
+          "average": 6.2,
+          "summary": "This manuscript provides a comprehensive overview of the Lightning Network with generally accurate technical descriptions and good structural organization. However, it lacks depth in critical areas of routing algorithms, liquidity management economics, and fee market dynamics. The treatment is more descriptive than analytical, missing opportunities for rigorous examination of the specific challenges in source-based routing and channel rebalancing strategies.",
+          "strengths": [
+            "Clear explanation of fundamental mechanisms including HTLCs, commitment transactions, and revocation schemes with well-structured examples",
+            "Comprehensive coverage of the protocol landscape including implementations, wallets, and emerging developments like BOLT 12 and Taproot integration",
+            "Good contextualization of the scalability problem and honest acknowledgment of current limitations including routing reliability and liquidity management challenges"
+          ],
+          "weaknesses": [
+            "Superficial treatment of pathfinding algorithms - mentions 'modified Dijkstra variants' without analyzing specific approaches like Pickhardt-Richter's min-cost flow formulation, probability-based routing, or the tradeoffs between different optimization objectives",
+            "Inadequate analysis of routing node economics and fee market dynamics - lacks discussion of fee setting strategies, competitive dynamics between routing nodes, or empirical data on routing profitability and sustainability",
+            "Missing critical technical details on channel rebalancing - no quantitative analysis of rebalancing costs, success rates, or comparison of strategies (circular rebalancing vs. submarine swaps vs. splicing), and insufficient treatment of the capital efficiency problem"
+          ],
+          "suggestions": [
+            "Add rigorous analysis of routing algorithms: Compare Dijkstra-based approaches with probability-based routing (e.g., using historical success rates), discuss the exploration-exploitation tradeoff in route selection, and analyze how incomplete liquidity information affects pathfinding optimality",
+            "Expand fee market analysis: Include empirical data on fee distributions across the network, analyze routing node profitability models, discuss fee competition dynamics, and examine how fee policies affect routing success rates and network topology evolution",
+            "Provide quantitative treatment of liquidity management: Include data on rebalancing costs as percentage of channel capacity, analyze optimal rebalancing frequency, compare different rebalancing strategies with concrete examples, and discuss the relationship between channel size, rebalancing frequency, and routing profitability"
+          ],
+          "detailed_feedback": "From the perspective of distributed network systems and payment routing, this manuscript demonstrates solid foundational understanding but lacks the analytical depth expected for a comprehensive technical analysis. The section on pathfinding (2.3.2) is particularly weak - it mentions that implementations use 'modified Dijkstra's algorithm variants' but provides no detail on what modifications are employed or why. The Lightning Network's routing problem is fundamentally different from classical shortest-path problems due to: (1) uncertain edge capacities (liquidity distribution unknown), (2) directional capacity constraints, (3) dynamic network state, and (4) privacy requirements limiting information sharing. Recent work by Pickhardt and Richter reformulated Lightning routing as a min-cost flow problem with uncertainty, achieving significantly better payment success rates - this deserves detailed treatment.\n\nThe liquidity management section (2.4) identifies the problem but provides insufficient analysis of solutions. Circular rebalancing is mentioned but without discussing its economic viability - what are typical costs? When does rebalancing become unprofitable? How do routing nodes optimize rebalancing decisions? The manuscript would benefit from concrete examples: 'A routing node with 10 BTC capacity across 20 channels might spend X% on monthly rebalancing fees, with success rates varying by Y% depending on network conditions.' The relationship between channel capacity allocation, routing volume, and profitability needs rigorous examination.\n\nThe fee market discussion is notably absent despite being central to routing node incentives. How do nodes set fees? What is the distribution of fees across the network? Is there evidence of fee competition? How do fees affect routing decisions and payment success rates? The manuscript mentions Bob earning 0.001 BTC as a routing fee in an example but never analyzes whether such fees are economically sustainable given capital costs, rebalancing expenses, and operational overhead.\n\nThe treatment of multipath payments (4.1.2) is too brief. MPP fundamentally changes the routing problem from finding a single path to solving a multi-commodity flow problem. How do implementations decompose payments across paths? What are the tradeoffs between payment splitting strategies? How does MPP affect routing node economics when multiple HTLCs must be held simultaneously?\n\nChannel jamming (4.3.2) receives superficial treatment. The manuscript lists proposed mitigations but doesn't analyze their effectiveness or implementation challenges. Upfront fees create their own problems - how should they be priced? How do they affect legitimate payment routing? The economic game theory of jamming attacks and defenses deserves deeper analysis.\n\nThe manuscript would be significantly strengthened by: (1) detailed algorithmic analysis of routing approaches with complexity analysis and empirical performance comparisons, (2) economic modeling of routing node operations including cost structures and revenue models, (3) quantitative analysis of liquidity management strategies with real network data, and (4) game-theoretic treatment of fee markets and attack scenarios. The current version reads more as an informed survey than a rigorous technical analysis.",
+          "tokens": 9211
+        }
+      ],
+      "overall_average": 6.1,
+      "moderator_decision": {
+        "decision": "MAJOR_REVISION",
+        "confidence": 4,
+        "meta_review": "Both reviewers agree that this manuscript provides a competent, well-structured overview of the Lightning Network that successfully conveys fundamental concepts to a general technical audience. The writing is clear (both reviewers scored clarity at 8/10), and the coverage of basic mechanisms\u2014HTLCs, commitment transactions, and the revocation scheme\u2014is accurate at a conceptual level. The manuscript appropriately acknowledges current limitations and provides useful context on the broader protocol ecosystem.\n\nHowever, both reviewers identify a consistent pattern of insufficient technical depth that undermines the manuscript's value as a comprehensive technical analysis. Reviewer 1 highlights critical omissions in cryptographic foundations: the absence of SegWit's essential role in enabling Lightning, missing details on actual revocation key derivation, and no treatment of HTLC script construction. Reviewer 2 raises parallel concerns about routing and economics: superficial coverage of pathfinding algorithms without analysis of specific approaches like Pickhardt-Richter, inadequate treatment of fee market dynamics and routing node economics, and missing quantitative analysis of liquidity management strategies. The low novelty scores (4/10 from both reviewers) and moderate rigor scores (5-6/10) indicate that while the manuscript is accurate, it does not advance beyond existing documentation and tutorials.\n\nThe manuscript has a solid foundation but requires substantial expansion to meet the standards expected for rigorous technical analysis. The issues identified are addressable through revision, but the scope of required changes\u2014adding cryptographic details, protocol-level specifications, algorithmic analysis, and empirical data\u2014constitutes major rather than minor revision work.",
+        "key_strengths": [
+          "Clear, well-organized exposition of Lightning Network fundamentals accessible to general technical audiences",
+          "Accurate conceptual treatment of core mechanisms including HTLCs, commitment transactions, and revocation schemes",
+          "Comprehensive coverage of the protocol ecosystem including implementations, wallets, and emerging developments (BOLT 12, Taproot)"
+        ],
+        "key_weaknesses": [
+          "Missing critical cryptographic foundations: no coverage of SegWit dependency, actual revocation key derivation formulas, or HTLC Bitcoin Script construction",
+          "Superficial treatment of routing algorithms without analysis of specific approaches (e.g., Pickhardt-Richter min-cost flow, probability-based routing) or their tradeoffs",
+          "Inadequate quantitative analysis of fee market dynamics, routing node economics, and liquidity management strategies"
+        ],
+        "required_changes": [
+          "Add a dedicated section on SegWit's essential role in enabling Lightning, explaining transaction malleability, how witness segregation resolves it, and implications for channel funding security",
+          "Expand cryptographic details to include actual revocation key derivation formulas and HTLC script construction with specific opcodes (OP_CHECKLOCKTIMEVERIFY, OP_CHECKSIG, OP_HASH160)",
+          "Provide rigorous analysis of pathfinding algorithms comparing Dijkstra-based approaches with probability-based routing, including discussion of the exploration-exploitation tradeoff",
+          "Include empirical data and quantitative analysis of routing node economics, fee distributions, rebalancing costs, and liquidity management strategy comparisons"
+        ],
+        "recommendation": "The manuscript provides a solid conceptual foundation but currently reads more as an accessible tutorial than a rigorous technical analysis. To meet publication standards, authors should significantly expand the technical depth in two key areas: (1) cryptographic and protocol-level details, particularly SegWit dependency, revocation key derivation, and HTLC script construction; and (2) routing and economic analysis, including specific algorithm comparisons, empirical fee market data, and quantitative liquidity management analysis. Consider restructuring to include a 'Protocol Foundations' section covering cryptographic primitives and a 'Network Economics' section with empirical analysis. The clear writing style is an asset\u2014maintain accessibility while adding the technical rigor expected for this venue.",
+        "round": 1,
+        "overall_average": 6.1,
+        "tokens": 2607
+      },
+      "manuscript_diff": null,
+      "threshold": 7.5,
+      "passed": false,
+      "timestamp": "2026-02-04T15:18:43.871583"
+    },
+    {
+      "round": 2,
+      "manuscript_version": "v2",
+      "word_count": 4354,
+      "reviews": [
+        {
+          "specialist": "expert_1",
+          "specialist_name": "Payment Channel Cryptography and Bitcoin Protocol",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 6
+          },
+          "average": 6.6,
+          "summary": "This manuscript provides a solid technical overview of Lightning Network payment channel cryptography with generally accurate descriptions of HTLC construction, commitment transactions, and revocation mechanisms. However, several technical details require correction, and the treatment of security properties lacks formal rigor expected for a comprehensive technical analysis.",
+          "strengths": [
+            "Excellent explanation of the SegWit dependency and transaction malleability problem, with clear step-by-step demonstration of why pre-SegWit payment channels were vulnerable",
+            "The revocation mechanism and key derivation scheme is well-documented with proper cryptographic notation showing both public key and private key derivation formulas",
+            "Good coverage of the asymmetric commitment transaction structure and the security rationale behind to_self_delay timelock windows"
+          ],
+          "weaknesses": [
+            "The HTLC scripts presented contain errors - Lightning HTLCs use SHA256 for the payment hash verification (not HASH160 as stated), and the actual BOLT #3 scripts differ structurally from those shown",
+            "Missing critical discussion of anchor outputs (introduced in commitment transaction format v2) which fundamentally changed how HTLC security works under fee volatility conditions",
+            "No formal security analysis or threat model - the manuscript describes mechanisms but doesn't rigorously prove atomicity, non-repudiation, or analyze the security bounds of the punishment mechanism"
+          ],
+          "suggestions": [
+            "Correct the HTLC script representations to match BOLT #3 specification exactly, and clarify that payment_hash uses SHA256 (32 bytes) while the revocation key check uses HASH160",
+            "Add a dedicated section on anchor outputs and their security implications, including CPFP carve-out rules and how they address the HTLC-timeout pinning attack vector",
+            "Include formal security property definitions and at minimum sketch proofs for: (1) payment atomicity across multi-hop paths, (2) balance security under unilateral close, and (3) punishment mechanism game-theoretic incentives"
+          ],
+          "detailed_feedback": "From a payment channel cryptography perspective, this manuscript demonstrates competent understanding of Lightning fundamentals but falls short of the rigor expected for a 'comprehensive technical analysis.' The SegWit dependency section (2.1.1) is genuinely well-executed and correctly identifies the critical txid malleability issue. However, Section 2.2.1 contains a significant error: Lightning HTLCs use SHA256 for payment hash verification, not HASH160 as claimed. The actual BOLT #3 offered HTLC script structure also differs from what's presented - it uses a witness script with specific ordering of OP_IF branches and includes the 2-of-2 multisig requirement for HTLC-timeout transactions. The manuscript correctly notes second-stage transactions but doesn't adequately explain why they're necessary for security (specifically, preventing the counterparty from immediately sweeping HTLC outputs before the rightful claimant can respond). A critical omission is any discussion of anchor outputs, which were introduced precisely because the original commitment transaction design had a fatal flaw: pre-signed transactions with fixed fees could become unconfirmable during fee spikes, potentially allowing HTLC-timeout attacks. The CLTV delta discussion is good but should quantify the actual security margins needed under adversarial mempool conditions. Finally, the revocation mechanism description would benefit from explicit analysis of the shachain storage optimization's security properties and the implications of the 2^48 state limit. The manuscript would be significantly strengthened by including even informal security arguments rather than purely descriptive content.",
+          "tokens": 9435
+        },
+        {
+          "specialist": "expert_2",
+          "specialist_name": "Distributed Network Systems and Payment Routing",
+          "provider": "anthropic",
+          "model": "claude-sonnet-4.5",
+          "scores": {
+            "accuracy": 9,
+            "completeness": 8,
+            "clarity": 9,
+            "novelty": 6,
+            "rigor": 8
+          },
+          "average": 8.0,
+          "summary": "This is a substantially improved revision that addresses most previous concerns. The manuscript now provides rigorous technical depth in routing algorithms, fee economics, and liquidity management. The pathfinding section is particularly strong, incorporating modern approaches like Pickhardt-Richter min-cost flow. However, some gaps remain in empirical validation and emerging protocol developments.",
+          "strengths": [
+            "Excellent expansion of pathfinding algorithms with proper complexity analysis, probability-based routing, and min-cost flow formulation - this represents state-of-the-art understanding",
+            "Significantly improved liquidity management section with quantitative cost analysis, comparative strategy evaluation, and realistic profitability models backed by empirical data",
+            "Strong technical rigor in routing node economics, including proper modeling of capital costs, rebalancing expenses, and fee market dynamics with actual operator data",
+            "Clear explanation of source routing privacy properties and onion encryption mechanics",
+            "Comprehensive treatment of HTLC scripts with proper distinction between offered/received HTLCs and second-stage transactions"
+          ],
+          "weaknesses": [
+            "Missing discussion of critical routing challenges: payment probing attacks, balance discovery vulnerabilities, and timing analysis risks that compromise privacy",
+            "Insufficient coverage of multi-path payments (MPP/AMP) - mentioned briefly but lacks technical detail on payment splitting algorithms, partial payment handling, and failure recovery",
+            "Fee market analysis lacks discussion of dynamic fee adjustment strategies, automated fee management tools (e.g., charge-lnd), and the impact of Just-In-Time (JIT) routing on fee economics",
+            "Limited treatment of watchtower economics and incentive structures - critical for security model but only briefly mentioned",
+            "Missing analysis of channel jamming attacks and proposed mitigations (upfront fees, reputation systems) - significant ongoing research area"
+          ],
+          "suggestions": [
+            "Add section on multi-path payment mechanics: include technical details on payment splitting heuristics, partial failure handling, and the tradeoff between payment reliability and privacy (more paths = more information leakage)",
+            "Expand routing security discussion: cover balance probing techniques, timing correlation attacks, and practical privacy limitations of source routing. Include discussion of blinded paths (BOLT12) as mitigation",
+            "Include analysis of Just-In-Time (JIT) routing and its impact on liquidity management and fee markets - this is reshaping routing node economics significantly",
+            "Add quantitative analysis of channel jamming attacks: cost to attacker vs. cost to network, proposed mitigation strategies (circuit breaker, upfront fees), and their economic implications",
+            "Discuss emerging protocol improvements: Taproot channels, PTLCs (Point Time-Locked Contracts) replacing HTLCs, and their implications for privacy and routing efficiency"
+          ],
+          "detailed_feedback": "As a distributed network systems and payment routing expert, I find this revision demonstrates substantial improvement in technical depth and rigor. The pathfinding section now properly addresses the fundamental challenges of routing under uncertainty, correctly presenting the evolution from naive Dijkstra approaches to sophisticated probability-based methods and min-cost flow formulations. The inclusion of Pickhardt-Richter's work is particularly appropriate and shows awareness of cutting-edge research.\n\nThe liquidity management analysis is now quantitatively grounded with realistic cost models and empirical data from actual routing node operators. The comparative analysis of rebalancing strategies (circular rebalancing vs. submarine swaps vs. liquidity marketplaces) provides actionable insights with proper consideration of cost, reliability, and capital efficiency tradeoffs. The routing node economics section correctly models the full cost structure including opportunity costs, which many treatments overlook.\n\nHowever, several important gaps remain. The manuscript lacks discussion of multi-path payments (MPP/AMP), which are now standard and fundamentally change routing dynamics. The payment splitting problem - how to optimally divide a payment across multiple paths while balancing success probability, fee costs, and privacy - deserves technical treatment. The failure handling mechanics (partial payment success/failure) and their impact on routing algorithms should be addressed.\n\nThe security and privacy analysis is insufficient for a comprehensive technical treatment. Payment probing attacks allow adversaries to discover channel balances, undermining privacy assumptions. Timing correlation attacks can link payment flows across hops. These aren't theoretical concerns - they're practical vulnerabilities that affect real deployments. The manuscript should discuss these attacks and mitigations like blinded paths (BOLT12).\n\nChannel jamming attacks represent a critical ongoing challenge. An attacker can lock liquidity across multiple channels using HTLCs that deliberately fail or timeout, effectively DoS-ing routing capacity at low cost. The manuscript should analyze attack economics (cost to attacker vs. damage to network) and discuss proposed mitigations: upfront fees, local reputation systems, and circuit breakers. These proposals have significant implications for fee markets and routing incentives.\n\nThe fee market analysis, while improved, misses important dynamics. Just-In-Time (JIT) routing - where nodes dynamically rebalance channels during payment forwarding - is reshaping routing economics by reducing capital requirements and enabling new business models. Dynamic fee adjustment strategies and automated fee management tools are becoming standard, yet receive minimal treatment.\n\nEmerging protocol developments deserve mention: Taproot channels improve privacy and reduce on-chain footprint; PTLCs (replacing HTLCs) eliminate payment correlation vulnerabilities; channel factories enable more efficient channel management. These aren't speculative - they're in various stages of specification and implementation.\n\nThe manuscript would benefit from more critical analysis of routing centralization trends. The scale-free network topology and economies of scale in routing create natural centralization pressures. What are the implications for censorship resistance and network resilience? How do protocol design choices affect these dynamics?\n\nDespite these gaps, this is now a solid technical treatment suitable for publication with moderate revisions. The core routing and liquidity management content is rigorous and well-presented. Addressing the identified gaps would elevate it to exceptional quality.",
+          "tokens": 9951
+        }
+      ],
+      "overall_average": 7.3,
+      "moderator_decision": {
+        "decision": "MINOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive technical overview of Lightning Network payment channels, routing mechanisms, and network economics. The revision has substantially improved from the previous round, with Reviewer 2 noting significant enhancements in pathfinding algorithms, liquidity management, and routing node economics. The treatment of probability-based routing and min-cost flow formulations represents state-of-the-art understanding, and the empirical grounding of profitability models adds considerable value. The clarity of exposition is consistently praised by both reviewers.\n\nHowever, important technical issues remain unresolved. Reviewer 1 identifies concrete errors in HTLC script representations that deviate from BOLT #3 specifications\u2014a factual accuracy issue that must be corrected. The absence of anchor outputs discussion represents a significant gap given their fundamental impact on HTLC security under fee volatility. Additionally, both reviewers converge on the need for stronger security analysis: Reviewer 1 requests formal security property definitions, while Reviewer 2 highlights missing coverage of payment probing attacks, channel jamming, and privacy vulnerabilities. The limited treatment of multi-path payments and emerging protocol developments (Taproot channels, PTLCs) also represents a notable gap for a manuscript aiming to be comprehensive.\n\nGiven this is the final round and the overall quality is solid (7.3 average), the manuscript merits conditional acceptance pending targeted revisions. The core technical content is sound and valuable to the research community, but the identified errors and gaps\u2014particularly the HTLC script inaccuracies and missing anchor outputs discussion\u2014require correction before publication.",
+        "key_strengths": [
+          "Excellent treatment of pathfinding algorithms with proper complexity analysis, probability-based routing, and min-cost flow formulation representing current state-of-the-art",
+          "Strong quantitative analysis of routing node economics with empirical data on capital costs, rebalancing expenses, and realistic profitability models",
+          "Clear and well-structured exposition of SegWit dependency, revocation mechanisms, and asymmetric commitment transaction design with proper cryptographic notation"
+        ],
+        "key_weaknesses": [
+          "HTLC script representations contain errors and deviate from BOLT #3 specifications (SHA256 vs HASH160 confusion, structural differences)",
+          "Missing critical discussion of anchor outputs and their security implications for HTLC-timeout pinning attacks under fee volatility",
+          "Insufficient coverage of security threats including payment probing attacks, channel jamming, and privacy vulnerabilities in source routing"
+        ],
+        "required_changes": [
+          "Correct all HTLC script representations to exactly match BOLT #3 specifications, with explicit clarification of hash function usage (SHA256 for payment_hash, HASH160 for revocation key checks)",
+          "Add dedicated section on anchor outputs covering CPFP carve-out rules and HTLC-timeout pinning attack mitigation",
+          "Expand security discussion to include balance probing vulnerabilities, channel jamming attacks with cost analysis, and at minimum informal security arguments for payment atomicity and punishment mechanism incentives",
+          "Provide technical details on multi-path payments (MPP/AMP) including payment splitting algorithms and failure recovery mechanisms"
+        ],
+        "recommendation": "The manuscript is close to publication quality but requires targeted corrections before acceptance. Priority should be given to: (1) fixing the HTLC script errors to ensure technical accuracy\u2014this is non-negotiable for a reference-quality document; (2) adding anchor outputs discussion as this represents a fundamental protocol change; (3) strengthening security analysis with at least informal treatment of the identified attack vectors. The multi-path payment expansion and emerging protocol discussion (PTLCs, Taproot channels) would strengthen the manuscript but may be addressed more briefly given space constraints. Authors should submit a revision addressing these specific points with a detailed response letter mapping changes to reviewer concerns.",
+        "round": 2,
+        "overall_average": 7.3,
+        "tokens": 2576
+      },
+      "manuscript_diff": {
+        "words_added": -143,
+        "previous_version": "v1",
+        "current_version": "v2"
+      },
+      "threshold": 7.5,
+      "passed": false,
+      "timestamp": "2026-02-04T15:22:25.319562"
+    }
+  ],
+  "final_score": 7.3,
+  "passed": false,
+  "total_rounds": 2,
+  "performance": {
+    "workflow_start": "2026-02-04T15:15:16.350169",
+    "workflow_end": "2026-02-04T15:22:25.321988",
+    "total_duration": 428.97,
+    "initial_draft_time": 155.46,
+    "initial_draft_tokens": 0,
+    "team_composition_time": 0.0,
+    "team_composition_tokens": 0,
+    "rounds": [
+      {
+        "round_number": 1,
+        "review_start": "2026-02-04T15:17:51.816594",
+        "review_end": "2026-02-04T15:18:43.871316",
+        "review_duration": 52.05,
+        "reviewer_times": {
+          "expert_1": 29.49,
+          "expert_2": 33.96
+        },
+        "moderator_time": 18.06,
+        "revision_time": null,
+        "round_tokens": 18412
+      },
+      {
+        "round_number": 2,
+        "review_start": "2026-02-04T15:21:29.564012",
+        "review_end": "2026-02-04T15:22:25.319415",
+        "review_duration": 55.76,
+        "reviewer_times": {
+          "expert_1": 22.95,
+          "expert_2": 36.65
+        },
+        "moderator_time": 19.08,
+        "revision_time": null,
+        "round_tokens": 19386
+      }
+    ],
+    "total_tokens": 37798,
+    "estimated_cost": 0.11
+  },
+  "timestamp": "2026-02-04T15:22:25.324502"
+}

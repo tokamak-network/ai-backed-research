@@ -1,0 +1,875 @@
+{
+  "projects": [
+    {
+      "id": "benchmark-short-20260207-143527",
+      "title": null,
+      "topic": "Sparse Mixture-of-Experts Routing Strategies for Efficient Large Language Model Inference",
+      "final_score": 6.8,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 2,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 3.7,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 6.8,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-07T14:48:59.412152",
+      "data_file": "data/benchmark-short-20260207-143527.json",
+      "elapsed_time_seconds": 479,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "benchmark-short-20260207-142241",
+      "title": null,
+      "topic": "Sparse Mixture-of-Experts Routing Strategies for Efficient Large Language Model Inference",
+      "final_score": 0,
+      "passed": false,
+      "status": "failed",
+      "total_rounds": 1,
+      "rounds": [
+        {
+          "round": 0,
+          "score": 0,
+          "decision": "DESK_REJECT",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-07T14:28:18.577403",
+      "data_file": "data/benchmark-short-20260207-142241.json",
+      "elapsed_time_seconds": 2,
+      "final_decision": "DESK_REJECT"
+    },
+    {
+      "id": "zero-knowledge-proofs-in-layer-2-rollup-security",
+      "title": "Zero-Knowledge Proofs in Layer 2 Rollup Security: A Comprehensive Research Report",
+      "topic": "Zero-Knowledge Proofs in Layer 2 Rollup Security",
+      "final_score": 7.5,
+      "passed": true,
+      "status": "completed",
+      "total_rounds": 2,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.0,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.5,
+          "decision": "ACCEPT",
+          "passed": true
+        }
+      ],
+      "timestamp": "2026-02-07T12:08:53.631709",
+      "data_file": "data/zero-knowledge-proofs-in-layer-2-rollup-security.json",
+      "elapsed_time_seconds": 528,
+      "final_decision": "ACCEPT"
+    },
+    {
+      "id": "expectation-on-changes-in-crypto-industry-by-the-recent-ai-innovation-(2026-feb.)-20260207-021056",
+      "title": "Expectations on Changes in the Crypto Industry by Recent AI Innovation: A Comprehensive Analysis",
+      "topic": "Expectation on Changes in Crypto industry by the recent AI innovation (2026 Feb.)",
+      "final_score": 7.9,
+      "passed": true,
+      "status": "completed",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 5.8,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.0,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.9,
+          "decision": "ACCEPT",
+          "passed": true
+        }
+      ],
+      "timestamp": "2026-02-07T02:25:15.022667",
+      "data_file": "data/expectation-on-changes-in-crypto-industry-by-the-recent-ai-innovation-(2026-feb.)-20260207-021056.json",
+      "elapsed_time_seconds": 858,
+      "final_decision": "ACCEPT"
+    },
+    {
+      "id": "under-recent-ai-discuption-(2026-feb),-crypto's-change-(e.g.-ai+crypto,-instant-finality-and-etc)-20260207-005433",
+      "title": "The Convergence of Artificial Intelligence and Cryptocurrency: Transformations in Blockchain Architecture and Market Dynamics Under the 2026 AI Disruption",
+      "topic": "Under recent AI discuption (2026 Feb), Crypto's change (e.g. AI+Crypto, Instant finality and etc)",
+      "final_score": 6.8,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.0,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.0,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 6.8,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-07T01:48:04.524198",
+      "data_file": "data/under-recent-ai-discuption-(2026-feb),-crypto's-change-(e.g.-ai+crypto,-instant-finality-and-etc)-20260207-005433.json",
+      "elapsed_time_seconds": 118,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "ethereum-layer-2's-slow-developments-to-rollup-stage-2-20260206-221218",
+      "title": "The Protracted Path to Decentralization: A Comprehensive Analysis of Ethereum Layer 2 Rollup Stage 2 Development Delays",
+      "topic": "Ethereum Layer 2's slow developments to Rollup Stage 2",
+      "final_score": 7.5,
+      "passed": true,
+      "status": "completed",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.2,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.3,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.5,
+          "decision": "ACCEPT",
+          "passed": true
+        }
+      ],
+      "timestamp": "2026-02-07T00:45:19.460989",
+      "data_file": "data/ethereum-layer-2's-slow-developments-to-rollup-stage-2-20260206-221218.json",
+      "elapsed_time_seconds": 53,
+      "final_decision": "ACCEPT"
+    },
+    {
+      "id": "zero-knowledge-rollup-security-analysis-20260207-000914",
+      "title": null,
+      "topic": "Zero-Knowledge Rollup Security Analysis",
+      "final_score": 5.8,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 1,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 5.8,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-07T00:16:29.982058",
+      "data_file": "data/zero-knowledge-rollup-security-analysis-20260207-000914.json",
+      "elapsed_time_seconds": 108,
+      "final_decision": "MAJOR_REVISION"
+    },
+    {
+      "id": "ai-+-crypto-financial-impact-20260206-165504",
+      "title": "The Financial Impact of Artificial Intelligence Integration in Cryptocurrency Markets: A Comprehensive Analysis",
+      "topic": "AI + Crypto Financial Impact",
+      "final_score": 7.0,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 5.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.1,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.0,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-06T19:50:46.282349",
+      "data_file": "data/ai-+-crypto-financial-impact-20260206-165504.json",
+      "elapsed_time_seconds": 139,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "efficient-and-realistic-secure-voting-mechanism-for-blockchain-based-dao-20260206-155500",
+      "title": "Efficient and Realistic Secure Voting Mechanisms for Blockchain-Based Decentralized Autonomous Organizations",
+      "topic": "efficient and realistic secure voting mechanism for blockchain based DAO",
+      "final_score": 6.9,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 5.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 6.8,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 6.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-06T16:06:51.090500",
+      "data_file": "data/efficient-and-realistic-secure-voting-mechanism-for-blockchain-based-dao-20260206-155500.json",
+      "elapsed_time_seconds": 710,
+      "final_decision": "MAJOR_REVISION"
+    },
+    {
+      "id": "ethereum-layer-2-technologies-20260206-153937",
+      "title": "Ethereum Layer 2 Technologies: A Comprehensive Analysis of Scaling Solutions, Technical Architectures, and Ecosystem Evolution",
+      "topic": "Ethereum Layer 2 technologies",
+      "final_score": 6.9,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 5.7,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 6.7,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 6.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-06T15:50:19.907875",
+      "data_file": "data/ethereum-layer-2-technologies-20260206-153937.json",
+      "elapsed_time_seconds": 642,
+      "final_decision": "MAJOR_REVISION"
+    },
+    {
+      "id": "fraud-proof-test-20260206-135358",
+      "title": "Optimistic Rollup Fraud Proof Mechanisms: A Comprehensive Technical Analysis",
+      "topic": "Optimistic rollup fraud proof mechanisms",
+      "final_score": 8.6,
+      "passed": true,
+      "status": "completed",
+      "total_rounds": 2,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 8.6,
+          "decision": "ACCEPT",
+          "passed": true
+        }
+      ],
+      "timestamp": "2026-02-06T14:14:52.165686",
+      "data_file": "data/fraud-proof-test-20260206-135358.json",
+      "elapsed_time_seconds": 1253,
+      "final_decision": "ACCEPT"
+    },
+    {
+      "id": "rollup's-stages-and-current-situation-and-bottleneck-20260206-011653",
+      "title": "Rollup Stages: Current Landscape, Challenges, and the Path to Full Decentralization",
+      "topic": "Rollup's stages and current situation and bottleneck",
+      "final_score": 6.9,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.2,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.0,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 6.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-06T01:27:25.284973",
+      "data_file": "data/rollup's-stages-and-current-situation-and-bottleneck-20260206-011653.json",
+      "elapsed_time_seconds": 632,
+      "final_decision": "MAJOR_REVISION"
+    },
+    {
+      "id": "test-20260205-235637",
+      "title": "Comprehensive Research Report: Testing Methodologies in Blockchain and Distributed Systems",
+      "topic": "Test",
+      "final_score": 7.2,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.8,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-06T00:05:12.340943",
+      "data_file": "data/test-20260205-235637.json",
+      "elapsed_time_seconds": 514,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "based-rollup-20260205-234749",
+      "title": "Based Rollups: A Comprehensive Research Report on Ethereum-Native Sequencing for Layer 2 Scalability",
+      "topic": "Based rollup",
+      "final_score": 7.2,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.3,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T23:57:34.799020",
+      "data_file": "data/based-rollup-20260205-234749.json",
+      "elapsed_time_seconds": 585,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "based-rollup-20260205-234653",
+      "title": "Based Rollups: A Comprehensive Analysis of Ethereum-Native Sequencing Architecture",
+      "topic": "Based rollup",
+      "final_score": 7.2,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.5,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T23:56:33.815839",
+      "data_file": "data/based-rollup-20260205-234653.json",
+      "elapsed_time_seconds": 580,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "rollup-security-mechanism-20260205-233921",
+      "title": "Rollup Security Mechanisms: A Comprehensive Analysis of Layer-2 Scaling Security Architecture",
+      "topic": "Rollup security mechanism",
+      "final_score": 7.4,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 6.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.4,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T23:49:10.985018",
+      "data_file": "data/rollup-security-mechanism-20260205-233921.json",
+      "elapsed_time_seconds": 589,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "ethereum's-pos-20260205-233921",
+      "title": "Ethereum's Proof of Stake: A Comprehensive Technical Analysis of The Merge and Its Implications for Blockchain Consensus Mechanisms",
+      "topic": "Ethereum's PoS",
+      "final_score": 7.2,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 7.1,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T23:49:10.787263",
+      "data_file": "data/ethereum's-pos-20260205-233921.json",
+      "elapsed_time_seconds": 589,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "most-efficient-and-secure-voting-system-for-evm-compatible-blockchain-20260205-233921",
+      "title": "Most Efficient and Secure Voting System for EVM-Compatible Blockchains: A Comprehensive Research Report",
+      "topic": "Most efficient and secure voting system for EVM compatible blockchain",
+      "final_score": 7.2,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.5,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T23:49:10.194453",
+      "data_file": "data/most-efficient-and-secure-voting-system-for-evm-compatible-blockchain-20260205-233921.json",
+      "elapsed_time_seconds": 588,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "ethereum-pos-20260205-233921",
+      "title": "Ethereum Proof-of-Stake: A Comprehensive Analysis of the Merge and Its Implications for Distributed Consensus Systems",
+      "topic": "Ethereum PoS",
+      "final_score": 7.7,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 7.1,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.7,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T23:48:48.825568",
+      "data_file": "data/ethereum-pos-20260205-233921.json",
+      "elapsed_time_seconds": 566,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "ethereum-pos-consensus-mechanism-20260205-233921",
+      "title": "Ethereum Proof-of-Stake Consensus Mechanism: A Comprehensive Technical Analysis",
+      "topic": "Ethereum PoS consensus mechanism",
+      "final_score": 7.5,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 7.3,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.5,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T23:48:42.382945",
+      "data_file": "data/ethereum-pos-consensus-mechanism-20260205-233921.json",
+      "elapsed_time_seconds": 560,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "bitcoin-lightning-network-overview-20260205-233921",
+      "title": "Bitcoin Lightning Network: A Comprehensive Technical Analysis of Second-Layer Payment Channel Architecture",
+      "topic": "Bitcoin Lightning Network Overview",
+      "final_score": 7.5,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 2,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.8,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.5,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T23:46:00.160491",
+      "data_file": "data/bitcoin-lightning-network-overview-20260205-233921.json",
+      "elapsed_time_seconds": 398,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "rollup-security-mechanism-20260205-154031",
+      "title": "Rollup Security Mechanisms: A Comprehensive Analysis of Trust Assumptions, Verification Paradigms, and Emerging Threat Vectors",
+      "topic": "Rollup security mechanism",
+      "final_score": 7.1,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.5,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.1,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T15:51:29.262578",
+      "data_file": "data/rollup-security-mechanism-20260205-154031.json",
+      "elapsed_time_seconds": 658,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "most-efficient-and-secure-voting-system-for-evm-compatible-blockchain-20260205-152402",
+      "title": "Most Efficient and Secure Voting System for EVM-Compatible Blockchains: A Comprehensive Research Report",
+      "topic": "Most efficient and secure voting system for EVM compatible blockchain",
+      "final_score": 7.2,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 5.8,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 6.9,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T15:33:57.881137",
+      "data_file": "data/most-efficient-and-secure-voting-system-for-evm-compatible-blockchain-20260205-152402.json",
+      "elapsed_time_seconds": 595,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "ethereum's-pos-20260205-145041",
+      "title": "Ethereum's Proof of Stake: A Comprehensive Analysis of the Merge and Its Implications for Blockchain Consensus Mechanisms",
+      "topic": "Ethereum's PoS",
+      "final_score": 7.2,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.1,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T15:00:35.537959",
+      "data_file": "data/ethereum's-pos-20260205-145041.json",
+      "elapsed_time_seconds": 593,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "ethereum-pos-20260205-140001",
+      "title": "Ethereum Proof-of-Stake: A Comprehensive Analysis of the Merge and Its Implications for Distributed Consensus Systems",
+      "topic": "Ethereum PoS",
+      "final_score": 7.3,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.7,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.3,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T14:10:00.969916",
+      "data_file": "data/ethereum-pos-20260205-140001.json",
+      "elapsed_time_seconds": 599,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "ethereum-pos-consensus-mechanism-20260205-112608",
+      "title": "Ethereum Proof-of-Stake Consensus Mechanism: A Comprehensive Technical Analysis",
+      "topic": "Ethereum PoS consensus mechanism",
+      "final_score": 7.2,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.7,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.3,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.2,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-05T11:35:58.915716",
+      "data_file": "data/ethereum-pos-consensus-mechanism-20260205-112608.json",
+      "elapsed_time_seconds": 590,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "bitcoin-lightning-network-overview",
+      "title": "Bitcoin Lightning Network: A Comprehensive Technical Analysis of Second-Layer Scaling Solutions",
+      "topic": "Bitcoin Lightning Network Overview",
+      "final_score": 7.3,
+      "passed": false,
+      "status": "rejected",
+      "total_rounds": 2,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 6.1,
+          "decision": "MAJOR_REVISION",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.3,
+          "decision": "MINOR_REVISION",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-04T15:22:25.324502",
+      "data_file": "data/bitcoin-lightning-network-overview.json",
+      "elapsed_time_seconds": 428,
+      "final_decision": "MINOR_REVISION"
+    },
+    {
+      "id": "research-report",
+      "title": "Understanding Layer 2 Fee Structures: A Comparative Analysis Across Rollup Types",
+      "topic": "Research Report",
+      "final_score": 7.9,
+      "passed": false,
+      "status": "failed",
+      "total_rounds": 3,
+      "rounds": [
+        {
+          "round": 1,
+          "score": 4.9,
+          "decision": "",
+          "passed": false
+        },
+        {
+          "round": 2,
+          "score": 7.6,
+          "decision": "",
+          "passed": false
+        },
+        {
+          "round": 3,
+          "score": 7.9,
+          "decision": "",
+          "passed": false
+        }
+      ],
+      "timestamp": "2026-02-04T10:24:30.437491",
+      "data_file": "data/research-report.json",
+      "elapsed_time_seconds": 0,
+      "final_decision": "PENDING"
+    }
+  ],
+  "updated_at": "2026-02-07T23:11:24.259900"
+}

@@ -1,0 +1,512 @@
+{
+  "topic": "Rollup security mechanism",
+  "output_directory": "results/rollup-security-mechanism-20260205-233921",
+  "max_rounds": 3,
+  "threshold": 8.0,
+  "expert_team": [
+    {
+      "id": "expert-1",
+      "name": "Expert 1",
+      "domain": "General",
+      "focus_areas": [
+        "Soundness guarantees of validity proofs and fraud proof constructions",
+        "Cryptographic assumption strength and potential attack vectors on proof systems",
+        "Prover/verifier complexity tradeoffs and their security implications"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    },
+    {
+      "id": "expert-2",
+      "name": "Expert 2",
+      "domain": "General",
+      "focus_areas": [
+        "Data availability sampling and publication guarantees on L1",
+        "Sequencer centralization risks and censorship resistance mechanisms",
+        "L1-L2 security inheritance and finality assumptions"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    },
+    {
+      "id": "expert-3",
+      "name": "Expert 3",
+      "domain": "General",
+      "focus_areas": [
+        "Bridge contract vulnerabilities and cross-layer message verification",
+        "Withdrawal mechanism security and challenge period adequacy",
+        "Upgrade governance risks and emergency intervention mechanisms"
+      ],
+      "provider": "anthropic",
+      "model": "claude-opus-4.5"
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "manuscript_version": "v1",
+      "word_count": 3567,
+      "reviews": [
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Expert 3",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 9,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.4,
+          "summary": "This is a well-structured and comprehensive overview of rollup security mechanisms that successfully synthesizes complex technical concepts for a broad audience. While the manuscript demonstrates strong technical accuracy and excellent clarity, it lacks depth in several critical security areas specified in the review focus, particularly around bridge contract vulnerabilities and withdrawal mechanism security analysis.",
+          "strengths": [
+            "Excellent organizational structure with clear taxonomy distinguishing optimistic and ZK-rollup security models, making complex concepts accessible",
+            "Strong coverage of the theoretical foundations including formal security definitions and the 1-of-N honest assumption framework",
+            "Practical and actionable security evaluation framework in Section 6 that provides genuine utility for practitioners assessing rollup deployments",
+            "Good use of comparative tables and code examples to illustrate technical concepts, particularly the interactive fraud proof bisection protocol"
+          ],
+          "weaknesses": [
+            "Bridge contract vulnerability analysis is superficial - references external bridge hacks (Ronin, Wormhole, Nomad) but fails to deeply analyze canonical rollup bridge-specific vulnerabilities such as message replay attacks, cross-layer reentrancy, or state root manipulation vectors",
+            "Withdrawal mechanism security analysis lacks rigor - the challenge period discussion doesn't adequately address withdrawal delay attacks, liquidity provider risks, or the security implications of fast withdrawal services that bypass challenge periods",
+            "Emergency intervention mechanisms and upgrade governance risks are mentioned but not systematically analyzed - missing threat models for security council key compromise, timelock bypass scenarios, and the tension between emergency response capability and decentralization"
+          ],
+          "suggestions": [
+            "Expand Section 4.3 to include detailed analysis of canonical bridge vulnerabilities specific to rollups, including cross-layer message verification edge cases, deposit/withdrawal race conditions, and the security implications of L1-L2 state synchronization delays",
+            "Add a dedicated subsection analyzing withdrawal mechanism attack vectors including: griefing attacks on challenge periods, economic attacks on liquidity providers offering fast withdrawals, and the security assumptions underlying withdrawal proof verification",
+            "Develop a formal threat model for upgrade governance that addresses: security council operational security requirements, attack scenarios involving compromised council members, and quantitative analysis of timelock adequacy under different adversarial assumptions"
+          ],
+          "detailed_feedback": "The manuscript provides a solid foundation for understanding rollup security but requires significant strengthening in the specific areas of bridge security, withdrawal mechanisms, and upgrade governance that are critical to the practical security of deployed systems. The bridge security section (4.3) correctly identifies the importance of canonical bridges but then pivots to discussing non-rollup bridge hacks without deeply analyzing rollup-specific vulnerabilities. For instance, the cross-layer message verification process deserves detailed scrutiny: how do rollups verify that a deposit message on L1 corresponds to a legitimate deposit transaction? What happens if the sequencer observes a deposit event but the L1 transaction is later reorged? The manuscript should analyze the security of message hashing schemes, the handling of L1 reorgs during the deposit flow, and potential vulnerabilities in the event parsing logic. Similarly, the withdrawal mechanism analysis focuses primarily on challenge period length but neglects critical security considerations such as: the economic security of the challenge game under various stake distributions, the implications of withdrawal batching on individual user security, and the trust assumptions introduced by fast withdrawal providers who effectively become trusted intermediaries. The upgrade governance discussion would benefit from quantitative analysis - for example, what is the minimum safe timelock duration given realistic assumptions about community response time and attacker capabilities? The manuscript references L2Beat's Stages framework but doesn't critically examine whether the Stage 1/2 criteria adequately capture upgrade security risks. Finally, while the manuscript mentions emergency intervention mechanisms, it doesn't analyze the fundamental tension between having effective emergency response capabilities and achieving meaningful decentralization - this deserves a dedicated threat model analysis.",
+          "tokens": 8104
+        },
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Expert 1",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 6
+          },
+          "average": 6.6,
+          "summary": "This manuscript provides a well-structured and accessible overview of rollup security mechanisms, covering both optimistic and ZK-rollup architectures with reasonable breadth. However, the treatment of cryptographic foundations and security proofs lacks the mathematical depth expected for rigorous security analysis, and the novelty is limited as the content largely synthesizes existing knowledge without presenting new theoretical contributions or empirical findings.",
+          "strengths": [
+            "Comprehensive taxonomic coverage of both optimistic and ZK-rollup security mechanisms with clear architectural distinctions and practical protocol examples",
+            "Well-organized presentation with effective use of tables, diagrams, and code snippets that enhance accessibility for practitioners",
+            "Thoughtful treatment of cross-cutting concerns including sequencer centralization, data availability, and upgrade mechanisms that reflects real-world security considerations"
+          ],
+          "weaknesses": [
+            "The cryptographic soundness analysis is superficial\u2014the paper states properties like computational soundness without formally defining the security games, reduction arguments, or concrete security bounds that would substantiate these claims",
+            "The fraud proof construction analysis lacks rigorous treatment of the bisection protocol's security properties, including formal analysis of the 1-of-N honest assumption's implications under various adversarial models and network conditions",
+            "Missing critical analysis of prover/verifier complexity tradeoffs\u2014the paper mentions proof sizes and verification times but does not analyze the security implications of these tradeoffs (e.g., how prover complexity affects decentralization and thus security assumptions)"
+          ],
+          "suggestions": [
+            "Formalize the security model for fraud proofs by defining the adversarial capabilities, providing security games for soundness and completeness, and analyzing the concrete security guarantees under different network synchrony assumptions",
+            "Include a rigorous treatment of ZK proof system security assumptions\u2014specify the exact cryptographic assumptions (e.g., discrete log, knowledge of exponent, random oracle model) and discuss their relative strength and potential attack vectors including quantum threats",
+            "Add quantitative analysis of the prover centralization problem, including formal modeling of how prover complexity creates barriers to decentralization and the resulting security implications (e.g., censorship resistance degradation, liveness guarantees)"
+          ],
+          "detailed_feedback": "From a security analysis perspective, this manuscript serves as a useful survey but falls short of the rigor expected for a comprehensive security analysis. The treatment of validity proofs is particularly concerning\u2014while the paper correctly identifies that ZK-rollups provide 'computational soundness,' it never formally defines what this means in terms of security reductions or concrete security parameters. For instance, when discussing SNARK-based systems, the paper should specify that soundness relies on assumptions like the Knowledge of Exponent Assumption (KEA) or the Algebraic Group Model, and discuss the implications of these assumptions being falsified. The fraud proof analysis similarly lacks depth: the bisection protocol is described procedurally but without analysis of its security properties under adversarial conditions. Key questions remain unaddressed: What happens if the challenger runs out of gas? How does the protocol handle situations where both parties are malicious? What are the exact conditions under which the 1-of-N assumption provides security, and what network synchrony assumptions are required? The paper mentions that 'periods shorter than 5 days may be insufficient' citing Kelkar et al., but this citation appears misattributed (the referenced paper is about order-fairness, not challenge period analysis). The circuit security section identifies important concerns but lacks formal treatment\u2014what does it mean for a circuit to have a 'soundness bug'? This should be formalized in terms of the constraint system admitting satisfying witnesses for invalid statements. Finally, the prover/verifier complexity discussion needs substantial expansion: the security implications of centralized proving extend beyond liveness and censorship to include potential for undetectable proof manipulation if the prover has implementation-level vulnerabilities that aren't caught by the verification circuit.",
+          "tokens": 8138
+        },
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Expert 2",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 6
+          },
+          "average": 6.6,
+          "summary": "This manuscript provides a well-structured and accessible overview of rollup security mechanisms, covering both optimistic and ZK-rollup architectures comprehensively. While the technical content is generally accurate and the presentation is clear, the work lacks novel contributions and would benefit from deeper analytical rigor, particularly in the areas of data availability sampling, sequencer centralization quantification, and formal treatment of L1-L2 security inheritance.",
+          "strengths": [
+            "Comprehensive taxonomy and clear organization covering both optimistic and ZK-rollup security mechanisms with appropriate technical depth for a survey-style document",
+            "Practical security evaluation framework in Section 6 provides actionable guidance for practitioners, including monitoring considerations and incident response protocols",
+            "Good coverage of current protocol implementations (Arbitrum, Optimism, zkSync, StarkNet) with specific technical details about their security architectures and historical incidents"
+          ],
+          "weaknesses": [
+            "Data availability sampling (DAS) treatment is superficial\u2014the manuscript mentions EIP-4844 and alternative DA layers but fails to analyze the cryptographic guarantees of DAS, erasure coding schemes, or the specific security assumptions underlying data availability sampling in proto-danksharding",
+            "Sequencer centralization risks are described qualitatively but lack quantitative analysis\u2014no formal threat models, no analysis of MEV extraction magnitude, no game-theoretic treatment of sequencer misbehavior incentives, and insufficient discussion of timing attacks or front-running vectors",
+            "L1-L2 security inheritance claims are asserted rather than proven\u2014the manuscript states rollups 'inherit' L1 security but doesn't rigorously define what this means, particularly regarding finality assumptions, reorg handling, or the security degradation when L1 experiences instability"
+          ],
+          "suggestions": [
+            "Expand Section 4.2 to include formal treatment of data availability sampling: analyze the 2D Reed-Solomon erasure coding in danksharding, derive the security bounds for DAS with specific assumptions about honest node participation, and discuss the implications of blob pruning after ~18 days for long-term data retrievability",
+            "Add quantitative analysis of sequencer centralization: model the economic incentives for sequencer misbehavior, estimate MEV extraction potential under different sequencer configurations, and formally analyze the security guarantees of force-inclusion mechanisms including timing assumptions and gas price manipulation vectors",
+            "Develop a formal security model for L1-L2 inheritance: define precisely what security properties transfer from L1 to L2, analyze the impact of L1 reorgs on rollup finality (particularly for optimistic rollups during challenge periods), and quantify the security assumptions required for the claimed inheritance to hold"
+          ],
+          "detailed_feedback": "The manuscript demonstrates solid foundational knowledge of rollup architectures but falls short of the rigor expected for a comprehensive security analysis. Regarding data availability, the treatment of EIP-4844 is particularly thin\u2014while blob transactions are mentioned, there's no discussion of how data availability sampling actually works, what the honest minority assumptions are, or how the 18-day pruning window interacts with the 7-day challenge period for optimistic rollups. This is a critical gap since DA is fundamental to rollup security. The claim that 'Security = min(Ethereum, DA layer security)' for external DA is an oversimplification that ignores the nuanced ways these security guarantees compose.\n\nOn sequencer centralization, the manuscript correctly identifies the risks but provides no formal analysis. What is the expected value of MEV extraction for a malicious sequencer? Under what conditions would a sequencer rationally choose to censor transactions? How do force-inclusion delays interact with time-sensitive DeFi operations? These questions require game-theoretic modeling that is absent from the current work.\n\nThe L1-L2 security inheritance discussion is perhaps the weakest aspect. The manuscript assumes that posting data and proofs to L1 automatically confers L1-level security, but this ignores several subtleties: (1) L1 reorgs can invalidate rollup state that users believed was final, (2) the security of validity proofs depends on cryptographic assumptions that are independent of L1 consensus security, (3) bridge security depends on correct implementation of verification logic, not just L1 finality. A rigorous treatment would define a formal security model specifying exactly which L1 properties are inherited and under what assumptions.\n\nThe references, while appropriate, are somewhat dated and miss recent academic work on rollup security formalization. The practical evaluation framework is useful but would benefit from connection to formal verification efforts and existing security audit methodologies. Overall, this is a competent survey that would benefit significantly from deeper analytical treatment of its core claims.",
+          "tokens": 8326
+        }
+      ],
+      "overall_average": 6.9,
+      "moderator_decision": {
+        "decision": "MAJOR_REVISION",
+        "confidence": 4,
+        "meta_review": "The three reviewers converge on a consistent assessment of this manuscript: it is a well-organized, clearly written survey of rollup security mechanisms that provides genuine value for practitioners, but it falls short of the analytical rigor expected for a top-tier venue. All reviewers praised the comprehensive taxonomy, clear presentation, and practical utility of the security evaluation framework. However, they unanimously identified a pattern of superficial treatment where deeper analysis is warranted\u2014the manuscript describes security mechanisms but often fails to formally analyze them.\n\nThe most significant concerns center on three areas. First, the cryptographic and formal foundations are underdeveloped: security properties are stated without formal definitions, security games, or reduction arguments. Second, critical security-relevant topics receive inadequate depth, including bridge contract vulnerabilities, withdrawal mechanism attacks, data availability sampling guarantees, and sequencer centralization risks. Third, the claimed L1-L2 security inheritance is asserted rather than rigorously defined and proven. The novelty scores (5-6 across reviewers) also indicate that the manuscript synthesizes existing knowledge without contributing new theoretical insights or empirical findings.\n\nDespite these limitations, the reviewers recognize the manuscript's potential value as a comprehensive reference. The issues identified are addressable through revision, though the scope of required changes is substantial. The authors must significantly deepen the analytical treatment of multiple sections rather than simply adding surface-level content.",
+        "key_strengths": [
+          "Excellent organizational structure with clear taxonomy distinguishing optimistic and ZK-rollup security models, making complex concepts accessible to a broad audience",
+          "Practical and actionable security evaluation framework that provides genuine utility for practitioners assessing rollup deployments",
+          "Comprehensive coverage of current protocol implementations (Arbitrum, Optimism, zkSync, StarkNet) with specific technical details and historical incident analysis"
+        ],
+        "key_weaknesses": [
+          "Cryptographic foundations and security proofs lack mathematical rigor\u2014security properties are stated without formal definitions, security games, reduction arguments, or concrete security bounds",
+          "Critical security topics receive superficial treatment: bridge contract vulnerabilities, withdrawal mechanism attacks, data availability sampling, and sequencer centralization risks all need substantially deeper analysis",
+          "L1-L2 security inheritance claims are asserted rather than formally defined and proven, particularly regarding finality assumptions, reorg handling, and security degradation scenarios"
+        ],
+        "required_changes": [
+          "Formalize the security model for both fraud proofs and ZK proofs: define adversarial capabilities, provide security games for soundness and completeness, specify cryptographic assumptions, and analyze concrete security guarantees under different network conditions",
+          "Substantially expand analysis of bridge vulnerabilities (cross-layer reentrancy, message replay, state root manipulation), withdrawal mechanism attacks (challenge period griefing, fast withdrawal risks), and upgrade governance threat models with quantitative treatment",
+          "Develop rigorous treatment of data availability sampling (erasure coding security bounds, honest node assumptions, blob pruning implications) and sequencer centralization (formal threat models, MEV quantification, game-theoretic analysis of misbehavior incentives)",
+          "Create a formal security model for L1-L2 inheritance that precisely defines which security properties transfer, analyzes L1 reorg impacts on rollup finality, and quantifies the assumptions required for claimed inheritance to hold"
+        ],
+        "recommendation": "This manuscript has a solid foundation but requires substantial deepening of its analytical content to meet publication standards. The authors should focus on transforming descriptive content into rigorous analysis: replace qualitative statements with formal definitions, add security games and proofs where security properties are claimed, and provide quantitative analysis of risks that are currently only described qualitatively. Consider whether the scope should be narrowed to allow deeper treatment of fewer topics, or whether the manuscript should be positioned explicitly as a practitioner-oriented survey (which would require different framing and potentially a different venue). The reviewers see clear potential, but the current version reads more as a technical tutorial than a research contribution with novel analytical depth.",
+        "round": 1,
+        "overall_average": 6.9,
+        "tokens": 3159
+      },
+      "manuscript_diff": null,
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T23:42:17.627634"
+    },
+    {
+      "round": 2,
+      "manuscript_version": "v2",
+      "word_count": 4043,
+      "reviews": [
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Expert 1",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 7,
+            "completeness": 6,
+            "clarity": 8,
+            "novelty": 5,
+            "rigor": 6
+          },
+          "average": 6.4,
+          "summary": "This manuscript provides a comprehensive survey of rollup security mechanisms with good structural organization and clear exposition. However, the treatment of cryptographic assumptions and proof system security lacks the depth required for rigorous security analysis, and several critical attack vectors on proof systems are underexplored.",
+          "strengths": [
+            "Well-structured formal security definitions for both optimistic and ZK rollup security models, including explicit security games for fraud proof soundness",
+            "Comprehensive coverage of practical implementation concerns including sequencer centralization, data availability, and bridge security with concrete protocol examples",
+            "Good quantitative analysis of economic security parameters including MEV extraction potential and challenge period adequacy"
+          ],
+          "weaknesses": [
+            "The cryptographic assumption analysis in Section 3.1.2 is superficial - the manuscript lists assumptions without rigorously analyzing their relationships, reduction tightness, or concrete security implications when assumptions are weakened",
+            "Missing analysis of prover/verifier complexity tradeoffs and their security implications - the manuscript notes proof sizes and verification times but doesn't analyze how these affect adversarial strategies or system security under resource constraints",
+            "The treatment of circuit soundness vulnerabilities lacks formal rigor - while the Polygon zkEVM case study is mentioned, there's no systematic framework for analyzing under-constrained circuits or methodology for identifying soundness bugs"
+          ],
+          "suggestions": [
+            "Expand Section 3.1.2 to include formal reduction-based security analysis showing how SNARK/STARK security reduces to underlying assumptions, with explicit discussion of tightness gaps and their practical implications",
+            "Add a dedicated section analyzing prover complexity attacks - scenarios where adversaries exploit computational asymmetry between proving and verification, including potential DoS vectors on prover infrastructure and implications of proof generation delays for system liveness",
+            "Develop a formal framework for circuit vulnerability classification beyond the informal categories presented, potentially leveraging recent work on automated circuit analysis and formal verification of constraint systems"
+          ],
+          "detailed_feedback": "From a security analysis perspective, this manuscript covers important ground but falls short of the rigor expected for a comprehensive security analysis. The formal security definitions in Sections 2.1.1 and 3.1.1 are a good start, but the soundness and completeness properties for fraud proofs need tighter specification - particularly around the computational model and what 'PPT adversary' means in the context of interactive protocols with timing constraints. The cryptographic assumptions table in Section 3.1.2 is concerning in its brevity: the Knowledge of Exponent Assumption (KEA) is labeled 'non-standard' without discussing the implications of its potential falsification beyond a single sentence, and the Algebraic Group Model's limitations in capturing real-world attacks deserve deeper treatment. The manuscript correctly identifies that STARK security relies on collision-resistant hash functions, but doesn't address the concrete security bounds or how the hash function instantiation affects the overall security level. The prover centralization analysis in Section 3.4 identifies risks but doesn't formally model the security degradation - what exactly can a malicious prover do given current architectures? The claim that 'soundness is preserved' in proof markets needs justification: while proofs are verified on-chain, a malicious prover could potentially exploit timing, submit proofs for reorged transactions, or engage in selective proving that affects liveness in security-critical ways. The bridge security section is practically useful but the formal security composition claim that 'Security = min(Ethereum consensus, DA layer, Proof system)' is an oversimplification that could mislead practitioners - security composition in layered systems is rarely a simple minimum function and depends critically on the specific properties being composed.",
+          "tokens": 9433
+        },
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Expert 3",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive technical analysis of rollup security mechanisms that demonstrates strong understanding of both optimistic and ZK-rollup architectures. The manuscript provides valuable formal security definitions and practical implementation details, though it appears incomplete (truncated at Section 4.3.2) and would benefit from more empirical validation and novel contributions beyond synthesizing existing knowledge.",
+          "strengths": [
+            "Excellent formal treatment of security models with explicit security games, formal definitions of soundness/completeness properties, and clear articulation of cryptographic assumptions underlying different proof systems",
+            "Strong practical grounding with specific protocol analysis (Arbitrum, Optimism, zkSync, StarkNet), concrete gas cost comparisons, and real audit findings that bridge theory and implementation",
+            "Thorough analysis of bridge security and cross-layer message verification vulnerabilities, including specific attack vectors like deposit race conditions and event parsing vulnerabilities with code examples"
+          ],
+          "weaknesses": [
+            "The manuscript appears truncated mid-section (Section 4.3.2 ends abruptly with an incomplete table), leaving critical sections on upgrade governance risks and emergency intervention mechanisms unaddressed despite being mentioned in the scope",
+            "Limited empirical validation - while MEV extraction estimates are provided, they are noted as extrapolations from L1 data rather than direct measurements; the paper would benefit from actual incident analysis and quantitative security metrics from deployed systems",
+            "The novelty is limited as the work primarily synthesizes existing knowledge rather than presenting new security frameworks, attack vectors, or defensive mechanisms; the formal security games presented are standard formulations rather than novel contributions"
+          ],
+          "suggestions": [
+            "Complete the missing sections, particularly the promised analysis of upgrade governance risks and emergency intervention mechanisms, and ensure the audit findings table in Section 4.3.2 is populated with actual data",
+            "Add a dedicated section on withdrawal mechanism security that quantitatively analyzes challenge period adequacy under various adversarial scenarios, including formal game-theoretic models of withdrawal attacks and liquidity provider risks",
+            "Include empirical case studies of actual security incidents (e.g., the Arbitrum Nitro vulnerability mentioned, specific zkEVM audit findings) with root cause analysis to strengthen the practical applicability of the security framework"
+          ],
+          "detailed_feedback": "This manuscript represents a solid technical survey of rollup security mechanisms with commendable attention to formal rigor. The security game formulations in Section 2.1.1 and the formal definitions of circuit vulnerabilities in Section 3.3.1 demonstrate appropriate academic rigor. However, several issues warrant attention for a complete review. First, the document is clearly incomplete - Section 4.3.2 ends mid-sentence with an empty table, and the promised analysis of 'upgrade governance risks and emergency intervention mechanisms' from the abstract is entirely missing. This is a significant gap given that upgrade mechanisms represent one of the most critical trust assumptions in current rollup deployments. Second, while the challenge period analysis in Section 2.3 is reasonable, it lacks formal treatment of the economic security bounds - what is the minimum stake required to make fraud proof submission incentive-compatible? How do gas price fluctuations affect the security guarantees? Third, the bridge security analysis, while comprehensive in identifying vulnerability classes, would benefit from a systematic threat model that considers different adversary capabilities (sequencer compromise vs. external attacker vs. governance attack). The cross-layer reentrancy discussion is valuable but could be strengthened with formal invariants that secure bridges should maintain. Finally, the paper would benefit from a clearer distinction between theoretical security properties and the current state of deployed systems - many rollups operate with training wheels (security councils, upgrade keys) that fundamentally alter the trust model from what the theoretical analysis suggests.",
+          "tokens": 9428
+        },
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Expert 2",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive technical survey of rollup security mechanisms that demonstrates strong understanding of both optimistic and ZK-rollup architectures. The manuscript provides valuable formalization of security models and practical analysis of deployed systems, though it appears incomplete (truncated at bridge security section) and would benefit from more empirical validation and novel contributions beyond synthesis of existing knowledge.",
+          "strengths": [
+            "Strong formalization of security models with explicit security games, formal definitions of soundness/completeness, and clear specification of cryptographic assumptions underlying different proof systems",
+            "Excellent comparative analysis between optimistic and ZK approaches, including quantitative trade-off tables for proof systems, challenge periods, and sequencer risks with concrete numerical estimates",
+            "Thorough treatment of data availability concerns including formal security bounds for DAS, analysis of EIP-4844 implications, and security composition for external DA layers"
+          ],
+          "weaknesses": [
+            "The manuscript appears truncated mid-section (bridge security audit findings table is empty, and sections 5+ are missing), making it impossible to evaluate the complete work including promised forward-looking analysis and recommendations",
+            "Limited empirical validation - MEV extraction estimates are noted as 'estimated' based on L1 extrapolation without methodology details; TVL figures and incident counts would benefit from citations and timestamps",
+            "The L1-L2 security inheritance model, while mentioned in scope, lacks rigorous treatment of finality assumptions - specifically how L1 reorg risks propagate to L2 security guarantees and the formal conditions under which security inheritance holds"
+          ],
+          "suggestions": [
+            "Complete the missing sections and provide the promised audit findings table; the bridge security section is critical given historical bridge exploits and deserves thorough treatment including specific vulnerability case studies",
+            "Strengthen the L1-L2 security inheritance analysis with formal treatment of finality assumptions - define precisely what 'inheriting L1 security' means under different L1 finality models (probabilistic vs. economic finality) and how rollup security degrades during L1 instability",
+            "Add empirical methodology section explaining how quantitative estimates (MEV potential, attack probabilities, gas costs) were derived, and include sensitivity analysis showing how security guarantees change under different parameter assumptions"
+          ],
+          "detailed_feedback": "This manuscript represents a solid technical survey that will be valuable to practitioners and researchers entering the rollup security space. The formalization efforts are commendable - the security games for fraud proof soundness, the formal definitions of circuit vulnerabilities, and the quantitative analysis of challenge period adequacy all demonstrate rigorous thinking. However, several issues require attention before this work reaches publication quality.\n\nThe most pressing concern is completeness - the manuscript is clearly truncated, with an empty table in Section 4.3.2 and missing sections that were promised in the introduction (forward-looking analysis, actionable recommendations). This makes comprehensive review impossible.\n\nRegarding the specific focus areas requested: The data availability sampling treatment is strong, with proper formalization of security bounds and good discussion of the interaction between blob pruning windows and challenge periods. However, the sequencer centralization analysis, while identifying the risks well, could go deeper on censorship resistance mechanisms - the force-inclusion analysis is good but doesn't fully address scenarios where L1 itself faces congestion or censorship pressure. Most notably, the L1-L2 security inheritance model needs substantial strengthening. The manuscript states rollups 'inherit' L1 security but doesn't rigorously define what this means. Key questions remain unaddressed: What happens to rollup security during L1 reorgs beyond the finality threshold? How do different L1 finality assumptions (Ethereum's LMD-GHOST vs. Casper FFG finality) affect rollup security properties? What are the formal conditions under which the security composition formula presented actually holds?\n\nThe novelty score reflects that this is primarily a synthesis work rather than presenting new theoretical results or empirical findings. This is acceptable for a survey paper, but the contribution would be strengthened by original analysis - perhaps formal verification of specific protocol implementations or novel attack vector identification.",
+          "tokens": 9525
+        }
+      ],
+      "overall_average": 6.9,
+      "moderator_decision": {
+        "decision": "MAJOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive survey of rollup security mechanisms that demonstrates strong technical understanding and provides valuable formalization of security models for both optimistic and ZK-rollup architectures. All three reviewers consistently praised the well-structured formal security definitions, clear exposition, and practical grounding with specific protocol analysis. The comparative analysis between rollup approaches and the treatment of data availability concerns were noted as particular strengths.\n\nHowever, the reviews converge on several significant concerns that prevent acceptance in the current form. Most critically, the manuscript appears to be incomplete\u2014multiple reviewers noted truncation at Section 4.3.2 with an empty audit findings table and missing sections on upgrade governance and emergency intervention mechanisms that were promised in the scope. This incompleteness alone necessitates major revision. Beyond structural issues, reviewers identified substantive gaps: the cryptographic assumption analysis lacks rigor (no reduction-based security analysis or tightness discussion), empirical validation is weak (MEV estimates are extrapolations without clear methodology), and the L1-L2 security inheritance model lacks formal treatment of finality assumptions. The novelty contribution is also limited, as the work primarily synthesizes existing knowledge rather than presenting new frameworks or attack vectors.\n\nWhile the foundation is solid and the topic is timely, the combination of incomplete content, insufficient cryptographic rigor, and limited empirical validation represents a gap between current state and publication readiness that requires substantial work to address.",
+        "key_strengths": [
+          "Well-structured formal security definitions with explicit security games for fraud proof soundness and clear specification of cryptographic assumptions",
+          "Excellent comparative analysis between optimistic and ZK approaches with quantitative trade-off tables and concrete numerical estimates for practical parameters",
+          "Strong practical grounding with specific protocol analysis (Arbitrum, Optimism, zkSync, StarkNet), real audit findings, and thorough treatment of bridge security vulnerabilities"
+        ],
+        "key_weaknesses": [
+          "Manuscript is incomplete\u2014truncated at Section 4.3.2 with empty audit findings table and missing promised sections on upgrade governance risks and emergency intervention mechanisms",
+          "Cryptographic assumption analysis lacks rigor\u2014no reduction-based security analysis, tightness discussion, or systematic framework for circuit vulnerability classification",
+          "Limited empirical validation\u2014MEV estimates are extrapolations without methodology details, and the L1-L2 security inheritance model lacks formal treatment of finality assumptions"
+        ],
+        "required_changes": [
+          "Complete all missing sections including the audit findings table, upgrade governance risks analysis, and emergency intervention mechanisms; ensure no truncation in the final submission",
+          "Expand Section 3.1.2 to include formal reduction-based security analysis showing how SNARK/STARK security reduces to underlying assumptions, with explicit discussion of tightness gaps and concrete security implications",
+          "Add rigorous treatment of L1-L2 security inheritance under different finality models, formally defining conditions under which security inheritance holds and how rollup security degrades during L1 instability",
+          "Include empirical methodology section explaining derivation of quantitative estimates and add case studies of actual security incidents with root cause analysis"
+        ],
+        "recommendation": "The manuscript addresses an important topic and has a solid foundation, but requires substantial completion and strengthening before it can be accepted. Authors should prioritize: (1) completing all truncated and missing sections\u2014this is non-negotiable for the next submission; (2) adding formal cryptographic rigor to the assumption analysis, including reduction-based arguments; (3) developing a proper empirical methodology section with clear data sources and sensitivity analysis; and (4) strengthening the novelty contribution by developing original frameworks for circuit vulnerability classification or formal models for L1-L2 security composition. Given this is round 2 of 3, authors have one more opportunity to address these concerns comprehensively.",
+        "round": 2,
+        "overall_average": 6.9,
+        "tokens": 2967
+      },
+      "manuscript_diff": {
+        "words_added": 476,
+        "previous_version": "v1",
+        "current_version": "v2"
+      },
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T23:45:43.130064"
+    },
+    {
+      "round": 3,
+      "manuscript_version": "v3",
+      "word_count": 4065,
+      "reviews": [
+        {
+          "specialist": "expert-3",
+          "specialist_name": "Expert 3",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 7,
+            "rigor": 8
+          },
+          "average": 7.6,
+          "summary": "This is a comprehensive and technically rigorous analysis of rollup security mechanisms that demonstrates strong understanding of both optimistic and ZK-rollup architectures. The manuscript excels in formalizing security models and providing concrete protocol analysis, though it appears truncated and would benefit from deeper treatment of certain critical security areas within the specified review focus.",
+          "strengths": [
+            "Excellent formalization of security models with explicit security games, computational assumptions, and reduction-based analysis that goes beyond typical industry reports",
+            "Strong treatment of economic security considerations including stake derivation, gas price sensitivity analysis, and incentive compatibility for fraud proof submission",
+            "Comprehensive comparison of cryptographic assumptions underlying different proof systems with clear hierarchy and implications of assumption failures"
+          ],
+          "weaknesses": [
+            "The manuscript appears truncated mid-sentence in the circuit vulnerability case study, leaving critical analysis incomplete",
+            "Bridge contract vulnerabilities and cross-layer message verification\u2014a key review focus area\u2014receive insufficient dedicated treatment despite being mentioned in the executive summary",
+            "Upgrade governance risks and emergency intervention mechanisms are mentioned but lack the formal analysis depth given to other security aspects"
+          ],
+          "suggestions": [
+            "Add a dedicated section on bridge contract security covering message verification protocols, replay attack prevention, and cross-layer atomicity guarantees with formal security definitions",
+            "Expand the withdrawal mechanism security analysis to include formal treatment of the withdrawal proof verification process, potential griefing vectors beyond those mentioned, and liquidity provider risk models",
+            "Include systematic analysis of upgrade governance with formal threat models for different upgrade mechanisms (timelocks, multisigs, DAOs) and quantitative analysis of emergency intervention trade-offs"
+          ],
+          "detailed_feedback": "From a general security perspective, this manuscript represents strong work that successfully bridges theoretical foundations with practical implementation analysis. The formalization of the bisection protocol security proof and the detailed treatment of cryptographic assumptions are particularly valuable contributions. However, several areas warrant attention for a complete security analysis.\n\nThe treatment of bridge contracts is notably thin given their historical significance as attack vectors (Ronin, Wormhole, Nomad bridges collectively lost over $1B). The manuscript should formalize the security properties required for cross-layer message passing, including message ordering guarantees, replay protection mechanisms, and the trust assumptions in message relayers. The current discussion of L1-L2 security inheritance would benefit from explicit treatment of how bridge contract vulnerabilities can break the security inheritance model.\n\nThe withdrawal mechanism analysis, while including useful economic considerations, lacks formal treatment of the withdrawal proof verification process itself. Questions such as: What happens if a withdrawal proof references a state root that gets challenged? How do fast withdrawal providers verify proof validity before fronting funds? What are the exact conditions under which a withdrawal can be censored or delayed? These deserve rigorous analysis.\n\nThe upgrade governance section is particularly underdeveloped relative to its importance. The Security Council mechanisms mentioned for Arbitrum and Optimism represent significant trust assumptions that could override the cryptographic and economic security guarantees analyzed elsewhere. A formal threat model for upgrade mechanisms\u2014including analysis of timelock adequacy, multisig compromise scenarios, and the tension between emergency response capability and decentralization\u2014would strengthen the manuscript considerably.\n\nThe empirical data sources are well-documented, which is commendable. However, the manuscript would benefit from sensitivity analysis on key parameters\u2014for instance, how do the security conclusions change if L1 censorship resistance degrades due to validator concentration trends?\n\nFinally, the abrupt truncation suggests this is incomplete work. The circuit vulnerability case study was building toward important conclusions that are now missing. Completing this section and ensuring all promised analysis is delivered would significantly improve the manuscript's value.",
+          "tokens": 9418
+        },
+        {
+          "specialist": "expert-1",
+          "specialist_name": "Expert 1",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 7
+          },
+          "average": 7.2,
+          "summary": "This is a comprehensive and well-structured analysis of rollup security mechanisms that demonstrates strong technical understanding of both optimistic and ZK-rollup architectures. The manuscript provides valuable formalizations of security models and practical analysis of deployed systems, though it remains incomplete (cutting off mid-section) and could benefit from deeper treatment of certain cryptographic nuances and more novel contributions beyond systematization.",
+          "strengths": [
+            "Strong formalization of security models including explicit security games for fraud proof soundness, formal definitions of computational and knowledge soundness, and rigorous treatment of timing constraints in the PPT adversarial model",
+            "Excellent comparative analysis of cryptographic assumptions with clear hierarchy presentation, including important discussion of KEA non-falsifiability and tightness gaps in Groth16 reductions",
+            "Practical grounding with specific protocol parameters, empirical data sources clearly cited, and concrete case studies of vulnerabilities (e.g., Polygon zkEVM audit findings with root cause analysis)"
+          ],
+          "weaknesses": [
+            "The manuscript is incomplete, cutting off mid-sentence in Section 3.3.3, leaving critical sections on bridge security, data availability, and systemic risks unaddressed despite being promised in the introduction",
+            "The treatment of prover/verifier complexity tradeoffs lacks quantitative depth - while proof sizes and verification costs are listed, there's insufficient analysis of how these tradeoffs affect security margins under resource-constrained adversaries",
+            "The analysis of attack vectors on proof systems is somewhat superficial - for instance, the discussion of trusted setup attacks, grinding attacks on STARKs, or potential side-channel vulnerabilities in prover implementations is absent"
+          ],
+          "suggestions": [
+            "Complete the manuscript with promised sections on data availability constraints, bridge vulnerabilities, and upgrade mechanism risks, as these represent critical attack surfaces that significantly affect the overall security analysis",
+            "Add a dedicated section analyzing prover centralization risks with formal treatment - specifically, model the security implications when a single prover controls proof generation, including censorship, MEV extraction, and liveness failures",
+            "Include analysis of recursive proof composition security, as this is increasingly important for scaling and introduces additional attack surfaces (e.g., accumulator soundness, folding scheme vulnerabilities in Nova/Sangria-style systems)"
+          ],
+          "detailed_feedback": "From a security analysis perspective, this manuscript makes solid contributions to systematizing rollup security knowledge, particularly in its formalization of the optimistic rollup security model and comparative cryptographic assumption analysis. The proof of the bisection protocol theorem is correct and well-presented, and the treatment of network synchrony assumptions appropriately captures the realistic partially synchronous model. However, several areas warrant deeper investigation. First, the soundness analysis for ZK-rollups should address the concrete security of deployed systems more rigorously - for instance, what is the actual soundness error when accounting for the number of proofs verified over the system's lifetime? The birthday bound implications for systems processing millions of proofs deserve attention. Second, the manuscript would benefit from analyzing composition security: when multiple rollups share infrastructure (sequencers, provers, bridges), how do correlated failures affect the aggregate security? Third, the economic security analysis for fraud proofs, while useful, doesn't adequately address the game-theoretic equilibria - specifically, under what conditions might rational challengers coordinate to not challenge (e.g., if challenging reveals profitable MEV strategies)? The KEA assumption discussion is valuable but should note recent work on falsifiable alternatives and their applicability to deployed systems. Finally, the circuit vulnerability framework is a good start but would benefit from connection to formal methods literature on constraint system analysis and automated vulnerability detection tools currently in development.",
+          "tokens": 9430
+        },
+        {
+          "specialist": "expert-2",
+          "specialist_name": "Expert 2",
+          "provider": "anthropic",
+          "model": "claude-opus-4.5",
+          "scores": {
+            "accuracy": 8,
+            "completeness": 7,
+            "clarity": 8,
+            "novelty": 6,
+            "rigor": 8
+          },
+          "average": 7.4,
+          "summary": "This is a well-structured and technically rigorous analysis of rollup security mechanisms that demonstrates strong understanding of both optimistic and ZK-rollup architectures. The formal security definitions and proofs are generally sound, though the manuscript appears incomplete (cuts off mid-sentence) and would benefit from deeper treatment of some emerging areas like shared sequencing and cross-rollup security.",
+          "strengths": [
+            "Excellent formalization of security models with proper cryptographic definitions, security games, and reduction-based analysis - particularly the bisection protocol proof and the detailed treatment of cryptographic assumptions",
+            "Strong empirical grounding with specific protocol parameters, TVL figures with sources, and concrete vulnerability case studies from actual audits",
+            "Comprehensive treatment of the timing and economic aspects of fraud proofs, including the challenge period adequacy analysis and gas price sensitivity considerations"
+          ],
+          "weaknesses": [
+            "The manuscript is clearly incomplete - Section 3.3.3 cuts off mid-sentence, and promised sections on data availability sampling, sequencer decentralization mechanisms, and L1-L2 finality analysis (mentioned in the scope) appear to be missing",
+            "Limited treatment of data availability guarantees - while mentioned in definitions, there's no substantive analysis of DAS, erasure coding, or the security implications of different DA layers (EIP-4844, Celestia, etc.)",
+            "The novelty is limited as this primarily synthesizes existing knowledge rather than presenting new theoretical results or empirical findings; the formal models, while rigorous, largely formalize well-understood properties"
+          ],
+          "suggestions": [
+            "Complete the missing sections, particularly adding substantive analysis of data availability mechanisms (DAS, KZG commitments for blob verification, DA sampling security bounds) and sequencer centralization risks with proposed mitigations",
+            "Add a dedicated section on L1-L2 security inheritance that formally analyzes how L1 finality assumptions propagate to L2 security guarantees, including the impact of L1 reorgs on rollup state",
+            "Include analysis of emerging security considerations: shared sequencing security models, based rollups, cross-rollup bridge security, and the security implications of rollup fragmentation"
+          ],
+          "detailed_feedback": "This manuscript demonstrates strong technical competence in formalizing rollup security mechanisms. The treatment of optimistic rollup fraud proofs is particularly well-done, with the bisection protocol proof being mathematically rigorous and the economic analysis providing actionable insights. The cryptographic foundations section for ZK-rollups shows good understanding of the assumption hierarchy and the practical implications of different proof systems.\n\nHowever, several issues need attention. First, the manuscript is incomplete - it cuts off during the circuit vulnerability case study, and critical topics promised in the scope (data availability sampling, sequencer centralization, L1-L2 finality) are not adequately covered. The data availability section is especially important given its centrality to rollup security; the current treatment is superficial.\n\nSecond, while the formal models are sound, some claims need qualification. The 1-of-N honest assumption analysis should more explicitly address the distinction between theoretical and practical honest parties - having one honest observer is different from having one honest observer with sufficient capital, infrastructure, and incentive to challenge. The economic analysis begins this but doesn't fully connect to the formal model.\n\nThird, the treatment of ZK-rollup prover centralization is mentioned but not analyzed in depth. Given that most ZK-rollups currently have single provers, this represents a significant trust assumption that deserves formal treatment similar to the sequencer analysis for optimistic rollups.\n\nFinally, the manuscript would benefit from a threat model taxonomy that clearly distinguishes between: (1) cryptographic attacks on proof systems, (2) economic attacks on incentive mechanisms, (3) operational attacks on infrastructure, and (4) governance attacks on upgrade mechanisms. This would help readers understand the multi-layered nature of rollup security.",
+          "tokens": 9495
+        }
+      ],
+      "overall_average": 7.4,
+      "moderator_decision": {
+        "decision": "MINOR_REVISION",
+        "confidence": 4,
+        "meta_review": "This manuscript presents a comprehensive and technically rigorous analysis of rollup security mechanisms, demonstrating strong expertise in both optimistic and ZK-rollup architectures. All three reviewers consistently praised the excellent formalization of security models, including well-constructed security games, reduction-based analysis, and rigorous treatment of cryptographic assumptions. The empirical grounding with specific protocol parameters, TVL data, and concrete vulnerability case studies from actual audits significantly strengthens the practical relevance of the work. The comparative analysis of cryptographic assumptions and the treatment of economic security considerations (stake derivation, gas price sensitivity, incentive compatibility) represent notable contributions to the systematization of knowledge in this domain.\n\nHowever, all reviewers identified a critical structural issue: the manuscript is incomplete, cutting off mid-sentence in Section 3.3.3, leaving promised sections on data availability, bridge security, and upgrade governance unaddressed. This truncation is particularly problematic given that bridge contract vulnerabilities and cross-layer message verification were explicitly identified as key review focus areas. Additionally, reviewers noted limited novelty beyond systematization, insufficient treatment of emerging topics (shared sequencing, cross-rollup security, recursive proof composition), and gaps in the analysis of prover centralization risks and L1-L2 security inheritance. While the technical quality of the completed sections is high (accuracy scores of 8/10 across all reviewers), the incompleteness prevents acceptance in the current form.\n\nGiven that this is the final review round and the average score of 7.4 falls within the minor revision range, the manuscript merits conditional acceptance pending completion of the missing sections. The core technical contributions are sound and valuable to the research community, and the identified gaps are addressable without fundamental restructuring of the work.",
+        "key_strengths": [
+          "Excellent formalization of security models with proper cryptographic definitions, security games, and reduction-based proofs that exceed typical industry standards",
+          "Strong empirical grounding with specific protocol parameters, cited data sources, and concrete vulnerability case studies from actual audits (e.g., Polygon zkEVM findings)",
+          "Comprehensive treatment of economic security aspects including stake derivation, gas price sensitivity analysis, and incentive compatibility for fraud proof submission"
+        ],
+        "key_weaknesses": [
+          "Manuscript is incomplete\u2014cuts off mid-sentence in Section 3.3.3, leaving critical promised sections on data availability, bridge security, and upgrade governance unaddressed",
+          "Insufficient treatment of bridge contract vulnerabilities and cross-layer message verification despite being identified as a key review focus area",
+          "Limited novelty beyond systematization of existing knowledge, with gaps in coverage of emerging topics like shared sequencing, recursive proof composition, and prover centralization risks"
+        ],
+        "required_changes": [
+          "Complete the truncated Section 3.3.3 and add the promised sections on data availability mechanisms (DAS, erasure coding, EIP-4844 implications) with formal security analysis",
+          "Add a dedicated section on bridge contract security covering message verification protocols, replay attack prevention, cross-layer atomicity guarantees, and formal security definitions",
+          "Include analysis of prover/sequencer centralization risks with formal threat models, and expand treatment of L1-L2 security inheritance including L1 reorg implications for rollup state"
+        ],
+        "recommendation": "The manuscript demonstrates strong technical merit and provides valuable systematization of rollup security mechanisms. However, it cannot be accepted in its current incomplete state. Authors should: (1) complete all truncated and missing sections, particularly those on data availability and bridge security; (2) add formal treatment of upgrade governance mechanisms and emergency intervention trade-offs; (3) consider including analysis of emerging security considerations (shared sequencing, recursive proofs) to enhance novelty. Given the high quality of completed sections, a thorough revision addressing these gaps should result in a publication-ready manuscript. Please ensure the final submission is complete and self-contained before resubmission.",
+        "round": 3,
+        "overall_average": 7.4,
+        "tokens": 2933
+      },
+      "manuscript_diff": {
+        "words_added": 22,
+        "previous_version": "v2",
+        "current_version": "v3"
+      },
+      "threshold": 8.0,
+      "passed": false,
+      "timestamp": "2026-02-05T23:49:10.980843"
+    }
+  ],
+  "final_score": 7.4,
+  "passed": false,
+  "total_rounds": 3,
+  "performance": {
+    "workflow_start": "2026-02-05T23:39:21.760596",
+    "workflow_end": "2026-02-05T23:49:10.983770",
+    "total_duration": 589.22,
+    "initial_draft_time": 131.75,
+    "initial_draft_tokens": 0,
+    "team_composition_time": 0.0,
+    "team_composition_tokens": 0,
+    "rounds": [
+      {
+        "round_number": 1,
+        "review_start": "2026-02-05T23:41:33.527708",
+        "review_end": "2026-02-05T23:42:17.627473",
+        "review_duration": 44.1,
+        "reviewer_times": {
+          "expert-3": 23.96,
+          "expert-1": 25.02,
+          "expert-2": 25.51
+        },
+        "moderator_time": 18.57,
+        "revision_time": null,
+        "round_tokens": 24568
+      },
+      {
+        "round_number": 2,
+        "review_start": "2026-02-05T23:45:01.126719",
+        "review_end": "2026-02-05T23:45:43.129942",
+        "review_duration": 42.0,
+        "reviewer_times": {
+          "expert-1": 23.25,
+          "expert-3": 23.91,
+          "expert-2": 25.76
+        },
+        "moderator_time": 16.18,
+        "revision_time": null,
+        "round_tokens": 28386
+      },
+      {
+        "round_number": 3,
+        "review_start": "2026-02-05T23:48:28.963055",
+        "review_end": "2026-02-05T23:49:10.972964",
+        "review_duration": 42.01,
+        "reviewer_times": {
+          "expert-3": 24.21,
+          "expert-1": 24.57,
+          "expert-2": 24.97
+        },
+        "moderator_time": 17.0,
+        "revision_time": null,
+        "round_tokens": 28343
+      }
+    ],
+    "total_tokens": 81297,
+    "estimated_cost": 0.24
+  },
+  "timestamp": "2026-02-05T23:49:10.985018"
+}
