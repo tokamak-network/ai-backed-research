@@ -1,8 +1,7 @@
 """Paper writer agent for writing polished papers from research notes."""
 
 from typing import List, Optional
-from ..llm import ClaudeLLM
-from ..config import get_config
+from ..model_config import create_llm_for_role
 from ..models.research_notes import ResearchNotebook
 from ..models.section import ResearchPlan, SectionOutput, WritingContext
 
@@ -17,20 +16,14 @@ class PaperWriterAgent:
     - Maintains academic rigor
     """
 
-    def __init__(self, model: str = "claude-opus-4.5"):
+    def __init__(self, role: str = "paper_writer"):
         """Initialize paper writer agent.
 
         Args:
-            model: Claude model to use (Opus for quality)
+            role: Role name for model config lookup
         """
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-        self.model = model
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
     async def plan_paper_structure(
         self,

@@ -5,8 +5,7 @@ from datetime import datetime
 from pathlib import Path
 import json
 
-from ..llm import ClaudeLLM
-from ..config import get_config
+from ..model_config import create_llm_for_role
 from ..models.research_notes import (
     ResearchNotebook,
     LiteratureNote,
@@ -26,20 +25,14 @@ class ResearchNotesAgent:
     - No focus on readability (raw notes)
     """
 
-    def __init__(self, model: str = "claude-sonnet-4"):
+    def __init__(self, role: str = "research_notes"):
         """Initialize research notes agent.
 
         Args:
-            model: Claude model to use (Sonnet for cost efficiency)
+            role: Role name for model config lookup
         """
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-        self.model = model
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
     async def start_research(
         self,

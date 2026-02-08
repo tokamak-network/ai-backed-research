@@ -11,9 +11,9 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from ..config import get_config
-from ..llm import ClaudeLLM, OpenAILLM, GeminiLLM
+from ..model_config import _create_llm
 from ..agents import WriterAgent, ModeratorAgent
+from ..agents.writer import validate_manuscript_completeness
 from ..agents.desk_editor import DeskEditorAgent
 from ..agents.specialist_factory import SpecialistFactory
 from ..categories import get_domain_description
@@ -54,19 +54,10 @@ async def generate_review(
     Returns:
         Review data dictionary
     """
-    config = get_config()
-
     provider = specialist["provider"]
     model = specialist["model"]
 
-    llm_config = config.get_llm_config(provider, model)
-
-    if provider == "openai":
-        llm = OpenAILLM(api_key=llm_config.api_key, model=llm_config.model, base_url=llm_config.base_url)
-    elif provider == "google":
-        llm = GeminiLLM(api_key=llm_config.api_key, model=llm_config.model)
-    else:
-        llm = ClaudeLLM(api_key=llm_config.api_key, model=llm_config.model, base_url=llm_config.base_url)
+    llm = _create_llm(provider, model)
 
     # Build context from previous reviews
     previous_context = ""
@@ -415,10 +406,10 @@ class WorkflowOrchestrator:
         )
 
         # Initialize agents
-        self.writer = WriterAgent(model="claude-opus-4.5")  # initial draft, revisions
-        self.light_writer = WriterAgent(model="claude-sonnet-4")  # author response, citation verification
-        self.moderator = ModeratorAgent(model="claude-opus-4.5")
-        self.desk_editor = DeskEditorAgent(model="claude-sonnet-4.5")
+        self.writer = WriterAgent(role="writer")
+        self.light_writer = WriterAgent(role="writer_light")
+        self.moderator = ModeratorAgent(role="moderator")
+        self.desk_editor = DeskEditorAgent(role="desk_editor")
 
         # Sources retrieved before writing (populated in _generate_initial_manuscript)
         self.sources: List[Reference] = []
@@ -574,6 +565,16 @@ class WorkflowOrchestrator:
             if self.status_callback:
                 self.status_callback("reviewing", round_num, f"Round {round_num}/{self.max_rounds}: Reviews complete, moderator evaluating...")
 
+            # Check manuscript completeness before moderator evaluation
+            completeness = validate_manuscript_completeness(current_manuscript)
+            completeness_warning = None
+            if not completeness["is_complete"]:
+                completeness_warning = (
+                    f"COMPLETENESS WARNING: {', '.join(completeness['issues'])}. "
+                    "An incomplete manuscript MUST NOT be accepted."
+                )
+                console.print(f"[yellow]⚠ {completeness_warning}[/yellow]")
+
             # Moderator decision + author response in parallel
             # Author response only needs reviews (not moderator decision), so they can overlap
             console.print("\n[cyan]Moderator evaluating + Author preparing response (parallel)...[/cyan]")
@@ -587,6 +588,7 @@ class WorkflowOrchestrator:
                     self.max_rounds,
                     previous_rounds=all_rounds,
                     domain=self.domain_desc,
+                    completeness_warning=completeness_warning,
                 )
                 moderator_time = self.tracker.end_operation("moderator")
                 self.tracker.record_moderator_time(moderator_time)
@@ -681,7 +683,7 @@ class WorkflowOrchestrator:
                 "author_response": author_response,
                 "manuscript_diff": manuscript_diff,
                 "threshold": self.threshold,
-                "passed": moderator_decision["decision"] in ("ACCEPT", "MINOR_REVISION"),
+                "passed": moderator_decision["decision"] == "ACCEPT",
                 "timestamp": datetime.now().isoformat()
             }
 
@@ -835,7 +837,16 @@ class WorkflowOrchestrator:
             self.tracker.record_initial_draft(duration, **self.writer.get_last_token_usage())
             progress.update(task, completed=True)
 
-        console.print(f"[green]✓ Initial manuscript complete[/green]\n")
+        console.print(f"[green]✓ Initial manuscript complete[/green]")
+
+        # Check manuscript completeness
+        completeness = validate_manuscript_completeness(manuscript)
+        if not completeness["is_complete"]:
+            console.print(f"[yellow]⚠ Completeness issues: {', '.join(completeness['issues'])}[/yellow]")
+        else:
+            console.print(f"[green]✓ Manuscript completeness check passed[/green]")
+
+        console.print()
         return manuscript
 
     async def _finalize_workflow(self, all_rounds: List[dict]) -> dict:
@@ -1109,6 +1120,16 @@ class WorkflowOrchestrator:
             if self.status_callback:
                 self.status_callback("reviewing", round_num, f"Round {round_num}/{self.max_rounds}: Reviews complete, moderator evaluating...")
 
+            # Check manuscript completeness before moderator evaluation
+            completeness = validate_manuscript_completeness(current_manuscript)
+            completeness_warning = None
+            if not completeness["is_complete"]:
+                completeness_warning = (
+                    f"COMPLETENESS WARNING: {', '.join(completeness['issues'])}. "
+                    "An incomplete manuscript MUST NOT be accepted."
+                )
+                console.print(f"[yellow]⚠ {completeness_warning}[/yellow]")
+
             # Moderator decision + author response in parallel (same as main run())
             console.print("\n[cyan]Moderator evaluating + Author preparing response (parallel)...[/cyan]")
 
@@ -1121,6 +1142,7 @@ class WorkflowOrchestrator:
                     self.max_rounds,
                     previous_rounds=all_rounds,
                     domain=self.domain_desc,
+                    completeness_warning=completeness_warning,
                 )
                 moderator_time = self.tracker.end_operation("moderator")
                 self.tracker.record_moderator_time(moderator_time)
@@ -1215,7 +1237,7 @@ class WorkflowOrchestrator:
                 "author_response": author_response,
                 "manuscript_diff": manuscript_diff,
                 "threshold": self.threshold,
-                "passed": moderator_decision["decision"] in ("ACCEPT", "MINOR_REVISION"),
+                "passed": moderator_decision["decision"] == "ACCEPT",
                 "timestamp": datetime.now().isoformat()
             }
 

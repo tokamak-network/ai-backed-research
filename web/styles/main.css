@@ -318,6 +318,79 @@ code {
     color: var(--text-primary);
 }
 
+/* Nav Dropdown */
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-trigger {
+    font-size: var(--type-scale-02);
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: var(--spacing-02) 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: inherit;
+    transition: color var(--duration-fast) var(--easing);
+}
+
+.nav-dropdown-trigger:hover {
+    color: var(--text-primary);
+}
+
+.nav-dropdown-trigger svg {
+    width: 12px;
+    height: 12px;
+    transition: transform var(--duration-fast) var(--easing);
+}
+
+.nav-dropdown:hover .nav-dropdown-trigger svg,
+.nav-dropdown:focus-within .nav-dropdown-trigger svg {
+    transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: var(--layer-02);
+    border: 1px solid var(--border-subtle);
+    border-radius: 2px;
+    min-width: 180px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    z-index: 100;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown:focus-within .nav-dropdown-menu {
+    display: block;
+}
+
+.nav-dropdown-menu a {
+    display: block;
+    padding: 10px 16px;
+    font-size: var(--type-scale-02);
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: background var(--duration-fast) var(--easing),
+                color var(--duration-fast) var(--easing);
+}
+
+.nav-dropdown-menu a:hover {
+    background: var(--background-hover);
+    color: var(--text-primary);
+}
+
+.nav-dropdown-menu a + a {
+    border-top: 1px solid var(--border-subtle);
+}
+
 /* Theme Toggle */
 .theme-toggle {
     width: 32px;
@@ -420,6 +493,14 @@ code {
     box-shadow: var(--shadow-02);
 }
 
+.card-badges-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: var(--spacing-03);
+    flex-wrap: wrap;
+}
+
 .card-badge {
     display: inline-flex;
     align-items: center;
@@ -432,7 +513,6 @@ code {
     border: 1px solid var(--border-subtle);
     padding: var(--spacing-01) var(--spacing-02);
     border-radius: var(--radius-none);
-    margin-bottom: var(--spacing-03);
     width: fit-content;
 }
 
@@ -804,8 +884,14 @@ code {
         gap: var(--spacing-03);
     }
 
-    .nav-link {
+    .nav-link,
+    .nav-dropdown-trigger {
         font-size: var(--type-scale-01);
+    }
+
+    .nav-dropdown-menu {
+        right: auto;
+        left: 0;
     }
 
     .about-content {

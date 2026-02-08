@@ -78,11 +78,6 @@ class CollaborativeWorkflowOrchestrator:
     async def run(self) -> dict:
         """Run complete collaborative workflow."""
 
-        # Hybrid model strategy: coauthors use Sonnet for efficiency
-        # (research, plan feedback, section review are auxiliary tasks)
-        for ca in self.writer_team.coauthors:
-            ca.model = "claude-sonnet-4"
-
         console.print("\n[bold green]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold green]")
         console.print("[bold green] Collaborative Research Workflow[/bold green]")
         console.print("[bold green]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold green]\n")

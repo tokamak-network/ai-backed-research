@@ -2,8 +2,7 @@
 
 from typing import List
 import json
-from ..llm import ClaudeLLM
-from ..config import get_config
+from ..model_config import create_llm_for_role
 from ..models.section import ResearchPlan, SectionSpec
 
 
@@ -13,20 +12,14 @@ class ResearchPlannerAgent:
     Creates detailed section-by-section plans that guide multi-stage writing.
     """
 
-    def __init__(self, model: str = "claude-sonnet-4"):
+    def __init__(self, role: str = "research_planner"):
         """Initialize research planner.
 
         Args:
-            model: Claude model to use (Sonnet for cost efficiency)
+            role: Role name for model config lookup
         """
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-        self.model = model
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
     async def create_research_plan(
         self,

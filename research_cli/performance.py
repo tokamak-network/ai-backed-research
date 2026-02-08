@@ -6,17 +6,19 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from contextlib import contextmanager
 
-# Model pricing per 1M tokens (USD)
-MODEL_PRICING = {
-    "claude-opus-4-5": {"input": 15.0, "output": 75.0},
-    "claude-opus-4.5": {"input": 15.0, "output": 75.0},
-    "claude-sonnet-4-5": {"input": 3.0, "output": 15.0},
-    "claude-sonnet-4.5": {"input": 3.0, "output": 15.0},
-    "claude-sonnet-4": {"input": 3.0, "output": 15.0},
-    "gpt-4.1": {"input": 2.0, "output": 8.0},
-    "gpt-4.1-mini": {"input": 0.40, "output": 1.60},
-}
-# Fallback for unknown models
+from .model_config import get_all_pricing, get_pricing
+
+
+def _load_model_pricing() -> Dict[str, dict]:
+    """Load model pricing from central config."""
+    try:
+        return get_all_pricing()
+    except Exception:
+        # Fallback if config not available (e.g. during testing)
+        return {}
+
+
+MODEL_PRICING = _load_model_pricing()
 _DEFAULT_PRICING = {"input": 3.0, "output": 15.0}
 
 

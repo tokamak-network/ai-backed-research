@@ -3,22 +3,21 @@
 import json
 from typing import List
 
-from ..config import get_config
-from ..llm import ClaudeLLM
+from ..model_config import create_llm_for_role
 from ..models.expert import ExpertProposal
 
 
 class TeamComposerAgent:
     """AI agent that analyzes research topics and proposes expert teams."""
 
-    def __init__(self, model: str = "claude-opus-4.5"):
+    def __init__(self, role: str = "team_composer"):
         """Initialize team composer.
 
         Args:
-            model: LLM model to use for team composition
+            role: Role name for model configuration lookup
         """
-        self.model = model
-        self.config = get_config()
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
     async def propose_team(
         self,
@@ -36,17 +35,10 @@ class TeamComposerAgent:
         Returns:
             List of ExpertProposal objects
         """
-        llm_config = self.config.get_llm_config("anthropic", self.model)
-        llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-
         prompt = self._build_proposal_prompt(topic, num_experts, additional_context)
         system_prompt = self._get_system_prompt()
 
-        response = await llm.generate(
+        response = await self.llm.generate(
             prompt=prompt,
             system=system_prompt,
             temperature=0.7,  # Allow creative team composition

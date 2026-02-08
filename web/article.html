@@ -209,31 +209,23 @@
         }
 
         function renderManuscript(markdownContent) {
-            // Pre-process: wrap undelimited math expressions in $...$
-            // Matches patterns like: c_L1, B_s, Cost_safety^{OR}, 2^{-128}, Σ_i, E[u], Pr[...], f(x)
+            // Pre-process: only wrap explicitly mathematical patterns in $...$
+            // Be conservative — only match patterns that are unambiguously math notation
+            // Already $-delimited math is handled by KaTeX later
             let processedContent = markdownContent
-                // Already-delimited math — skip
-                // Standalone formulas on their own line (e.g. "Cost(v, Π) = ..." or "B_s ≥ G / P_detection")
-                .replace(/^([ \t]*)((?:[A-Za-z_\\][\w]*(?:[_^][\w{}()+\-]+)*\s*[=≥≤<>≈∈∉∧∨]+\s*).{3,})$/gm, (match, indent, expr) => {
-                    if (expr.includes('%%MATH') || expr.startsWith('#') || expr.startsWith('|') || expr.startsWith('-') || expr.startsWith('*')) return match;
-                    return `${indent}$$${expr.trim()}$$`;
-                })
-                // Inline: expressions with subscript/superscript like c_L1, B_s, Cost_safety^{OR}, 2^{128}
-                .replace(/(?<![$\\`\w])(\w+(?:[_^]\{[^}]+\}|[_^]\w)+)(?![$`\w])/g, (match, expr) => {
-                    if (expr.length < 3) return match;
-                    return `$${expr}$`;
-                })
-                // Inline: Greek/math symbols mixed with subscripts/operators like Σ_i, Δ, τ, ε ≤ 2^{-128}
-                .replace(/(?<![$`])([στελδκΣΔΠ∞][\w_^{}\-]*(?:\s*[≤≥=<>]\s*[\w^{}\-./]+)?)(?![$`])/g, (match, expr) => {
-                    return `$${expr}$`;
+                // Inline: Adv^{...}_A(...), Pr[b' = b], negl(λ) — formal crypto notation with braces
+                .replace(/(?<![`$\\])(\b\w+\^?\{[^}]+\}(?:_\w+|\([^)]*\))*)(?![`$])/g, (match, expr) => {
+                    // Only wrap if it has both braces AND sub/superscript — clearly math
+                    if (/[_^]\{/.test(expr)) return `$${expr}$`;
+                    return match;
                 })
                 // Inline: Pr[...], E[...] probability/expectation notation
-                .replace(/(?<![$`])((Pr|E)\[[^\]]{2,}\])(?![$`])/g, (match, expr) => {
+                .replace(/(?<![`$])(\b(Pr|E)\[[^\]]{2,}\])(?![`$])/g, (match, expr) => {
                     return `$${expr}$`;
                 })
-                // Inline: negl(λ), p(λ) function notation with Greek
-                .replace(/(?<![$`\w])(\w+\([στελδκλΣΔΠ]\))(?![$`])/g, (match, expr) => {
-                    return `$${expr}$`;
+                // Inline: negl(λ), poly(λ) — function with single Greek argument
+                .replace(/(?<![`$\w])(negl|poly)\(([λεδσ])\)(?![`$])/g, (match, fn, arg) => {
+                    return `$\\text{${fn}}(${arg})$`;
                 });
 
             // Protect math blocks from marked processing

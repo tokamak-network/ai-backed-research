@@ -569,7 +569,7 @@ async def _run_collaborative_workflow(
     expert_pool = get_expert_pool(major_field, subfield)
 
     reviewer_configs = []
-    for i, expert_id in enumerate(expert_pool[:3]):
+    for i, expert_id in enumerate(expert_pool):
         name = expert_id.replace("_expert", "").replace("_", " ").title() + " Expert"
         domain = expert_id.replace("_expert", "").replace("_", " ").title()
         reviewer_configs.append(ExpertConfig(

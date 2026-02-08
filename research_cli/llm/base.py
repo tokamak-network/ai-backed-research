@@ -14,6 +14,7 @@ class LLMResponse:
     provider: str
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
+    stop_reason: Optional[str] = None  # "end_turn"/"stop" = normal, "max_tokens"/"length" = truncated
 
     @property
     def total_tokens(self) -> Optional[int]:

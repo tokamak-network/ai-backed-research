@@ -2,8 +2,7 @@
 
 import json
 from typing import Dict
-from ..llm import ClaudeLLM
-from ..config import get_config
+from ..model_config import create_llm_for_role
 
 
 class WriterTeamComposerAgent:
@@ -16,16 +15,10 @@ class WriterTeamComposerAgent:
     - Rationale for each team member
     """
 
-    def __init__(self, model: str = "claude-opus-4.5"):
+    def __init__(self, role: str = "team_composer"):
         """Initialize writer team composer agent."""
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-        self.model = model
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
     async def propose_writer_team(
         self,

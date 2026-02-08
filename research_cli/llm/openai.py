@@ -69,6 +69,7 @@ class OpenAILLM(BaseLLM):
             provider="openai",
             input_tokens=response.usage.prompt_tokens if response.usage else None,
             output_tokens=response.usage.completion_tokens if response.usage else None,
+            stop_reason=response.choices[0].finish_reason,
         )
 
     async def stream(

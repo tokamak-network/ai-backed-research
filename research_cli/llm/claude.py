@@ -64,6 +64,7 @@ class ClaudeLLM(BaseLLM):
             provider="anthropic",
             input_tokens=response.usage.input_tokens,
             output_tokens=response.usage.output_tokens,
+            stop_reason=response.stop_reason,
         )
 
     async def generate_streaming(
@@ -100,6 +101,7 @@ class ClaudeLLM(BaseLLM):
             provider="anthropic",
             input_tokens=message.usage.input_tokens,
             output_tokens=message.usage.output_tokens,
+            stop_reason=message.stop_reason,
         )
 
     async def stream(

@@ -130,3 +130,322 @@ _(to be filled after completion)_
 - [ ] ask-topic.html: standard mode → co-author section hidden
 - [ ] ask-topic.html: only 3 reviewers displayed
 - [ ] workflow_complete.json: `initial_draft_tokens > 0`, `revision_tokens > 0`, `tokens_by_model` populated
+
+---
+
+## API Key Application System + UI/UX Improvements
+
+### Part 1: index.html Category Tag Position — Done
+- [x] `web/styles/main.css`: Added `.card-badges-row` flex container, removed `margin-bottom` from `.card-badge`
+- [x] `web/index.html`: Moved category tag + audience badge into `.card-badges-row` alongside New/Featured badge
+- [x] Removed trailing `meta-divider` from `categoryHtml`
+
+### Part 2: Moderator Decision Rationale in review.html — Done
+- [x] `web/review.html`: `renderRound()` now shows recommendation, key_strengths/weaknesses (side-by-side grid), required_changes, and meta_review (collapsible)
+- [x] All fields conditional — gracefully handles missing data
+
+### Part 3: Author Response Display Fix — Done
+- [x] `web/review.html`: Removed `!isLastRound` gate so all rounds show previous author response
+- [x] Added display of last round's own `author_response` when it exists
+
+### Part 4: API Key Application System — Done
+- [x] **4a: `research_cli/db.py`** — SQLite module with 5 tables (researchers, applications, api_keys, key_usage, workflow_ownership), indexes, full CRUD helpers
+- [x] **4b: `api_server.py`** — 11 new endpoints: apply, status check, my-profile, my-workflows, my-quota, admin applications CRUD, quota/revoke management. SQLite key verification alongside legacy. Quota enforcement on start-workflow. Ownership tracking.
+- [x] **4c: `web/apply.html`** — Researcher application form with tags input, sample works (add/remove), IP rate limiting, status check section
+- [x] **4d: `web/admin.html`** — Added tabbed interface (API Keys | Applications). Applications tab shows full detail, approve/reject with notes, generated key display
+- [x] **4e: `scripts/migrate_keys.py`** — Migration script: reads keys.json → inserts into SQLite → renames to .backup
+- [x] **4f: `web/my-research.html`** — Researcher dashboard: quota circle, profile summary, workflow list with review links
+- [x] **4g: Quota + Ownership** — Daily quota check (10/day default) in start-workflow, usage recording, ownership tracking
+
+### New API Endpoints
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | /api/apply | Public (IP rate limited) | Submit application |
+| GET | /api/application-status/{email} | Public | Check status |
+| GET | /api/my-profile | API Key | Researcher profile |
+| GET | /api/my-workflows | API Key | Owned workflows |
+| GET | /api/my-quota | API Key | Daily quota |
+| GET | /api/admin/applications | Admin | List applications |
+| GET | /api/admin/applications/{id} | Admin | Application detail |
+| POST | /api/admin/applications/{id}/approve | Admin | Approve + generate key |
+| POST | /api/admin/applications/{id}/reject | Admin | Reject with reason |
+| PUT | /api/admin/keys/{prefix}/quota | Admin | Update quota |
+| POST | /api/admin/keys/{prefix}/revoke | Admin | Revoke key |
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `web/index.html` | Badge row layout, nav links for Apply/My Research |
+| `web/styles/main.css` | `.card-badges-row` style, `.card-badge` margin fix |
+| `web/review.html` | Moderator rationale display, author response fix |
+| `api_server.py` | DB init, SQLite key auth, 11 new endpoints, quota enforcement |
+| `research_cli/db.py` | NEW — SQLite module |
+| `web/apply.html` | NEW — Application form |
+| `web/admin.html` | Tabbed UI with Applications tab |
+| `web/my-research.html` | NEW — Researcher dashboard |
+| `scripts/migrate_keys.py` | NEW — Migration script |
+
+### Duration Fix (bonus)
+- [x] `api_server.py` `_build_project_summary()`: Use wall-clock time (workflow_start → workflow_end) instead of sum of round durations
+
+### Dark Mode Fix (review.html moderator panel)
+- [x] Replaced hardcoded `color: #161616` → `var(--text-primary, #161616)`
+- [x] Replaced `background: rgba(255,255,255,0.5)` → `var(--background)`
+- [x] Replaced `border: rgba(0,0,0,0.08)` → `var(--border-subtle)`
+
+### Verification
+- [x] Python syntax: all 3 Python files pass `ast.parse()`
+- [x] DB test: create_researcher → approve → check_quota → record_usage all work
+- [x] Full E2E test: 11 endpoints tested with FastAPI TestClient - all pass
+- [x] Duration fix verified: wall-clock shows 528s vs old 289s for resumed workflow
+- [ ] Visual: index.html badges in same row (needs server restart)
+- [ ] Visual: review.html moderator rationale sections visible (needs server restart)
+- [ ] Functional: apply.html → submit → admin.html approve → key displayed (needs server restart)
+- [ ] Functional: my-research.html → enter key → see quota + workflows (needs server restart)
+
+---
+
+## Manuscript Truncation Prevention + Incomplete Manuscript Detection
+
+### Part A: LLMResponse stop_reason — Done
+- [x] `research_cli/llm/base.py`: Added `stop_reason: Optional[str]` field to `LLMResponse`
+- [x] `research_cli/llm/claude.py`: Capture `stop_reason` in `generate()` and `generate_streaming()`
+- [x] `research_cli/llm/openai.py`: Capture `finish_reason` in `generate()`
+- [x] `research_cli/llm/gemini.py`: Capture `finish_reason` from candidates in `generate()`
+
+### Part B: Writer Auto-Continuation — Done
+- [x] `research_cli/agents/writer.py`: Extracted `_call_llm_once()` from `_generate_with_fallback()`
+- [x] `research_cli/agents/writer.py`: `_generate_with_fallback()` now detects `stop_reason="max_tokens"/"length"` and auto-continues up to 3 times
+- [x] Continuation stitches output seamlessly using last 500 chars as context
+- [x] Cumulative token tracking across continuations
+
+### Part C: Manuscript Completeness Validation — Done
+- [x] `research_cli/agents/writer.py`: Added `validate_manuscript_completeness()` function
+  - Detects: ends_mid_sentence, missing_references, missing_conclusion
+- [x] `research_cli/workflow/orchestrator.py`: Imported `validate_manuscript_completeness`
+- [x] `research_cli/workflow/orchestrator.py`: Completeness check after initial manuscript generation
+- [x] `research_cli/workflow/orchestrator.py`: Completeness check before moderator decision in `run()` and `_resume_workflow()`
+- [x] Completeness warning passed to moderator as `completeness_warning` parameter
+
+### Part D: Moderator Completeness Enforcement — Done
+- [x] `research_cli/agents/moderator.py`: Added `completeness_warning` parameter to `make_decision()`
+- [x] `research_cli/agents/moderator.py`: System prompt includes CRITICAL COMPLETENESS CHECK instructions
+- [x] `research_cli/agents/moderator.py`: Decision prompt injects ⚠ completeness warning when issues detected
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `research_cli/llm/base.py` | `stop_reason` field on `LLMResponse` |
+| `research_cli/llm/claude.py` | `stop_reason` capture (2 methods) |
+| `research_cli/llm/openai.py` | `stop_reason` capture |
+| `research_cli/llm/gemini.py` | `stop_reason` capture |
+| `research_cli/agents/writer.py` | Auto-continuation loop + `validate_manuscript_completeness()` |
+| `research_cli/agents/moderator.py` | Completeness check in prompts + `completeness_warning` param |
+| `research_cli/workflow/orchestrator.py` | Completeness validation + warning plumbing to moderator |
+
+### Verification
+- [x] All 7 files pass `ast.parse()` syntax check
+- [x] `validate_manuscript_completeness()` unit tests pass (truncated → issues detected, complete → clean)
+- [x] `LLMResponse(stop_reason="max_tokens")` field works correctly
+- [x] Orchestrator imports resolve cleanly
+- [ ] E2E: Long topic → auto-continuation triggers → manuscript not truncated
+- [ ] E2E: Truncated manuscript → moderator issues MAJOR_REVISION (not ACCEPT)
+
+---
+
+## Central Model Configuration + Fallback Chain + Gemini Removal
+
+### Part 1: `config/models.json` — Done
+- [x] Created `config/models.json` with role-based model assignments, fallback chains, provider config, pricing
+- [x] 14 roles defined: writer, writer_light, moderator, reviewer, desk_editor, lead_author, coauthor, team_composer, integration_editor, research_planner, research_notes, paper_writer, propose_reviewers
+
+### Part 2: `research_cli/model_config.py` — Done
+- [x] JSON loader with caching
+- [x] `get_role_config(role)` — returns RoleConfig dataclass
+- [x] `create_llm_for_role(role)` — instantiates primary LLM, falls back if API key missing
+- [x] `create_fallback_llm_for_role(role)` — for agents with explicit fallback (WriterAgent)
+- [x] `get_pricing(model)` / `get_all_pricing()` — pricing from JSON
+- [x] `get_reviewer_models()` — reviewer model cycle for cross-provider distribution
+- [x] `_create_llm(provider, model)` — low-level factory used by orchestrator
+
+### Part 3: Agent Refactoring (12 files) — Done
+- [x] `agents/writer.py` — role="writer", fallback via create_fallback_llm_for_role
+- [x] `agents/moderator.py` — role="moderator"
+- [x] `agents/desk_editor.py` — role="desk_editor"
+- [x] `agents/lead_author.py` — role="lead_author"
+- [x] `agents/coauthor.py` — role="coauthor"
+- [x] `agents/team_composer.py` — role="team_composer"
+- [x] `agents/integration_editor.py` — role="integration_editor"
+- [x] `agents/research_planner.py` — role="research_planner"
+- [x] `agents/research_notes_agent.py` — role="research_notes"
+- [x] `agents/paper_writer_agent.py` — role="paper_writer"
+- [x] `agents/writer_team_composer.py` — role="team_composer"
+- [x] `agents/data_analysis_agent.py` — role="research_notes"
+
+### Part 4: Orchestrator + API Server — Done
+- [x] `workflow/orchestrator.py` — role-based agent init, _create_llm for reviews, GeminiLLM removed
+- [x] `workflow/collaborative_workflow.py` — removed hardcoded coauthor model override
+- [x] `api_server.py` — reviewer models from config, pricing from config, propose_reviewers uses create_llm_for_role
+
+### Part 5: Gemini Removal — Done
+- [x] `GeminiLLM` import removed from orchestrator.py
+- [x] No Gemini models in models.json
+- [x] `llm/gemini.py` kept for future use
+
+### Part 6: Performance Pricing Integration — Done
+- [x] `performance.py` — MODEL_PRICING loaded from models.json via get_all_pricing()
+
+### Model Assignment Summary
+
+| Role | Primary | Fallback 1 | Fallback 2 |
+|------|---------|------------|------------|
+| writer | claude-opus-4.5 (anthropic) | gpt-5.2-pro (openai) | qwen3-235b (openai) |
+| writer_light | claude-sonnet-4.5 (anthropic) | gpt-5.2-pro (openai) | — |
+| moderator | claude-opus-4.5 (anthropic) | gpt-5.2-pro (openai) | — |
+| reviewer | gpt-5.2-pro (openai) | qwen3-235b (openai) | claude-sonnet-4.5 (anthropic) |
+| desk_editor | claude-haiku-4.5 (anthropic) | claude-sonnet-4.5 (anthropic) | — |
+| lead_author | claude-opus-4.5 (anthropic) | gpt-5.2-pro (openai) | — |
+| coauthor | gpt-5.2-pro (openai) | qwen3-235b (openai) | claude-sonnet-4.5 (anthropic) |
+| team_composer | claude-opus-4.5 (anthropic) | gpt-5.2-pro (openai) | — |
+| integration_editor | claude-sonnet-4.5 (anthropic) | gpt-5.2-pro (openai) | — |
+| paper_writer | claude-opus-4.5 (anthropic) | gpt-5.2-pro (openai) | — |
+
+### Additional Fixes
+- [x] Category detection: added 'health', 'smoke', 'maternal', 'nutrition', etc. to public_health keywords
+- [x] Reclassified 17 incomplete articles as rejected with reasons in workflow_complete.json
+
+### Verification
+- [x] All 18 files pass `ast.parse()` syntax check (0 FAIL)
+- [x] `config/models.json` valid JSON
+- [ ] `python scripts/test_api_connections.py` — test all model+provider connections
+- [ ] E2E: Submit workflow → verify correct models used per role
+- [ ] E2E: Primary API key missing → fallback model used
+
+---
+
+## Railway 배포 준비 (Step 1 — 코드 정리)
+
+### Part 1: Dockerfile + requirements.txt — Done
+- [x] `requirements.txt` — pyproject.toml 기반 + fastapi/uvicorn/gunicorn (google-generativeai 제거)
+- [x] `Dockerfile` — python:3.11-slim, gunicorn+UvicornWorker, `--workers 1`, `--timeout 900`
+- [x] `railway.toml` — dockerfile builder, health check `/api/health`
+- [x] `.dockerignore` — .git, .env, venv, __pycache__, data/, results/
+
+### Part 2: keys.json → SQLite 통합 — Done
+- [x] `api_server.py` — `KEYS_FILE`, `load_keys_from_file()`, `save_keys_to_file()`, `sync_keys_from_file()` 제거
+- [x] `api_server.py` — Admin key endpoints (`GET/POST/DELETE /api/admin/keys`) → `appdb` 사용
+- [x] `research_cli/db.py` — `create_api_key_direct()` 추가
+
+### Part 3: 프로덕션 서버 설정 — Done
+- [x] `api_server.py` — `__main__` 블록에 `PORT` env var 사용
+- [x] Health check endpoint 이미 존재 (`/api/health`)
+
+### Part 4: pyproject.toml + .env.example — Done
+- [x] `pyproject.toml` — fastapi, uvicorn[standard], gunicorn 추가; google-generativeai 제거
+- [x] `.env.example` — `RESEARCH_API_KEYS`, `RESEARCH_ADMIN_KEY`, `PORT` 추가
+
+### Part 5: Gemini import → lazy — Done
+- [x] `research_cli/llm/__init__.py` — `GeminiLLM` import를 `try/except ImportError`로 변경
+
+### Bug Fix: writer.py f-string syntax — Done
+- [x] `research_cli/agents/writer.py` — Python 3.11 호환: f-string 내 `\n` → 변수로 추출
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `Dockerfile` | **NEW** — python:3.11-slim, gunicorn |
+| `requirements.txt` | **NEW** — pip dependencies |
+| `railway.toml` | **NEW** — Railway config |
+| `.dockerignore` | **NEW** — build exclusions |
+| `api_server.py` | keys.json 제거, admin endpoints → SQLite, PORT env var |
+| `research_cli/db.py` | `create_api_key_direct()` 추가 |
+| `research_cli/llm/__init__.py` | Gemini lazy import |
+| `research_cli/agents/writer.py` | f-string Py3.11 fix |
+| `pyproject.toml` | fastapi/uvicorn/gunicorn 추가, gemini 제거 |
+| `.env.example` | Auth/Server env vars 추가 |
+
+### Verification
+- [x] Python syntax: 모든 파일 `ast.parse()` 통과
+- [x] `docker build` 성공
+- [x] Container 시작: gunicorn + uvicorn worker 부팅 정상
+- [x] `curl /api/health` → `{"status":"ok","service":"AI-Backed Research API"}`
+- [x] `curl /` → HTTP 200 (index.html)
+
+---
+
+## External Manuscript Submission + AI Peer Review Cycle
+
+### Summary
+Submit → AI Review → Decision → Revise & Resubmit → Re-review (max 3 rounds)
+
+### Part 1: DB Schema (`research_cli/db.py`) — Done
+- [x] `submissions` table: id, researcher_id, api_key, title, category, status, round tracking, deadlines
+- [x] `submission_rounds` table: per-round reviews, scores, moderator decisions
+- [x] 6 CRUD functions: create_submission, get_submission, get_submissions_by_key, update_submission_status, save_submission_round, expire_overdue_submissions
+- [x] Indexes: submissions(api_key), submissions(status), submission_rounds(submission_id)
+
+### Part 2: API Endpoints (`api_server.py`) — Done
+- [x] `POST /api/submit-manuscript` — submit manuscript for AI peer review
+- [x] `GET /api/submission/{id}` — get submission status + all round data
+- [x] `POST /api/submission/{id}/revise` — resubmit revised manuscript
+- [x] `GET /api/my-submissions` — list all submissions for authenticated user
+- [x] `run_submission_review_background()` — desk screen + reviewer generation + review + moderator decision
+- [x] `_check_expired_submission()` — check-on-access deadline enforcement
+- [x] Dead code removed: `review_requested` field from SubmitArticleRequest
+
+### Part 3: Web UI (`web/submit.html`) — Done
+- [x] Multi-step wizard: API key → metadata → content → deadline → submit
+- [x] File upload (drag & drop) + Markdown textarea
+- [x] Live preview (marked.js + KaTeX)
+- [x] Word count + validation
+- [x] Deadline selector (clickable cards: 24h / 72h / 7d)
+- [x] Status polling (3s interval) with round-by-round review display
+- [x] Revision form with re-upload when awaiting_revision
+- [x] URL parameter support (`?id=xxx`) for viewing existing submissions
+
+### Part 4: My Research Update (`web/my-research.html`) — Done
+- [x] "My Submissions" section below "My Workflows"
+- [x] Submission cards with status badges, round count, deadline countdown
+- [x] Click through to `submit.html?id=xxx`
+
+### Part 5: Navigation — Done
+- [x] "Submit" link added to `web/index.html` nav bar
+- [x] Dockerfile updated with `results/submissions` directory
+
+### State Machine
+```
+pending → desk_review → reviewing → accepted (publish)
+                           ├→ rejected
+                           └→ awaiting_revision → reviewing (resubmit)
+                                    └→ expired (deadline exceeded)
+```
+
+### New API Endpoints
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | /api/submit-manuscript | API Key | Submit manuscript for review |
+| GET | /api/submission/{id} | API Key (owner) | Get submission details + rounds |
+| POST | /api/submission/{id}/revise | API Key (owner) | Resubmit revised manuscript |
+| GET | /api/my-submissions | API Key | List all submissions |
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `research_cli/db.py` | 2 new tables + 6 CRUD functions + 3 indexes |
+| `api_server.py` | 4 endpoints + background function + dead code removal + timedelta import |
+| `web/submit.html` | **NEW** — manuscript submission wizard |
+| `web/my-research.html` | Submissions section + renderSubmissions() |
+| `web/index.html` | Submit nav link |
+| `Dockerfile` | results/submissions directory |
+
+### Verification
+- [x] Python syntax: db.py + api_server.py pass `ast.parse()`
+- [x] DB integration test: create → get → update → save_round → expire → list all pass
+- [x] All new imports verified
+- [x] submit.html: all key UI elements present
+- [x] my-research.html: submissions section + API call + render function present
+- [x] index.html: Submit nav link present
+- [ ] E2E: POST /api/submit-manuscript → desk screen + round 1 → awaiting_revision
+- [ ] E2E: GET /api/submission/{id} → review feedback visible
+- [ ] E2E: POST /api/submission/{id}/revise → round 2 → decision
+- [ ] E2E: Deadline expiry → status auto-expires on access

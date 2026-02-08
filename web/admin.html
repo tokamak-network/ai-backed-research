@@ -220,6 +220,180 @@
         [data-theme="dark"] .error-box {
             background: #2d0709;
         }
+
+        /* Tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .admin-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-family: var(--font-sans, inherit);
+            transition: all 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .admin-tab:hover {
+            color: var(--text);
+        }
+
+        .admin-tab.active {
+            color: var(--primary-600);
+            border-bottom-color: var(--primary-600);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Applications table */
+        .app-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .app-table th,
+        .app-table td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .app-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .app-status {
+            display: inline-block;
+            padding: 0.1875rem 0.5rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 0;
+        }
+
+        .app-status.pending { background: #f1c21b; color: #161616; }
+        .app-status.approved { background: #42be65; color: #fff; }
+        .app-status.rejected { background: #da1e28; color: #fff; }
+
+        .app-detail-panel {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .app-detail-panel h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 0.5rem 1rem;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .sample-work-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            font-size: 0.75rem;
+            color: var(--text);
+            text-decoration: none;
+            margin: 0.125rem;
+        }
+
+        .sample-work-link:hover {
+            border-color: var(--primary-600);
+            color: var(--primary-600);
+        }
+
+        .action-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            align-items: center;
+        }
+
+        .action-row input,
+        .action-row textarea {
+            flex: 1;
+            padding: 0.5rem 0.625rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 0.8125rem;
+            font-family: inherit;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .filter-row select {
+            padding: 0.5rem 0.625rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 0.8125rem;
+            font-family: inherit;
+        }
+
+        /* Quota management */
+        .quota-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .quota-row input {
+            width: 60px;
+            padding: 0.375rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 0.8125rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -268,41 +442,76 @@
             <div id="auth-status"></div>
         </div>
 
-        <!-- Key Management (shown after auth) -->
-        <div id="key-management" class="admin-section">
-            <h2>API Keys</h2>
+        <!-- Tabs (shown after auth) -->
+        <div id="admin-panel" style="display: none;">
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="switchTab('keys')">API Keys</button>
+                <button class="admin-tab" onclick="switchTab('applications')">Applications</button>
+            </div>
 
-            <!-- New key banner -->
-            <div id="new-key-banner" class="new-key-banner">
-                <p>New key created. Copy it now — it will not be shown again.</p>
-                <div class="new-key-value">
-                    <code id="new-key-display"></code>
-                    <button class="btn btn-secondary btn-sm" onclick="copyKey()">Copy</button>
+            <!-- API Keys Tab -->
+            <div id="tab-keys" class="tab-content active">
+                <div class="admin-section">
+                    <h2>API Keys</h2>
+
+                    <div id="new-key-banner" class="new-key-banner">
+                        <p>New key created. Copy it now — it will not be shown again.</p>
+                        <div class="new-key-value">
+                            <code id="new-key-display"></code>
+                            <button class="btn btn-secondary btn-sm" onclick="copyKey()">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="generate-row">
+                        <input type="text" id="key-label" placeholder="Label (e.g. friend's name)">
+                        <button class="btn btn-primary" onclick="generateKey()">Generate Key</button>
+                    </div>
+
+                    <table class="key-table">
+                        <thead>
+                            <tr>
+                                <th>Prefix</th>
+                                <th>Label</th>
+                                <th>Created</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="key-list">
+                            <tr><td colspan="4" class="empty-row">Loading...</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div id="key-error" class="error-box"></div>
                 </div>
             </div>
 
-            <!-- Generate row -->
-            <div class="generate-row">
-                <input type="text" id="key-label" placeholder="Label (e.g. friend's name)">
-                <button class="btn btn-primary" onclick="generateKey()">Generate Key</button>
+            <!-- Applications Tab -->
+            <div id="tab-applications" class="tab-content">
+                <div class="admin-section">
+                    <h2>Researcher Applications</h2>
+
+                    <div class="filter-row">
+                        <select id="app-filter" onchange="loadApplications()">
+                            <option value="pending">Pending</option>
+                            <option value="all">All</option>
+                        </select>
+                        <button class="btn btn-secondary btn-sm" onclick="loadApplications()">Refresh</button>
+                    </div>
+
+                    <!-- Approval key banner -->
+                    <div id="approval-key-banner" class="new-key-banner" style="display: none;">
+                        <p>API key generated for approved researcher. Share this with them:</p>
+                        <div class="new-key-value">
+                            <code id="approval-key-display"></code>
+                            <button class="btn btn-secondary btn-sm" onclick="copyApprovalKey()">Copy</button>
+                        </div>
+                    </div>
+
+                    <div id="applications-list"></div>
+
+                    <div id="app-error" class="error-box"></div>
+                </div>
             </div>
-
-            <!-- Key list -->
-            <table class="key-table">
-                <thead>
-                    <tr>
-                        <th>Prefix</th>
-                        <th>Label</th>
-                        <th>Created</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="key-list">
-                    <tr><td colspan="4" class="empty-row">Loading...</td></tr>
-                </tbody>
-            </table>
-
-            <div id="key-error" class="error-box"></div>
         </div>
     </main>
 
@@ -324,6 +533,17 @@
             return headers;
         }
 
+        // --- Tab Management ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            if (tabName === 'applications') loadApplications();
+        }
+
+        // --- Auth ---
         async function authenticate() {
             adminKey = document.getElementById('admin-key').value.trim();
             const statusEl = document.getElementById('auth-status');
@@ -339,14 +559,14 @@
                 if (resp.status === 403) {
                     statusEl.className = 'status-err';
                     statusEl.textContent = 'Invalid admin key.';
-                    document.getElementById('key-management').style.display = 'none';
+                    document.getElementById('admin-panel').style.display = 'none';
                     return;
                 }
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
                 statusEl.className = 'status-ok';
                 statusEl.textContent = 'Authenticated.';
-                document.getElementById('key-management').style.display = 'block';
+                document.getElementById('admin-panel').style.display = 'block';
                 await loadKeys();
             } catch (e) {
                 statusEl.className = 'status-err';
@@ -354,6 +574,7 @@
             }
         }
 
+        // --- API Keys ---
         async function loadKeys() {
             const errorEl = document.getElementById('key-error');
             errorEl.style.display = 'none';
@@ -398,12 +619,9 @@
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
                 const data = await resp.json();
-
-                // Show new key banner
                 document.getElementById('new-key-display').textContent = data.key;
                 document.getElementById('new-key-banner').style.display = 'block';
                 document.getElementById('key-label').value = '';
-
                 await loadKeys();
             } catch (e) {
                 errorEl.textContent = 'Failed to generate key: ' + e.message;
@@ -413,7 +631,6 @@
 
         async function deleteKey(prefix) {
             if (!confirm('Delete this key? Users with this key will lose access.')) return;
-
             const errorEl = document.getElementById('key-error');
             errorEl.style.display = 'none';
 
@@ -423,7 +640,6 @@
                     headers: apiHeaders()
                 });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
                 await loadKeys();
             } catch (e) {
                 errorEl.textContent = 'Failed to delete key: ' + e.message;
@@ -440,9 +656,139 @@
             });
         }
 
+        // --- Applications ---
+        async function loadApplications() {
+            const errorEl = document.getElementById('app-error');
+            errorEl.style.display = 'none';
+            const listEl = document.getElementById('applications-list');
+            listEl.innerHTML = '<p style="color: var(--text-secondary); padding: 1rem;">Loading...</p>';
+
+            const filter = document.getElementById('app-filter').value;
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/applications?status=${filter}`, { headers: apiHeaders() });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+                const data = await resp.json();
+                const apps = data.applications || [];
+
+                if (apps.length === 0) {
+                    listEl.innerHTML = '<p style="color: var(--text-secondary); padding: 1rem; text-align: center;">No applications found.</p>';
+                    return;
+                }
+
+                listEl.innerHTML = apps.map(app => renderApplication(app)).join('');
+            } catch (e) {
+                errorEl.textContent = 'Failed to load applications: ' + e.message;
+                errorEl.style.display = 'block';
+                listEl.innerHTML = '';
+            }
+        }
+
+        function renderApplication(app) {
+            const interests = Array.isArray(app.research_interests) ? app.research_interests : [];
+            const works = Array.isArray(app.sample_works) ? app.sample_works : [];
+
+            return `
+                <div class="app-detail-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <h3 style="margin: 0;">${escapeHtml(app.name)}</h3>
+                        <span class="app-status ${app.status}">${app.status}</span>
+                    </div>
+                    <div class="detail-grid">
+                        <span class="detail-label">Email</span>
+                        <span>${escapeHtml(app.email)}</span>
+                        <span class="detail-label">Affiliation</span>
+                        <span>${escapeHtml(app.affiliation || '-')}</span>
+                        <span class="detail-label">Submitted</span>
+                        <span>${app.submitted_at ? new Date(app.submitted_at).toLocaleString() : '-'}</span>
+                        <span class="detail-label">Interests</span>
+                        <span>${interests.length ? interests.map(i => '<span style="display:inline-block;padding:1px 6px;background:var(--surface);border:1px solid var(--border);font-size:0.75rem;margin:2px;">' + escapeHtml(i) + '</span>').join(' ') : '-'}</span>
+                    </div>
+                    ${app.bio ? `<div style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.75rem; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 2px;">${escapeHtml(app.bio)}</div>` : ''}
+                    ${works.length ? `
+                        <div style="margin-bottom: 0.75rem;">
+                            <span class="detail-label" style="display: block; margin-bottom: 0.375rem;">Sample Works</span>
+                            ${works.map(w => `
+                                <a href="${escapeHtml(w.url)}" target="_blank" rel="noopener" class="sample-work-link">
+                                    ${escapeHtml(w.type || 'link')} &rarr; ${escapeHtml(w.description || w.url)}
+                                </a>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    ${app.status === 'pending' ? `
+                        <div class="action-row">
+                            <input type="text" id="notes-${app.id}" placeholder="Admin notes (optional)">
+                            <button class="btn btn-primary btn-sm" onclick="approveApp('${app.id}')">Approve</button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectApp('${app.id}')">Reject</button>
+                        </div>
+                    ` : ''}
+                    ${app.status === 'rejected' && app.rejection_reason ? `<p style="font-size: 0.8125rem; color: #da1e28; margin-top: 0.5rem;">Reason: ${escapeHtml(app.rejection_reason)}</p>` : ''}
+                    ${app.status === 'approved' && app.reviewed_at ? `<p style="font-size: 0.8125rem; color: #198038; margin-top: 0.5rem;">Approved: ${new Date(app.reviewed_at).toLocaleString()}</p>` : ''}
+                </div>
+            `;
+        }
+
+        async function approveApp(appId) {
+            const notes = document.getElementById(`notes-${appId}`)?.value || '';
+            const errorEl = document.getElementById('app-error');
+            errorEl.style.display = 'none';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/applications/${appId}/approve`, {
+                    method: 'POST',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({ admin_notes: notes })
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.detail || 'Approval failed');
+
+                // Show generated API key
+                if (data.api_key) {
+                    document.getElementById('approval-key-display').textContent = data.api_key;
+                    document.getElementById('approval-key-banner').style.display = 'block';
+                }
+
+                await loadApplications();
+            } catch (e) {
+                errorEl.textContent = 'Approval failed: ' + e.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        async function rejectApp(appId) {
+            const reason = prompt('Rejection reason (optional):');
+            if (reason === null) return; // Cancelled
+            const errorEl = document.getElementById('app-error');
+            errorEl.style.display = 'none';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/applications/${appId}/reject`, {
+                    method: 'POST',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({ reason: reason })
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.detail || 'Rejection failed');
+                await loadApplications();
+            } catch (e) {
+                errorEl.textContent = 'Rejection failed: ' + e.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function copyApprovalKey() {
+            const key = document.getElementById('approval-key-display').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                const btn = event.target;
+                btn.textContent = 'Copied';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+            });
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = text || '';
             return div.innerHTML;
         }
     </script>

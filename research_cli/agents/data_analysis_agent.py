@@ -5,8 +5,7 @@ from pathlib import Path
 from datetime import datetime
 import json
 
-from ..llm import ClaudeLLM
-from ..config import get_config
+from ..model_config import create_llm_for_role
 from ..models.research_notes import DataAnalysisNote
 
 
@@ -20,20 +19,14 @@ class DataAnalysisAgent:
     - Records findings in research notes
     """
 
-    def __init__(self, model: str = "claude-sonnet-4"):
+    def __init__(self, role: str = "research_notes"):
         """Initialize data analysis agent.
 
         Args:
-            model: Claude model to use
+            role: Role name for model config lookup
         """
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-        self.model = model
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
     async def design_data_collection(
         self,

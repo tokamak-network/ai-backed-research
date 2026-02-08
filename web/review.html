@@ -1135,9 +1135,22 @@
                                         <span style="font-size: 1.125rem; font-weight: 700; color: ${moderator.decision === 'ACCEPT' ? '#047857' : moderator.decision.includes('MAJOR') ? '#b91c1c' : '#b45309'};">${moderator.confidence}/5</span>
                                     </div>
                                 </div>
-                                <div style="display: inline-block; padding: 0.625rem 1.25rem; background: ${moderator.decision === 'ACCEPT' ? '#059669' : moderator.decision.includes('MAJOR') ? '#dc2626' : '#d97706'}; color: white; border-radius: 6px; font-weight: 700; font-size: 1.125rem; letter-spacing: 0.02em; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <div style="display: inline-block; padding: 0.625rem 1.25rem; background: ${moderator.decision === 'ACCEPT' ? '#059669' : moderator.decision.includes('MAJOR') ? '#dc2626' : '#d97706'}; color: white; border-radius: 6px; font-weight: 700; font-size: 1.125rem; letter-spacing: 0.02em; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 1rem;">
                                     ${moderator.decision.replace('_', ' ')}
                                 </div>
+
+                                ${moderator.recommendation ? `
+                                    <p style="margin-top: 0.75rem; font-size: 0.875rem; line-height: 1.6; color: var(--text-primary, #161616);">${escapeHtml(moderator.recommendation)}</p>
+                                ` : ''}
+
+                                ${moderator.meta_review ? `
+                                    <details style="margin-top: 0.75rem;">
+                                        <summary style="cursor: pointer; font-weight: 600; font-size: 0.8125rem; color: ${moderator.decision === 'ACCEPT' ? '#047857' : moderator.decision.includes('MAJOR') ? '#b91c1c' : '#b45309'}; padding: 0.5rem 0;">Full Editorial Review</summary>
+                                        <div style="padding: 0.875rem; background: var(--background, rgba(255,255,255,0.5)); border: 1px solid var(--border-subtle, rgba(0,0,0,0.08)); border-radius: 2px; margin-top: 0.25rem;">
+                                            <p style="font-size: 0.875rem; line-height: 1.7; color: var(--text-primary, #161616); margin: 0; white-space: pre-wrap;">${escapeHtml(moderator.meta_review)}</p>
+                                        </div>
+                                    </details>
+                                ` : ''}
                             </div>
                         ` : ''}
 
@@ -1145,13 +1158,23 @@
                             ${round.reviews.map(r => renderReview(r)).join('')}
                         </div>
 
-                        ${previousResponse && !isLastRound ? `
+                        ${previousResponse ? `
                             <div class="author-response-panel">
                                 <div class="author-response-header">
                                     Author Response — Response to Round ${round.round - 1}
                                 </div>
                                 <div class="author-response-content">
                                     ${renderMarkdown(previousResponse)}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${isLastRound && (round.author_response || round.author_rebuttal) ? `
+                            <div class="author-response-panel">
+                                <div class="author-response-header">
+                                    Author Response — Response to Round ${round.round}
+                                </div>
+                                <div class="author-response-content">
+                                    ${renderMarkdown(round.author_response || round.author_rebuttal)}
                                 </div>
                             </div>
                         ` : ''}

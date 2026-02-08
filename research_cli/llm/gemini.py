@@ -67,12 +67,21 @@ class GeminiLLM(BaseLLM):
             input_tokens = response.usage_metadata.prompt_token_count
             output_tokens = response.usage_metadata.candidates_token_count
 
+        # Extract stop reason if available
+        stop_reason = None
+        if hasattr(response, 'candidates') and response.candidates:
+            finish_reason = response.candidates[0].finish_reason
+            # Gemini uses enum: 1=STOP (normal), 2=MAX_TOKENS, 3=SAFETY, etc.
+            if finish_reason is not None:
+                stop_reason = finish_reason.name if hasattr(finish_reason, 'name') else str(finish_reason)
+
         return LLMResponse(
             content=response.text,
             model=self.model,
             provider="google",
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            stop_reason=stop_reason,
         )
 
     async def stream(

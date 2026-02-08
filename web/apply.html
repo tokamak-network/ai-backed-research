@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for API Key | Autonomous Research Press</title>
+    <meta name="description" content="Apply for an API key to submit research to Autonomous Research Press">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.svg">
+    <link rel="mask-icon" href="favicon.svg" color="#2563eb">
+
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/article.css">
+    <style>
+        .apply-container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-section h2 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.125rem;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            margin-bottom: 0.375rem;
+            color: var(--text);
+        }
+
+        .form-group .hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.375rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            color: var(--text);
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            transition: border-color 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: 2px solid var(--primary-600);
+            outline-offset: -2px;
+            border-color: var(--primary-600);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .required::after {
+            content: " *";
+            color: #da1e28;
+        }
+
+        /* Tags input */
+        .tags-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 0.375rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            cursor: text;
+            min-height: 40px;
+            align-items: center;
+        }
+
+        .tags-input:focus-within {
+            outline: 2px solid var(--primary-600);
+            outline-offset: -2px;
+            border-color: var(--primary-600);
+        }
+
+        .tags-input .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            font-size: 0.75rem;
+            color: var(--text);
+        }
+
+        .tags-input .tag .remove-tag {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1;
+        }
+
+        .tags-input .tag .remove-tag:hover {
+            color: #da1e28;
+        }
+
+        .tags-input input {
+            border: none;
+            outline: none;
+            background: transparent;
+            flex: 1;
+            min-width: 120px;
+            padding: 0.25rem;
+            font-size: 0.8125rem;
+        }
+
+        /* Sample works */
+        .sample-works-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sample-work-item {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 0.5rem;
+            align-items: start;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+        }
+
+        .sample-work-item select,
+        .sample-work-item input {
+            width: 100%;
+            padding: 0.5rem 0.625rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.8125rem;
+            font-family: var(--font-sans);
+        }
+
+        .sample-work-item .remove-work {
+            padding: 0.5rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 0;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1;
+        }
+
+        .sample-work-item .remove-work:hover {
+            background: #fff1f1;
+            border-color: #da1e28;
+            color: #da1e28;
+        }
+
+        .add-work-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px dashed var(--border);
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            transition: all 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .add-work-btn:hover {
+            border-color: var(--primary-600);
+            color: var(--primary-600);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: background 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .btn-primary {
+            background: var(--primary-600);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            filter: brightness(1.1);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--background);
+        }
+
+        /* Result banners */
+        .result-banner {
+            padding: 1rem 1.25rem;
+            border-radius: 2px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .result-banner.success {
+            background: #defbe6;
+            border: 1px solid #42be65;
+            color: #044317;
+        }
+
+        .result-banner.error {
+            background: #fff1f1;
+            border: 1px solid #fa4d56;
+            color: #da1e28;
+        }
+
+        [data-theme="dark"] .result-banner.success {
+            background: #044317;
+            border-color: #42be65;
+            color: #defbe6;
+        }
+
+        [data-theme="dark"] .result-banner.error {
+            background: #2d0709;
+            border-color: #fa4d56;
+            color: #ffb3b8;
+        }
+
+        .result-banner p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: inherit;
+        }
+
+        /* Status check section */
+        .status-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-section h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.125rem;
+        }
+
+        .status-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .status-row input {
+            flex: 1;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        .status-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            display: none;
+        }
+
+        .status-result .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 0;
+        }
+
+        .status-badge.pending {
+            background: #f1c21b;
+            color: #161616;
+        }
+
+        .status-badge.approved {
+            background: #42be65;
+            color: #fff;
+        }
+
+        .status-badge.rejected {
+            background: #da1e28;
+            color: #fff;
+        }
+
+        .api-key-display {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #defbe6;
+            border: 1px solid #42be65;
+            border-radius: 2px;
+        }
+
+        .api-key-display code {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8125rem;
+            word-break: break-all;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .api-key-display .copy-btn {
+            margin-top: 0.5rem;
+        }
+
+        [data-theme="dark"] .api-key-display {
+            background: #044317;
+            border-color: #42be65;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-nav">
+                <a href="index.html" class="back-link">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Back to Research
+                </a>
+                <div class="header-content">
+                    <h1 class="site-title">Autonomous Research Press</h1>
+                    <p class="site-subtitle">Researcher Application</p>
+                </div>
+                <button class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="apply-container">
+        <h1 class="page-title">Apply for API Access</h1>
+        <p class="page-subtitle">Submit your researcher profile and sample works to request an API key for publishing research.</p>
+
+        <!-- Result banners -->
+        <div id="success-banner" class="result-banner success">
+            <p id="success-message"></p>
+        </div>
+        <div id="error-banner" class="result-banner error">
+            <p id="error-message"></p>
+        </div>
+
+        <!-- Application form -->
+        <form id="apply-form" onsubmit="submitApplication(event)">
+            <div class="form-section">
+                <h2>Researcher Profile</h2>
+
+                <div class="form-group">
+                    <label class="required">Full Name</label>
+                    <input type="text" id="name" required placeholder="Dr. Jane Smith">
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Email</label>
+                    <div class="hint">Used for application status updates and key delivery</div>
+                    <input type="email" id="email" required placeholder="jane.smith@university.edu">
+                </div>
+
+                <div class="form-group">
+                    <label>Affiliation / Organization</label>
+                    <input type="text" id="affiliation" placeholder="MIT, Stanford University, etc.">
+                </div>
+
+                <div class="form-group">
+                    <label>Research Interests</label>
+                    <div class="hint">Press Enter or comma to add a tag</div>
+                    <div class="tags-input" id="interests-container" onclick="this.querySelector('input').focus()">
+                        <input type="text" id="interests-input" placeholder="e.g. Machine Learning, NLP...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Brief Bio</label>
+                    <textarea id="bio" rows="3" placeholder="Briefly describe your research background and interests..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Sample Works</h2>
+                <p style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                    Provide links to your published work, portfolio, or GitHub repositories to help us evaluate your application.
+                </p>
+
+                <div id="sample-works-list" class="sample-works-list"></div>
+                <button type="button" class="add-work-btn" onclick="addSampleWork()" style="margin-top: 0.75rem;">+ Add Sample Work</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="submit-btn">Submit Application</button>
+        </form>
+
+        <!-- Status Check -->
+        <div class="status-section" style="margin-top: 2rem;">
+            <h2>Check Application Status</h2>
+            <div class="status-row">
+                <input type="email" id="status-email" placeholder="Enter your email address">
+                <button class="btn btn-secondary" onclick="checkStatus()">Check Status</button>
+            </div>
+            <div id="status-result" class="status-result"></div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p><strong>Platform:</strong> Autonomous Research Press</p>
+            <p class="copyright">2026 Autonomous Research Press. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Tags input
+        const interestsContainer = document.getElementById('interests-container');
+        const interestsInput = document.getElementById('interests-input');
+        let interests = [];
+
+        interestsInput.addEventListener('keydown', function(e) {
+            if ((e.key === 'Enter' || e.key === ',') && this.value.trim()) {
+                e.preventDefault();
+                const val = this.value.trim().replace(/,$/g, '');
+                if (val && !interests.includes(val)) {
+                    interests.push(val);
+                    renderTags();
+                }
+                this.value = '';
+            }
+            if (e.key === 'Backspace' && !this.value && interests.length > 0) {
+                interests.pop();
+                renderTags();
+            }
+        });
+
+        function renderTags() {
+            const tags = interestsContainer.querySelectorAll('.tag');
+            tags.forEach(t => t.remove());
+            interests.forEach((t, i) => {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.innerHTML = `${escapeHtml(t)} <span class="remove-tag" onclick="removeTag(${i})">&times;</span>`;
+                interestsContainer.insertBefore(tag, interestsInput);
+            });
+        }
+
+        function removeTag(index) {
+            interests.splice(index, 1);
+            renderTags();
+        }
+
+        // Sample works
+        let sampleWorks = [];
+
+        function addSampleWork() {
+            const id = Date.now();
+            sampleWorks.push({ id, type: 'paper', url: '', description: '' });
+            renderSampleWorks();
+        }
+
+        function removeSampleWork(id) {
+            sampleWorks = sampleWorks.filter(w => w.id !== id);
+            renderSampleWorks();
+        }
+
+        function renderSampleWorks() {
+            const list = document.getElementById('sample-works-list');
+            list.innerHTML = sampleWorks.map(w => `
+                <div class="sample-work-item">
+                    <select onchange="updateWork(${w.id}, 'type', this.value)">
+                        <option value="paper" ${w.type === 'paper' ? 'selected' : ''}>Paper</option>
+                        <option value="portfolio" ${w.type === 'portfolio' ? 'selected' : ''}>Portfolio</option>
+                        <option value="github" ${w.type === 'github' ? 'selected' : ''}>GitHub</option>
+                        <option value="other" ${w.type === 'other' ? 'selected' : ''}>Other</option>
+                    </select>
+                    <div style="display: flex; flex-direction: column; gap: 0.375rem;">
+                        <input type="url" value="${escapeAttr(w.url)}" placeholder="https://..." onchange="updateWork(${w.id}, 'url', this.value)">
+                        <input type="text" value="${escapeAttr(w.description)}" placeholder="Brief description" onchange="updateWork(${w.id}, 'description', this.value)">
+                    </div>
+                    <button type="button" class="remove-work" onclick="removeSampleWork(${w.id})">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function updateWork(id, field, value) {
+            const work = sampleWorks.find(w => w.id === id);
+            if (work) work[field] = value;
+        }
+
+        // Submit application
+        async function submitApplication(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            hideMessages();
+
+            const payload = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                affiliation: document.getElementById('affiliation').value.trim(),
+                research_interests: interests,
+                sample_works: sampleWorks.map(w => ({ type: w.type, url: w.url, description: w.description })).filter(w => w.url),
+                bio: document.getElementById('bio').value.trim(),
+            };
+
+            try {
+                const resp = await fetch('/api/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.detail || 'Submission failed');
+
+                showSuccess('Application submitted successfully! Check your status below using your email address.');
+                document.getElementById('apply-form').reset();
+                interests = [];
+                sampleWorks = [];
+                renderTags();
+                renderSampleWorks();
+                // Pre-fill status check with email
+                document.getElementById('status-email').value = payload.email;
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit Application';
+            }
+        }
+
+        // Check status
+        async function checkStatus() {
+            const email = document.getElementById('status-email').value.trim();
+            if (!email) return;
+
+            const resultEl = document.getElementById('status-result');
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '<p style="color: var(--text-secondary);">Checking...</p>';
+
+            try {
+                const resp = await fetch(`/api/application-status/${encodeURIComponent(email)}`);
+                if (resp.status === 404) {
+                    resultEl.innerHTML = '<p>No application found for this email.</p>';
+                    return;
+                }
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.detail || 'Failed to check status');
+
+                let html = `
+                    <p style="margin-bottom: 0.5rem;"><strong>${escapeHtml(data.name)}</strong></p>
+                    <span class="status-badge ${data.status}">${data.status.toUpperCase()}</span>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem; color: var(--text-secondary);">
+                        Submitted: ${new Date(data.submitted_at).toLocaleDateString()}
+                        ${data.reviewed_at ? ' &middot; Reviewed: ' + new Date(data.reviewed_at).toLocaleDateString() : ''}
+                    </p>
+                `;
+
+                if (data.status === 'approved' && data.api_key) {
+                    html += `
+                        <div class="api-key-display">
+                            <p style="font-weight: 600; font-size: 0.8125rem; margin-bottom: 0.25rem; color: inherit;">Your API Key:</p>
+                            <code id="status-api-key">${escapeHtml(data.api_key)}</code>
+                            <button class="btn btn-secondary btn-sm copy-btn" onclick="copyStatusKey()" style="margin-left: 0.5rem; padding: 0.25rem 0.625rem; font-size: 0.75rem;">Copy</button>
+                            <p style="font-size: 0.6875rem; color: var(--text-secondary); margin-top: 0.5rem;">Save this key securely. Use it in the <a href="ask-topic.html">Ask Research</a> page.</p>
+                        </div>
+                    `;
+                }
+
+                if (data.status === 'rejected' && data.rejection_reason) {
+                    html += `<p style="margin-top: 0.5rem; font-size: 0.8125rem; color: #da1e28;">Reason: ${escapeHtml(data.rejection_reason)}</p>`;
+                }
+
+                resultEl.innerHTML = html;
+            } catch (err) {
+                resultEl.innerHTML = `<p style="color: #da1e28;">${escapeHtml(err.message)}</p>`;
+            }
+        }
+
+        function copyStatusKey() {
+            const key = document.getElementById('status-api-key').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                const btn = event.target;
+                btn.textContent = 'Copied';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+            });
+        }
+
+        // Helpers
+        function showSuccess(msg) {
+            const el = document.getElementById('success-banner');
+            document.getElementById('success-message').textContent = msg;
+            el.style.display = 'block';
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error-banner');
+            document.getElementById('error-message').textContent = msg;
+            el.style.display = 'block';
+        }
+
+        function hideMessages() {
+            document.getElementById('success-banner').style.display = 'none';
+            document.getElementById('error-banner').style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function escapeAttr(text) {
+            return (text || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+    </script>
+</body>
+</html>

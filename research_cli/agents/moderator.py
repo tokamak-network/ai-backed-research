@@ -1,8 +1,7 @@
 """Moderator agent for making accept/reject decisions on peer reviews."""
 
 from typing import List, Dict
-from ..llm import ClaudeLLM
-from ..config import get_config
+from ..model_config import create_llm_for_role
 
 
 class ModeratorAgent:
@@ -12,20 +11,14 @@ class ModeratorAgent:
     the final decision on manuscript acceptance.
     """
 
-    def __init__(self, model: str = "claude-opus-4.5"):
+    def __init__(self, role: str = "moderator"):
         """Initialize moderator agent.
 
         Args:
-            model: Claude model to use (Opus for critical decisions)
+            role: Role name for model config lookup
         """
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-        self.model = model
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
     async def make_decision(
         self,
@@ -34,7 +27,8 @@ class ModeratorAgent:
         round_number: int,
         max_rounds: int,
         previous_rounds: List[Dict] = None,
-        domain: str = "interdisciplinary research"
+        domain: str = "interdisciplinary research",
+        completeness_warning: str = None,
     ) -> Dict:
         """Make accept/reject decision based on peer reviews.
 
@@ -76,6 +70,14 @@ Editorial discretion factors:
 5. **Round context**: After 3 rounds with consistent improvement, be pragmatic
 6. **Field standards**: Industry research reports have different standards than pure theory
 
+CRITICAL COMPLETENESS CHECK:
+Before making any decision, verify the manuscript is structurally complete:
+- Does the text end mid-sentence or appear truncated?
+- Are References/Bibliography present?
+- Is the Conclusion section present?
+If the manuscript appears truncated or incomplete, you MUST issue MAJOR_REVISION
+regardless of content quality. An incomplete manuscript cannot be accepted.
+
 Think like a real editor who cares about publishing valuable work, not a score calculator."""
 
         # Format reviews for moderator
@@ -96,6 +98,14 @@ Think like a real editor who cares about publishing valuable work, not a score c
                 improvement = overall_avg - first_score
                 trajectory_summary += f"\nScore change from Round 1: {improvement:+.1f} points"
 
+        # Build completeness warning block
+        completeness_block = ""
+        if completeness_warning:
+            completeness_block = f"""
+⚠ {completeness_warning}
+An incomplete or truncated manuscript MUST receive MAJOR_REVISION (or REJECT), never ACCEPT.
+"""
+
         prompt = f"""You are reviewing a manuscript submission. Exercise your editorial judgment.
 
 SUBMISSION STATUS:
@@ -106,7 +116,7 @@ SUBMISSION STATUS:
 
 PEER REVIEWS:
 {reviews_summary}
-
+{completeness_block}
 ---
 
 EDITORIAL ANALYSIS REQUIRED:

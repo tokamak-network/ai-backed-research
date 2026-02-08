@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Research | Autonomous Research Press</title>
+    <meta name="description" content="View your research workflows and API quota">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.svg">
+    <link rel="mask-icon" href="favicon.svg" color="#2563eb">
+
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/article.css">
+    <style>
+        .dashboard-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-section h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.125rem;
+        }
+
+        .auth-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .auth-row input {
+            flex: 1;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 0.875rem;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            font-family: var(--font-sans, inherit);
+            transition: background 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .btn-primary {
+            background: var(--primary-600);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            filter: brightness(1.1);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #auth-status {
+            font-size: 0.8125rem;
+            margin-top: 0.5rem;
+        }
+
+        .status-ok { color: #198038; }
+        .status-err { color: #da1e28; }
+
+        /* Dashboard content */
+        #dashboard {
+            display: none;
+        }
+
+        .dashboard-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-section h2 {
+            margin: 0 0 1.25rem 0;
+            font-size: 1.125rem;
+        }
+
+        /* Quota display */
+        .quota-card {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .quota-circle {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .quota-circle svg {
+            transform: rotate(-90deg);
+            width: 80px;
+            height: 80px;
+        }
+
+        .quota-circle .track {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 6;
+        }
+
+        .quota-circle .fill {
+            fill: none;
+            stroke: var(--primary-600);
+            stroke-width: 6;
+            stroke-linecap: butt;
+            transition: stroke-dashoffset 0.3s;
+        }
+
+        .quota-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .quota-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0.25rem 0;
+        }
+
+        .quota-info .quota-label {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        /* Profile summary */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .profile-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Workflow list */
+        .workflow-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .workflow-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            transition: border-color 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .workflow-card:hover {
+            border-color: var(--border-strong, var(--border));
+        }
+
+        .workflow-info {
+            flex: 1;
+        }
+
+        .workflow-title {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .workflow-title a {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .workflow-title a:hover {
+            color: var(--primary-600);
+        }
+
+        .workflow-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .workflow-status {
+            display: inline-block;
+            padding: 0.1875rem 0.5rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 0;
+        }
+
+        .workflow-status.completed, .workflow-status.accepted { background: #42be65; color: #fff; }
+        .workflow-status.rejected, .workflow-status.expired { background: #da1e28; color: #fff; }
+        .workflow-status.reviewing, .workflow-status.writing { background: #0f62fe; color: #fff; }
+        .workflow-status.queued, .workflow-status.pending, .workflow-status.desk_review { background: #f1c21b; color: #161616; }
+        .workflow-status.awaiting_revision { background: #f59e0b; color: #161616; }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .empty-state a {
+            color: var(--primary-600);
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-nav">
+                <a href="index.html" class="back-link">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Back to Research
+                </a>
+                <div class="header-content">
+                    <h1 class="site-title">Autonomous Research Press</h1>
+                    <p class="site-subtitle">My Research Dashboard</p>
+                </div>
+                <button class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <h1 class="page-title">My Research</h1>
+        <p class="page-subtitle">View your research submissions and API quota.</p>
+
+        <!-- Auth -->
+        <div class="auth-section">
+            <h2>Enter API Key</h2>
+            <div class="auth-row">
+                <input type="password" id="api-key-input" placeholder="Paste your API key">
+                <button class="btn btn-primary" onclick="loadDashboard()">Load Dashboard</button>
+            </div>
+            <div id="auth-status"></div>
+        </div>
+
+        <!-- Dashboard (shown after auth) -->
+        <div id="dashboard">
+            <!-- Quota -->
+            <div class="dashboard-section">
+                <h2>Daily Quota</h2>
+                <div class="quota-card">
+                    <div class="quota-circle">
+                        <svg viewBox="0 0 36 36">
+                            <circle class="track" cx="18" cy="18" r="15.91"></circle>
+                            <circle class="fill" id="quota-arc" cx="18" cy="18" r="15.91"
+                                stroke-dasharray="100 100" stroke-dashoffset="100"></circle>
+                        </svg>
+                        <span class="quota-text" id="quota-text">-</span>
+                    </div>
+                    <div class="quota-info">
+                        <p class="quota-label" id="quota-label">Loading...</p>
+                        <p id="quota-detail"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile -->
+            <div class="dashboard-section" id="profile-section" style="display: none;">
+                <h2>Profile</h2>
+                <div id="profile-content" class="profile-grid"></div>
+            </div>
+
+            <!-- Workflows -->
+            <div class="dashboard-section">
+                <h2>My Workflows</h2>
+                <div id="workflows-list" class="workflow-list">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Submissions -->
+            <div class="dashboard-section">
+                <h2>My Submissions</h2>
+                <div id="submissions-list" class="workflow-list">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p><strong>Platform:</strong> Autonomous Research Press</p>
+            <p class="copyright">2026 Autonomous Research Press. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        let apiKey = '';
+
+        function getHeaders() {
+            return { 'Content-Type': 'application/json', 'X-API-Key': apiKey };
+        }
+
+        async function loadDashboard() {
+            apiKey = document.getElementById('api-key-input').value.trim();
+            const statusEl = document.getElementById('auth-status');
+
+            if (!apiKey) {
+                statusEl.className = 'status-err';
+                statusEl.textContent = 'Please enter your API key.';
+                return;
+            }
+
+            statusEl.textContent = 'Verifying...';
+            statusEl.className = '';
+
+            try {
+                // Verify key by loading quota
+                const quotaResp = await fetch('/api/my-quota', { headers: getHeaders() });
+                if (quotaResp.status === 403) {
+                    statusEl.className = 'status-err';
+                    statusEl.textContent = 'Invalid API key.';
+                    return;
+                }
+                if (!quotaResp.ok) throw new Error(`HTTP ${quotaResp.status}`);
+
+                statusEl.className = 'status-ok';
+                statusEl.textContent = 'Authenticated.';
+                document.getElementById('dashboard').style.display = 'block';
+
+                // Load all sections in parallel
+                const [quota, profile, workflows, submissions] = await Promise.allSettled([
+                    quotaResp.json(),
+                    fetch('/api/my-profile', { headers: getHeaders() }).then(r => r.ok ? r.json() : null),
+                    fetch('/api/my-workflows', { headers: getHeaders() }).then(r => r.ok ? r.json() : { workflows: [] }),
+                    fetch('/api/my-submissions', { headers: getHeaders() }).then(r => r.ok ? r.json() : { submissions: [] }),
+                ]);
+
+                if (quota.status === 'fulfilled') renderQuota(quota.value);
+                if (profile.status === 'fulfilled' && profile.value) renderProfile(profile.value);
+                if (workflows.status === 'fulfilled') renderWorkflows(workflows.value.workflows || []);
+                if (submissions.status === 'fulfilled') renderSubmissions(submissions.value.submissions || []);
+
+            } catch (e) {
+                statusEl.className = 'status-err';
+                statusEl.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        function renderQuota(data) {
+            const used = data.used || 0;
+            const limit = data.limit || 10;
+            const remaining = Math.max(0, limit - used);
+            const pct = limit > 0 ? (used / limit) * 100 : 0;
+
+            document.getElementById('quota-text').textContent = remaining;
+            document.getElementById('quota-label').textContent = `${remaining} of ${limit} remaining`;
+            document.getElementById('quota-detail').textContent = `${used} used today`;
+
+            // Update SVG arc
+            const circumference = 100;
+            const offset = circumference - (pct / 100) * circumference;
+            const arc = document.getElementById('quota-arc');
+            arc.style.strokeDashoffset = offset;
+
+            // Color: green if plenty, yellow if low, red if exhausted
+            if (remaining <= 0) arc.style.stroke = '#da1e28';
+            else if (remaining <= 3) arc.style.stroke = '#f1c21b';
+            else arc.style.stroke = '#42be65';
+        }
+
+        function renderProfile(data) {
+            const section = document.getElementById('profile-section');
+            const content = document.getElementById('profile-content');
+            section.style.display = 'block';
+
+            const interests = Array.isArray(data.research_interests) ? data.research_interests : [];
+
+            content.innerHTML = `
+                <span class="profile-label">Name</span><span>${escapeHtml(data.name)}</span>
+                <span class="profile-label">Email</span><span>${escapeHtml(data.email)}</span>
+                <span class="profile-label">Affiliation</span><span>${escapeHtml(data.affiliation || '-')}</span>
+                <span class="profile-label">Status</span><span>${escapeHtml(data.status)}</span>
+                ${interests.length ? `<span class="profile-label">Interests</span><span>${interests.map(i => escapeHtml(i)).join(', ')}</span>` : ''}
+            `;
+        }
+
+        function renderWorkflows(workflows) {
+            const list = document.getElementById('workflows-list');
+
+            if (!workflows || workflows.length === 0) {
+                list.innerHTML = '<div class="empty-state">No workflows yet. <a href="ask-topic.html">Start your first research</a>.</div>';
+                return;
+            }
+
+            list.innerHTML = workflows.map(wf => {
+                const s = wf.summary;
+                const title = s ? (s.title || s.topic || wf.project_id) : wf.project_id;
+                const status = s ? s.status : 'unknown';
+                const score = s ? s.final_score : null;
+                const date = wf.created_at ? new Date(wf.created_at).toLocaleDateString() : '-';
+
+                return `
+                    <div class="workflow-card">
+                        <div class="workflow-info">
+                            <div class="workflow-title">
+                                <a href="review.html?id=${encodeURIComponent(wf.project_id)}">${escapeHtml(title)}</a>
+                            </div>
+                            <div class="workflow-meta">
+                                <span>${date}</span>
+                                ${score !== null ? `<span>Score: ${score}/10</span>` : ''}
+                                ${s && s.total_rounds ? `<span>${s.total_rounds} rounds</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="workflow-status ${status}">${status}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSubmissions(submissions) {
+            const list = document.getElementById('submissions-list');
+
+            if (!submissions || submissions.length === 0) {
+                list.innerHTML = '<div class="empty-state">No manuscript submissions yet. <a href="submit.html">Submit your first manuscript</a>.</div>';
+                return;
+            }
+
+            list.innerHTML = submissions.map(sub => {
+                const date = sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '-';
+                const statusLabels = {
+                    pending: 'Pending', desk_review: 'Desk Review', reviewing: 'Reviewing',
+                    awaiting_revision: 'Revision Requested', accepted: 'Accepted',
+                    rejected: 'Rejected', expired: 'Expired'
+                };
+                const statusLabel = statusLabels[sub.status] || sub.status;
+
+                let deadlineHtml = '';
+                if (sub.status === 'awaiting_revision' && sub.remaining_hours !== null && sub.remaining_hours !== undefined) {
+                    const h = Math.floor(sub.remaining_hours);
+                    deadlineHtml = `<span style="color:#f59e0b; font-weight:600;">${h}h left</span>`;
+                }
+
+                return `
+                    <div class="workflow-card">
+                        <div class="workflow-info">
+                            <div class="workflow-title">
+                                <a href="submit.html?id=${encodeURIComponent(sub.id)}">${escapeHtml(sub.title)}</a>
+                            </div>
+                            <div class="workflow-meta">
+                                <span>${date}</span>
+                                <span>Round ${sub.current_round}/${sub.max_rounds}</span>
+                                ${sub.final_score ? `<span>Score: ${sub.final_score.toFixed(1)}/10</span>` : ''}
+                                ${deadlineHtml}
+                            </div>
+                        </div>
+                        <span class="workflow-status ${sub.status}">${statusLabel}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

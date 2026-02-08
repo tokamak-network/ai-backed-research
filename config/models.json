@@ -1,0 +1,139 @@
+{
+  "_comment": "Central model configuration. Each role has a primary model and ordered fallback chain.",
+  "roles": {
+    "writer": {
+      "primary": {"model": "claude-opus-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"},
+        {"model": "qwen3-235b", "provider": "openai"}
+      ],
+      "temperature": 0.7,
+      "max_tokens": 16384
+    },
+    "writer_light": {
+      "primary": {"model": "claude-sonnet-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.7,
+      "max_tokens": 4096
+    },
+    "moderator": {
+      "primary": {"model": "claude-opus-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.3,
+      "max_tokens": 2048
+    },
+    "reviewer": {
+      "primary": {"model": "gpt-5.2-pro", "provider": "openai"},
+      "fallback": [
+        {"model": "qwen3-235b", "provider": "openai"},
+        {"model": "claude-sonnet-4.5", "provider": "anthropic"}
+      ],
+      "temperature": 0.3,
+      "max_tokens": 4096
+    },
+    "desk_editor": {
+      "primary": {"model": "claude-haiku-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "claude-sonnet-4.5", "provider": "anthropic"}
+      ],
+      "temperature": 0.1,
+      "max_tokens": 512
+    },
+    "lead_author": {
+      "primary": {"model": "claude-opus-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.7,
+      "max_tokens": 8192
+    },
+    "coauthor": {
+      "primary": {"model": "gpt-5.2-pro", "provider": "openai"},
+      "fallback": [
+        {"model": "qwen3-235b", "provider": "openai"},
+        {"model": "claude-sonnet-4.5", "provider": "anthropic"}
+      ],
+      "temperature": 0.7,
+      "max_tokens": 8192
+    },
+    "team_composer": {
+      "primary": {"model": "claude-opus-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.7,
+      "max_tokens": 4096
+    },
+    "integration_editor": {
+      "primary": {"model": "claude-sonnet-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.5,
+      "max_tokens": 8192
+    },
+    "research_planner": {
+      "primary": {"model": "claude-sonnet-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.7,
+      "max_tokens": 4096
+    },
+    "research_notes": {
+      "primary": {"model": "claude-sonnet-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.5,
+      "max_tokens": 4096
+    },
+    "paper_writer": {
+      "primary": {"model": "claude-opus-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.7,
+      "max_tokens": 16384
+    },
+    "propose_reviewers": {
+      "primary": {"model": "claude-haiku-4.5", "provider": "anthropic"},
+      "fallback": [],
+      "temperature": 0.7,
+      "max_tokens": 2000
+    },
+    "categorizer": {
+      "primary": {"model": "claude-haiku-4.5", "provider": "anthropic"},
+      "fallback": [
+        {"model": "gpt-5.2-pro", "provider": "openai"}
+      ],
+      "temperature": 0.0,
+      "max_tokens": 200
+    }
+  },
+  "provider_config": {
+    "anthropic": {
+      "env_key": "ANTHROPIC_API_KEY",
+      "env_key_alt": "ANTHROPIC_AUTH_TOKEN",
+      "env_base_url": "ANTHROPIC_BASE_URL"
+    },
+    "openai": {
+      "env_key": "OPENAI_API_KEY",
+      "env_base_url": "OPENAI_BASE_URL"
+    }
+  },
+  "pricing": {
+    "claude-opus-4.5": {"input": 15.0, "output": 75.0},
+    "claude-opus-4-6": {"input": 15.0, "output": 75.0},
+    "claude-sonnet-4.5": {"input": 3.0, "output": 15.0},
+    "claude-sonnet-4": {"input": 3.0, "output": 15.0},
+    "claude-haiku-4.5": {"input": 0.80, "output": 4.0},
+    "gpt-5.2-pro": {"input": 2.0, "output": 8.0},
+    "gpt-5.2-codex": {"input": 2.0, "output": 8.0},
+    "qwen3-235b": {"input": 1.0, "output": 4.0}
+  }
+}

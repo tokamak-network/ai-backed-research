@@ -3,9 +3,8 @@
 import asyncio
 import logging
 from typing import Optional, List, Dict
-from ..llm import ClaudeLLM
 from ..llm.base import LLMResponse
-from ..config import get_config
+from ..model_config import create_llm_for_role, create_fallback_llm_for_role
 from ..models.section import WritingContext, SectionOutput
 from ..models.collaborative_research import Reference
 from ..utils.source_retriever import SourceRetriever
@@ -16,6 +15,35 @@ logger = logging.getLogger(__name__)
 LLM_TIMEOUT_SECONDS = 180  # 3 minutes
 
 
+def validate_manuscript_completeness(text: str) -> dict:
+    """Validate manuscript structural completeness. Detects truncation signs.
+
+    Returns:
+        Dict with is_complete (bool), issues (list), word_count (int)
+    """
+    issues = []
+
+    # 1. Ends mid-sentence (last char is not terminal punctuation)
+    stripped = text.rstrip()
+    if stripped and stripped[-1] not in '.!?")\']':
+        issues.append("ends_mid_sentence")
+
+    # 2. Missing References/Bibliography section
+    lower = text.lower()
+    if "## references" not in lower and "## bibliography" not in lower:
+        issues.append("missing_references")
+
+    # 3. Missing Conclusion section
+    if "## conclusion" not in lower and "## summary" not in lower:
+        issues.append("missing_conclusion")
+
+    return {
+        "is_complete": len(issues) == 0,
+        "issues": issues,
+        "word_count": len(text.split()),
+    }
+
+
 class WriterAgent:
     """AI agent that writes and revises research manuscripts.
 
@@ -24,34 +52,24 @@ class WriterAgent:
     timeout or connection error.
     """
 
-    def __init__(self, model: str = "claude-opus-4.5"):
+    def __init__(self, role: str = "writer"):
         """Initialize writer agent.
 
         Args:
-            model: Claude model to use (default: Opus 4.5)
+            role: Role name for model configuration lookup
         """
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-        self.model = model
+        self.role = role
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
-        # Fallback LLM (Sonnet) for timeout/connection errors
-        fallback_config = config.get_llm_config("anthropic", "claude-sonnet-4")
-        self._fallback_llm = ClaudeLLM(
-            api_key=fallback_config.api_key,
-            model=fallback_config.model,
-            base_url=fallback_config.base_url
-        )
+        # Fallback LLM for timeout/connection errors
+        self._fallback_llm = create_fallback_llm_for_role(role)
 
         # Token tracking for last LLM call
         self._last_input_tokens: int = 0
         self._last_output_tokens: int = 0
         self._last_total_tokens: int = 0
-        self._last_model_used: str = model
+        self._last_model_used: str = self.model
 
     def get_last_token_usage(self) -> dict:
         """Return token usage from the most recent LLM call.
@@ -66,7 +84,7 @@ class WriterAgent:
             "model": self._last_model_used,
         }
 
-    async def _generate_with_fallback(
+    async def _call_llm_once(
         self,
         prompt: str,
         system: Optional[str] = None,
@@ -74,7 +92,7 @@ class WriterAgent:
         max_tokens: int = 16384,
         timeout: int = LLM_TIMEOUT_SECONDS,
     ) -> LLMResponse:
-        """Call primary LLM with timeout, fall back to Sonnet on failure.
+        """Single LLM call with timeout and fallback. No continuation logic.
 
         Uses streaming internally to prevent proxy idle-connection timeouts.
         """
@@ -88,10 +106,6 @@ class WriterAgent:
                 ),
                 timeout=timeout,
             )
-            self._last_input_tokens = response.input_tokens or 0
-            self._last_output_tokens = response.output_tokens or 0
-            self._last_total_tokens = response.total_tokens or 0
-            self._last_model_used = response.model
             return response
         except (asyncio.TimeoutError, Exception) as e:
             is_timeout = isinstance(e, asyncio.TimeoutError)
@@ -104,29 +118,98 @@ class WriterAgent:
             except Exception:
                 pass
             # Recreate primary client for future calls
-            config = get_config()
-            llm_config = config.get_llm_config("anthropic", self.model)
-            self.llm = ClaudeLLM(
-                api_key=llm_config.api_key,
-                model=llm_config.model,
-                base_url=llm_config.base_url,
-            )
+            self.llm = create_llm_for_role(self.role)
 
             # Small delay to let proxy release the connection slot
             await asyncio.sleep(2)
 
-            # Fallback to Sonnet (also streaming to avoid proxy timeouts)
-            response = await self._fallback_llm.generate_streaming(
+            # Fallback (also streaming to avoid proxy timeouts)
+            fallback = self._fallback_llm if self._fallback_llm else self.llm
+            response = await fallback.generate_streaming(
                 prompt=prompt,
                 system=system,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
-            self._last_input_tokens = response.input_tokens or 0
-            self._last_output_tokens = response.output_tokens or 0
-            self._last_total_tokens = response.total_tokens or 0
-            self._last_model_used = response.model
             return response
+
+    # Maximum number of continuation attempts when output is truncated
+    MAX_CONTINUATIONS = 3
+
+    async def _generate_with_fallback(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 16384,
+        timeout: int = LLM_TIMEOUT_SECONDS,
+    ) -> LLMResponse:
+        """Call LLM with timeout/fallback and auto-continuation on truncation.
+
+        If the LLM response is truncated (stop_reason == "max_tokens" or "length"),
+        automatically continues generation up to MAX_CONTINUATIONS times, stitching
+        the output together seamlessly.
+        """
+        response = await self._call_llm_once(
+            prompt=prompt, system=system, temperature=temperature,
+            max_tokens=max_tokens, timeout=timeout,
+        )
+
+        # Track cumulative tokens
+        total_input = response.input_tokens or 0
+        total_output = response.output_tokens or 0
+
+        accumulated = response.content
+
+        for i in range(self.MAX_CONTINUATIONS):
+            if response.stop_reason not in ("max_tokens", "length"):
+                break  # Normal completion
+
+            logger.warning(
+                f"Output truncated (stop_reason={response.stop_reason}), "
+                f"auto-continuing ({i+1}/{self.MAX_CONTINUATIONS})..."
+            )
+
+            # Use last ~500 chars as overlap context
+            tail = accumulated[-500:]
+            continuation_prompt = (
+                "You were writing a manuscript but your output was cut off. "
+                "Continue EXACTLY where you left off. Do not repeat any content. "
+                "Do not add any preamble or explanation.\n\n"
+                f"Your text ended with:\n---\n{tail}\n---\n\n"
+                "Continue writing from that exact point:"
+            )
+
+            response = await self._call_llm_once(
+                prompt=continuation_prompt, system=system,
+                temperature=temperature, max_tokens=max_tokens, timeout=timeout,
+            )
+
+            total_input += response.input_tokens or 0
+            total_output += response.output_tokens or 0
+            accumulated += response.content
+
+        if response.stop_reason in ("max_tokens", "length"):
+            logger.error(
+                f"Output still truncated after {self.MAX_CONTINUATIONS} continuations "
+                f"({len(accumulated.split())} words). Manuscript may be incomplete."
+            )
+
+        # Build combined response
+        combined = LLMResponse(
+            content=accumulated,
+            model=response.model,
+            provider=response.provider,
+            input_tokens=total_input,
+            output_tokens=total_output,
+            stop_reason=response.stop_reason,
+        )
+
+        self._last_input_tokens = total_input
+        self._last_output_tokens = total_output
+        self._last_total_tokens = total_input + total_output
+        self._last_model_used = response.model
+        return combined
 
     async def write_manuscript(
         self,
@@ -438,6 +521,15 @@ ACCOUNTABILITY: The above is YOUR response to reviewers. You MUST implement ever
 Reviewers will verify each promise. Any unimplemented commitment will be flagged as a serious issue.
 """
 
+        length_constraint = ""
+        if article_length == "short":
+            length_constraint = (
+                "5. Length constraint:\n"
+                "   - Keep the manuscript concise, under 3,000 words\n"
+                "   - Do not expand sections unnecessarily\n"
+                "   - Prioritize quality and depth over breadth\n"
+            )
+
         prompt = f"""REVISION ROUND {round_number}
 
 You are revising a research manuscript based on specialist peer reviews.
@@ -480,12 +572,7 @@ REVISION INSTRUCTIONS:
    - Keep strengths identified by reviewers
    - Maintain clear structure
    - Retain good examples and data
-{"" if article_length != "short" else """
-5. Length constraint:
-   - Keep the manuscript concise, under 3,000 words
-   - Do not expand sections unnecessarily
-   - Prioritize quality and depth over breadth
-"""}
+{length_constraint}
 Output the complete revised manuscript in markdown format.
 Focus on substantive improvements that address reviewer concerns."""
 

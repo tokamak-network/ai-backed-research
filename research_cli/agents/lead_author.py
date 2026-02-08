@@ -2,8 +2,7 @@
 
 import json
 from typing import List, Dict, Optional
-from ..llm import ClaudeLLM
-from ..config import get_config
+from ..model_config import create_llm_for_role
 from ..models.collaborative_research import (
     CollaborativeResearchNotes,
     Finding,
@@ -34,25 +33,19 @@ class LeadAuthorAgent:
         self,
         expertise: str,
         focus_areas: List[str],
-        model: str = "claude-opus-4.5"
+        role: str = "lead_author"
     ):
         """Initialize lead author agent.
 
         Args:
             expertise: Lead's area of expertise
             focus_areas: Specific focus areas
-            model: Claude model to use
+            role: Role name for model configuration lookup
         """
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
         self.expertise = expertise
         self.focus_areas = focus_areas
-        self.model = model
 
     async def create_initial_research_notes(
         self,

@@ -1,8 +1,7 @@
 """Desk editor agent for initial manuscript screening (desk reject)."""
 
 import json
-from ..llm import ClaudeLLM
-from ..config import get_config
+from ..model_config import create_llm_for_role
 
 
 class DeskEditorAgent:
@@ -13,20 +12,14 @@ class DeskEditorAgent:
     peer review. Uses a cheap, fast model (Haiku) with a short prompt.
     """
 
-    def __init__(self, model: str = "claude-sonnet-4.5"):
+    def __init__(self, role: str = "desk_editor"):
         """Initialize desk editor agent.
 
         Args:
-            model: Claude model to use for screening
+            role: Role name for model config lookup
         """
-        config = get_config()
-        llm_config = config.get_llm_config("anthropic", model)
-        self.llm = ClaudeLLM(
-            api_key=llm_config.api_key,
-            model=llm_config.model,
-            base_url=llm_config.base_url
-        )
-        self.model = model
+        self.llm = create_llm_for_role(role)
+        self.model = self.llm.model
 
     async def screen(self, manuscript: str, topic: str) -> dict:
         """Screen a manuscript for obvious fatal flaws.

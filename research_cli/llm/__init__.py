@@ -2,8 +2,12 @@
 
 from .base import BaseLLM, LLMResponse
 from .claude import ClaudeLLM
-from .gemini import GeminiLLM
 from .openai import OpenAILLM
+
+try:
+    from .gemini import GeminiLLM
+except ImportError:
+    GeminiLLM = None
 
 __all__ = [
     "BaseLLM",
