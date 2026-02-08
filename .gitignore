@@ -41,6 +41,9 @@ results/*/
 # Logs
 *.log
 
+# Database
+data/
+
 # Dynamic API keys
 keys.json
 
