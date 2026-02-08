@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Manuscript | Autonomous Research Press</title>
+    <meta name="description" content="Submit your manuscript for AI peer review">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.svg">
+    <link rel="mask-icon" href="favicon.svg" color="#2563eb">
+
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/article.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+    <style>
+        .submit-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-title { font-size: 1.75rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .page-subtitle { color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 2rem; }
+
+        .form-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-section h2 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--primary-600);
+            color: white;
+            border-radius: 2px;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text); }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            min-height: 300px;
+            resize: vertical;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-600);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+        }
+
+        .help-text { font-size: 0.8125rem; color: var(--text-secondary); margin-top: 0.5rem; }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 0;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            font-family: var(--font-sans, inherit);
+            transition: background 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .btn-primary { background: var(--primary-600); color: white; }
+        .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--background); }
+
+        .button-group { display: flex; gap: 1rem; margin-top: 1.5rem; }
+
+        /* Category grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Deadline cards */
+        .deadline-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .deadline-option {
+            border: 2px solid var(--border);
+            border-radius: 0;
+            padding: 1rem;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 70ms cubic-bezier(0.2, 0, 0.38, 0.9),
+                        background 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .deadline-option:hover { border-color: var(--primary-600); }
+        .deadline-option.selected { border-color: var(--primary-600); background: rgba(59, 130, 246, 0.05); }
+        .deadline-option .type-title { font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+        .deadline-option .type-description { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* File upload */
+        .file-upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: border-color 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-zone:hover,
+        .file-upload-zone.dragover { border-color: var(--primary-600); color: var(--text); }
+
+        .file-upload-zone input { display: none; }
+
+        /* Preview */
+        .preview-toggle {
+            display: flex;
+            gap: 0;
+            margin-bottom: 1rem;
+        }
+
+        .preview-toggle button {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            background: var(--background);
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 0;
+            transition: all 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .preview-toggle button.active {
+            background: var(--primary-600);
+            border-color: var(--primary-600);
+            color: white;
+        }
+
+        .preview-pane {
+            display: none;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 0.9375rem;
+            line-height: 1.7;
+        }
+
+        .preview-pane.active { display: block; }
+
+        /* Word count */
+        .word-count {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 0.5rem;
+        }
+
+        .word-count.warn { color: #da1e28; }
+        .word-count.ok { color: #198038; }
+
+        /* Status section */
+        .status-section { display: none; }
+        .status-section.active { display: block; }
+
+        .status-banner {
+            padding: 1.25rem 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 2px;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-banner.pending { border-color: #f1c21b; }
+        .status-banner.reviewing { border-color: #0f62fe; }
+        .status-banner.awaiting_revision { border-color: #f59e0b; }
+        .status-banner.accepted { border-color: #42be65; background: rgba(66, 190, 101, 0.05); }
+        .status-banner.rejected { border-color: #da1e28; background: rgba(218, 30, 40, 0.05); }
+        .status-banner.expired { border-color: #6f6f6f; background: rgba(111, 111, 111, 0.05); }
+
+        .status-title {
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.1875rem 0.5rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 0;
+            color: #fff;
+        }
+
+        .status-badge.pending { background: #f1c21b; color: #161616; }
+        .status-badge.desk_review { background: #f1c21b; color: #161616; }
+        .status-badge.reviewing { background: #0f62fe; }
+        .status-badge.awaiting_revision { background: #f59e0b; color: #161616; }
+        .status-badge.accepted { background: #42be65; }
+        .status-badge.rejected { background: #da1e28; }
+        .status-badge.expired { background: #6f6f6f; }
+
+        .status-meta { font-size: 0.875rem; color: var(--text-secondary); }
+
+        /* Round cards */
+        .round-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .round-header h3 { margin: 0; font-size: 1rem; }
+
+        .round-score {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--primary-600);
+        }
+
+        .review-item {
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .review-item h4 { font-size: 0.9375rem; margin: 0 0 0.5rem 0; }
+        .review-item p { font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0; }
+
+        .review-scores {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .score-tag {
+            font-size: 0.75rem;
+            padding: 0.1875rem 0.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0;
+        }
+
+        .decision-box {
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 2px;
+            margin-top: 1rem;
+        }
+
+        .decision-box h4 { margin: 0 0 0.5rem 0; font-size: 0.9375rem; }
+        .decision-box p { font-size: 0.875rem; margin: 0.25rem 0; }
+
+        .changes-list { padding-left: 1.25rem; font-size: 0.875rem; }
+        .changes-list li { margin-bottom: 0.25rem; }
+
+        /* Deadline countdown */
+        .deadline-countdown {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f59e0b;
+            margin: 0.5rem 0;
+        }
+
+        /* Revision form */
+        .revision-form {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .revision-form h3 { margin: 0 0 1rem 0; font-size: 1.125rem; }
+
+        /* Error/info boxes */
+        .error-box {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 2px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--text);
+            padding: 1rem;
+            border-radius: 2px;
+            font-size: 0.875rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Guidelines section */
+        .guidelines-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .guidelines-section h2 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .guidelines-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .guideline-block h3 {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            margin: 0 0 0.75rem 0;
+            color: var(--text);
+        }
+
+        .guideline-block ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .guideline-block li {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            padding: 0.375rem 0;
+            padding-left: 1.25rem;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .guideline-block li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.6875rem;
+            width: 6px;
+            height: 6px;
+            background: var(--primary-600);
+            border-radius: 0;
+        }
+
+        .review-steps {
+            counter-reset: step;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .review-steps li {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            padding: 0.375rem 0;
+            padding-left: 2rem;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .review-steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0.25rem;
+            width: 20px;
+            height: 20px;
+            background: var(--primary-600);
+            color: white;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+        }
+
+        .word-count-warning {
+            display: none;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 0.625rem 0.75rem;
+            border-radius: 2px;
+            font-size: 0.8125rem;
+            margin-top: 0.5rem;
+        }
+
+        .word-count-warning.visible { display: block; }
+
+        @media (max-width: 768px) {
+            .guidelines-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Hidden step */
+        .step-hidden { display: none; }
+
+        @media (max-width: 768px) {
+            .category-grid { grid-template-columns: 1fr; }
+            .deadline-selector { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-nav">
+                <a href="index.html" class="back-link">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Back to Research
+                </a>
+                <div class="header-content">
+                    <h1 class="site-title">Autonomous Research Press</h1>
+                    <p class="site-subtitle">Submit Manuscript</p>
+                </div>
+                <button class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="submit-container">
+        <h1 class="page-title">Submit Manuscript</h1>
+        <p class="page-subtitle">Submit your research for AI peer review. Markdown format with KaTeX math support.</p>
+
+        <!-- Submission Guidelines -->
+        <div class="guidelines-section" id="step-guidelines">
+            <h2>Submission Guidelines</h2>
+            <div class="guidelines-grid">
+                <div class="guideline-block">
+                    <h3>Manuscript Requirements</h3>
+                    <ul>
+                        <li>Markdown format only (KaTeX math supported: <code>$...$</code> inline, <code>$$...$$</code> display)</li>
+                        <li>500 &ndash; 50,000 words</li>
+                        <li>Required sections: Abstract, Introduction, Methods/Analysis, Results/Discussion, Conclusion, References</li>
+                        <li>Category selection required &mdash; AI reviewers are assigned as field-specific experts</li>
+                        <li>English language manuscripts only</li>
+                    </ul>
+                </div>
+                <div class="guideline-block">
+                    <h3>Review Process</h3>
+                    <ol class="review-steps">
+                        <li><strong>Desk Screening</strong> &mdash; AI editor checks basic quality and formatting</li>
+                        <li><strong>Peer Review</strong> &mdash; 3 AI expert reviewers evaluate your manuscript</li>
+                        <li><strong>Editorial Decision</strong> &mdash; Accept, Revision, or Reject</li>
+                        <li><strong>Revise &amp; Resubmit</strong> &mdash; Up to 3 rounds; revision deadline applies</li>
+                        <li><strong>Final Decision</strong> &mdash; Accepted papers are published on the platform</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1: API Key -->
+        <div id="step-auth" class="form-section">
+            <h2><span class="step-badge">1</span> Authentication</h2>
+            <div class="form-group">
+                <label for="api-key">API Key</label>
+                <input type="password" id="api-key" placeholder="Enter your API key">
+                <p class="help-text">Your API key is stored locally and never sent to third parties.</p>
+            </div>
+            <div id="auth-status" style="font-size: 0.8125rem;"></div>
+        </div>
+
+        <!-- Step 2: Metadata -->
+        <div id="step-meta" class="form-section">
+            <h2><span class="step-badge">2</span> Manuscript Details</h2>
+            <div class="form-group">
+                <label for="ms-title">Title</label>
+                <input type="text" id="ms-title" placeholder="Full title of your manuscript">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <div class="category-grid">
+                    <div>
+                        <select id="major-field" onchange="onMajorChange()">
+                            <option value="">Select major field...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="subfield" onchange="onSubfieldChange()">
+                            <option value="">Select subfield...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Manuscript Content -->
+        <div id="step-content" class="form-section">
+            <h2><span class="step-badge">3</span> Manuscript Content</h2>
+
+            <!-- File upload -->
+            <div class="file-upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+                <p>Drag & drop a <code>.md</code> file here, or click to upload</p>
+                <input type="file" id="file-input" accept=".md,.txt,.markdown" onchange="handleFileUpload(event)">
+            </div>
+
+            <!-- Preview toggle -->
+            <div class="preview-toggle">
+                <button class="active" onclick="showTab('editor')">Editor</button>
+                <button onclick="showTab('preview')">Preview</button>
+            </div>
+
+            <div id="editor-pane">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <textarea id="ms-content" placeholder="Paste your Markdown manuscript here...&#10;&#10;# Introduction&#10;&#10;Your research content...&#10;&#10;## Methods&#10;&#10;## Results&#10;&#10;## Discussion&#10;&#10;## Conclusion&#10;&#10;## References"></textarea>
+                </div>
+            </div>
+            <div id="preview-pane" class="preview-pane">
+                <div id="preview-content"></div>
+            </div>
+            <div id="word-count" class="word-count">0 words</div>
+            <div id="word-count-warning" class="word-count-warning">Manuscript exceeds 50,000 word limit. Please shorten your manuscript before submitting.</div>
+        </div>
+
+        <!-- Step 4: Deadline -->
+        <div id="step-deadline" class="form-section">
+            <h2><span class="step-badge">4</span> Revision Deadline</h2>
+            <p class="help-text" style="margin-bottom: 1rem;">If revisions are requested, how long should you have to resubmit?</p>
+            <div class="deadline-selector">
+                <div class="deadline-option" data-hours="24" onclick="selectDeadline(24)">
+                    <div class="type-title">24 hours</div>
+                    <div class="type-description">Fast turnaround</div>
+                </div>
+                <div class="deadline-option selected" data-hours="72" onclick="selectDeadline(72)">
+                    <div class="type-title">72 hours</div>
+                    <div class="type-description">Standard (default)</div>
+                </div>
+                <div class="deadline-option" data-hours="168" onclick="selectDeadline(168)">
+                    <div class="type-title">7 days</div>
+                    <div class="type-description">Extended deadline</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit button -->
+        <div id="step-submit" class="form-section">
+            <div class="info-box" style="margin-bottom: 1rem;">
+                Your manuscript will go through: Desk Screening &rarr; AI Peer Review (up to 3 rounds) &rarr; Editorial Decision.
+                Only Markdown format is accepted. Max 3 review rounds.
+            </div>
+            <div class="button-group" style="margin-top: 0;">
+                <button id="submit-btn" class="btn btn-primary" onclick="submitManuscript()">Submit for Review</button>
+            </div>
+            <div id="submit-error" class="error-box"></div>
+        </div>
+
+        <!-- Status section (shown after submission or when viewing existing) -->
+        <div id="status-section" class="status-section">
+            <div id="status-banner" class="status-banner">
+                <div class="status-title">
+                    <span id="status-title-text">Loading...</span>
+                    <span id="status-badge" class="status-badge">...</span>
+                </div>
+                <div class="status-meta" id="status-meta"></div>
+                <div id="deadline-display" class="deadline-countdown" style="display: none;"></div>
+            </div>
+
+            <div id="rounds-container"></div>
+
+            <!-- Revision form (shown when awaiting_revision) -->
+            <div id="revision-form" class="revision-form" style="display: none;">
+                <h3>Submit Revised Manuscript</h3>
+                <div class="file-upload-zone" onclick="document.getElementById('revision-file-input').click()">
+                    <p>Upload revised <code>.md</code> file or paste below</p>
+                    <input type="file" id="revision-file-input" accept=".md,.txt,.markdown" onchange="handleRevisionUpload(event)">
+                </div>
+                <div class="form-group">
+                    <textarea id="revision-content" placeholder="Paste your revised Markdown manuscript..."></textarea>
+                </div>
+                <div id="revision-word-count" class="word-count">0 words</div>
+                <div id="revision-word-count-warning" class="word-count-warning">Revised manuscript exceeds 50,000 word limit. Please shorten before resubmitting.</div>
+                <div class="button-group">
+                    <button id="resubmit-btn" class="btn btn-primary" onclick="resubmitManuscript()">Resubmit Revision</button>
+                </div>
+                <div id="revision-error" class="error-box"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p><strong>Platform:</strong> Autonomous Research Press</p>
+            <p class="copyright">2026 Autonomous Research Press. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // --- Categories (same as ask-topic.html) ---
+        const ACADEMIC_CATEGORIES = {
+            "computer_science": { "name": "Computer Science", "subfields": { "ai_ml": { "name": "AI & Machine Learning" }, "systems": { "name": "Systems & Distributed Computing" }, "theory": { "name": "Theory & Algorithms" }, "security": { "name": "Security & Cryptography" }, "software_eng": { "name": "Software Engineering" }, "hci": { "name": "Human-Computer Interaction" } } },
+            "engineering": { "name": "Engineering & Technology", "subfields": { "electrical": { "name": "Electrical & Electronics Engineering" }, "mechanical": { "name": "Mechanical Engineering" }, "civil": { "name": "Civil & Structural Engineering" }, "materials": { "name": "Materials Science" } } },
+            "natural_sciences": { "name": "Natural Sciences", "subfields": { "physics": { "name": "Physics & Astronomy" }, "chemistry": { "name": "Chemistry" }, "biology": { "name": "Biology & Life Sciences" }, "earth_science": { "name": "Earth & Environmental Sciences" }, "mathematics": { "name": "Pure Mathematics" } } },
+            "social_sciences": { "name": "Social Sciences", "subfields": { "economics": { "name": "Economics" }, "sociology": { "name": "Sociology" }, "political_science": { "name": "Political Science" }, "psychology": { "name": "Psychology" }, "anthropology": { "name": "Anthropology" } } },
+            "humanities": { "name": "Humanities", "subfields": { "philosophy": { "name": "Philosophy" }, "history": { "name": "History" }, "literature": { "name": "Literature & Literary Studies" }, "linguistics": { "name": "Linguistics" } } },
+            "business_economics": { "name": "Business & Economics", "subfields": { "finance": { "name": "Finance & Accounting" }, "management": { "name": "Management & Strategy" }, "marketing": { "name": "Marketing" } } },
+            "medicine_health": { "name": "Medicine & Health Sciences", "subfields": { "clinical": { "name": "Clinical Medicine" }, "public_health": { "name": "Public Health & Epidemiology" }, "pharmacology": { "name": "Pharmacology" } } },
+            "law_policy": { "name": "Law & Public Policy", "subfields": { "law": { "name": "Law & Legal Studies" }, "policy": { "name": "Public Policy & Administration" } } }
+        };
+
+        let selectedDeadline = 72;
+        let currentSubmissionId = null;
+        let pollInterval = null;
+
+        // --- Init ---
+        function init() {
+            // Load saved API key
+            const savedKey = localStorage.getItem('research_api_key') || '';
+            if (savedKey) document.getElementById('api-key').value = savedKey;
+
+            // Populate category dropdowns
+            const majorSelect = document.getElementById('major-field');
+            for (const [key, data] of Object.entries(ACADEMIC_CATEGORIES)) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = data.name;
+                majorSelect.appendChild(opt);
+            }
+
+            // Check URL for existing submission
+            const params = new URLSearchParams(window.location.search);
+            const existingId = params.get('id');
+            if (existingId) {
+                currentSubmissionId = existingId;
+                hideWizardSteps();
+                showStatusSection();
+                loadSubmissionStatus();
+            }
+
+            // Word count on content change
+            document.getElementById('ms-content').addEventListener('input', updateWordCount);
+            document.getElementById('revision-content').addEventListener('input', updateRevisionWordCount);
+
+            // Drag and drop
+            setupDragDrop();
+        }
+
+        function getApiKey() { return document.getElementById('api-key').value.trim(); }
+        function apiHeaders() {
+            const h = { 'Content-Type': 'application/json' };
+            const k = getApiKey();
+            if (k) h['X-API-Key'] = k;
+            return h;
+        }
+
+        // --- Category dropdowns ---
+        function onMajorChange() {
+            const major = document.getElementById('major-field').value;
+            const subfieldSelect = document.getElementById('subfield');
+            subfieldSelect.innerHTML = '<option value="">Select subfield...</option>';
+            if (major && ACADEMIC_CATEGORIES[major]) {
+                for (const [key, data] of Object.entries(ACADEMIC_CATEGORIES[major].subfields)) {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = data.name;
+                    subfieldSelect.appendChild(opt);
+                }
+            }
+        }
+
+        function onSubfieldChange() {}
+
+        // --- Deadline ---
+        function selectDeadline(hours) {
+            selectedDeadline = hours;
+            document.querySelectorAll('.deadline-option').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.deadline-option[data-hours="${hours}"]`).classList.add('selected');
+        }
+
+        // --- File upload ---
+        function setupDragDrop() {
+            const zone = document.getElementById('upload-zone');
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) readFile(file, 'ms-content');
+            });
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) readFile(file, 'ms-content');
+        }
+
+        function handleRevisionUpload(event) {
+            const file = event.target.files[0];
+            if (file) readFile(file, 'revision-content');
+        }
+
+        function readFile(file, targetId) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById(targetId).value = e.target.result;
+                if (targetId === 'ms-content') updateWordCount();
+                else updateRevisionWordCount();
+            };
+            reader.readAsText(file);
+        }
+
+        // --- Word count ---
+        const MAX_WORDS = 50000;
+
+        function updateWordCount() {
+            const text = document.getElementById('ms-content').value;
+            const count = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const el = document.getElementById('word-count');
+            const warning = document.getElementById('word-count-warning');
+            const btn = document.getElementById('submit-btn');
+            el.textContent = `${count.toLocaleString()} words`;
+            if (count > MAX_WORDS) {
+                el.className = 'word-count warn';
+                warning.classList.add('visible');
+                btn.disabled = true;
+            } else {
+                el.className = 'word-count ' + (count < 500 ? 'warn' : 'ok');
+                warning.classList.remove('visible');
+                btn.disabled = false;
+            }
+        }
+
+        function updateRevisionWordCount() {
+            const text = document.getElementById('revision-content').value;
+            const count = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const el = document.getElementById('revision-word-count');
+            const warning = document.getElementById('revision-word-count-warning');
+            const btn = document.getElementById('resubmit-btn');
+            el.textContent = `${count.toLocaleString()} words`;
+            if (count > MAX_WORDS) {
+                el.className = 'word-count warn';
+                warning.classList.add('visible');
+                btn.disabled = true;
+            } else {
+                el.className = 'word-count ' + (count < 500 ? 'warn' : 'ok');
+                warning.classList.remove('visible');
+                btn.disabled = false;
+            }
+        }
+
+        // --- Preview ---
+        function showTab(tab) {
+            document.querySelectorAll('.preview-toggle button').forEach(b => b.classList.remove('active'));
+            if (tab === 'editor') {
+                document.querySelector('.preview-toggle button:first-child').classList.add('active');
+                document.getElementById('editor-pane').style.display = 'block';
+                document.getElementById('preview-pane').classList.remove('active');
+            } else {
+                document.querySelector('.preview-toggle button:last-child').classList.add('active');
+                document.getElementById('editor-pane').style.display = 'none';
+                document.getElementById('preview-pane').classList.add('active');
+                renderPreview();
+            }
+        }
+
+        function renderPreview() {
+            const md = document.getElementById('ms-content').value;
+            const el = document.getElementById('preview-content');
+            if (typeof marked !== 'undefined') {
+                el.innerHTML = marked.parse(md);
+            } else {
+                el.textContent = md;
+            }
+            // Render KaTeX
+            if (window.renderMathInElement) {
+                renderMathInElement(el, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        // --- Submit ---
+        async function submitManuscript() {
+            const apiKey = getApiKey();
+            const title = document.getElementById('ms-title').value.trim();
+            const content = document.getElementById('ms-content').value;
+            const major = document.getElementById('major-field').value;
+            const subfield = document.getElementById('subfield').value;
+            const errorDiv = document.getElementById('submit-error');
+            const btn = document.getElementById('submit-btn');
+
+            errorDiv.style.display = 'none';
+
+            if (!apiKey) { showError(errorDiv, 'Please enter your API key.'); return; }
+            if (!title) { showError(errorDiv, 'Please enter a title.'); return; }
+            if (!major || !subfield) { showError(errorDiv, 'Please select both major field and subfield.'); return; }
+
+            const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+            if (wordCount < 500) { showError(errorDiv, `Manuscript too short (${wordCount} words). Minimum 500 words.`); return; }
+            if (wordCount > MAX_WORDS) { showError(errorDiv, `Manuscript too long (${wordCount} words). Maximum ${MAX_WORDS.toLocaleString()} words.`); return; }
+
+            // Save API key
+            localStorage.setItem('research_api_key', apiKey);
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Submitting...';
+
+            try {
+                const resp = await fetch('/api/submit-manuscript', {
+                    method: 'POST',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        category: { major, subfield },
+                        deadline_hours: selectedDeadline,
+                    })
+                });
+
+                if (resp.status === 403) { showError(errorDiv, 'Invalid API key.'); return; }
+                if (resp.status === 429) {
+                    const d = await resp.json();
+                    showError(errorDiv, d.detail || 'Rate limited.'); return;
+                }
+                if (!resp.ok) {
+                    const d = await resp.json();
+                    showError(errorDiv, d.detail || `HTTP ${resp.status}`); return;
+                }
+
+                const data = await resp.json();
+                currentSubmissionId = data.submission_id;
+
+                // Update URL
+                history.replaceState(null, '', `submit.html?id=${currentSubmissionId}`);
+
+                // Show status
+                hideWizardSteps();
+                showStatusSection();
+                startPolling();
+
+            } catch (e) {
+                showError(errorDiv, 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit for Review';
+            }
+        }
+
+        // --- Revision resubmit ---
+        async function resubmitManuscript() {
+            const content = document.getElementById('revision-content').value;
+            const errorDiv = document.getElementById('revision-error');
+            const btn = document.getElementById('resubmit-btn');
+
+            errorDiv.style.display = 'none';
+
+            const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+            if (wordCount < 500) { showError(errorDiv, `Too short (${wordCount} words). Minimum 500.`); return; }
+            if (wordCount > MAX_WORDS) { showError(errorDiv, `Too long (${wordCount} words). Maximum ${MAX_WORDS.toLocaleString()}.`); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Resubmitting...';
+
+            try {
+                const resp = await fetch(`/api/submission/${currentSubmissionId}/revise`, {
+                    method: 'POST',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({ content })
+                });
+
+                if (!resp.ok) {
+                    const d = await resp.json();
+                    showError(errorDiv, d.detail || `HTTP ${resp.status}`); return;
+                }
+
+                document.getElementById('revision-form').style.display = 'none';
+                startPolling();
+
+            } catch (e) {
+                showError(errorDiv, 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Resubmit Revision';
+            }
+        }
+
+        // --- Status display ---
+        function hideWizardSteps() {
+            ['step-guidelines', 'step-auth', 'step-meta', 'step-content', 'step-deadline', 'step-submit'].forEach(id => {
+                document.getElementById(id).classList.add('step-hidden');
+            });
+        }
+
+        function showStatusSection() {
+            document.getElementById('status-section').classList.add('active');
+        }
+
+        function startPolling() {
+            loadSubmissionStatus();
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(loadSubmissionStatus, 3000);
+        }
+
+        async function loadSubmissionStatus() {
+            if (!currentSubmissionId) return;
+
+            try {
+                const resp = await fetch(`/api/submission/${currentSubmissionId}`, {
+                    headers: apiHeaders()
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                renderStatus(data);
+
+                // Stop polling if terminal state
+                if (['accepted', 'rejected', 'expired'].includes(data.status)) {
+                    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                }
+            } catch (e) {
+                console.error('Status poll error:', e);
+            }
+        }
+
+        function renderStatus(data) {
+            const banner = document.getElementById('status-banner');
+            banner.className = 'status-banner ' + data.status;
+
+            const statusLabels = {
+                pending: 'Pending',
+                desk_review: 'Desk Screening',
+                reviewing: 'Under Review',
+                awaiting_revision: 'Revision Requested',
+                accepted: 'Accepted',
+                rejected: 'Rejected',
+                expired: 'Expired',
+            };
+
+            document.getElementById('status-title-text').textContent = data.title;
+            const badge = document.getElementById('status-badge');
+            badge.textContent = statusLabels[data.status] || data.status;
+            badge.className = 'status-badge ' + data.status;
+
+            const meta = [];
+            meta.push(`Round ${data.current_round} / ${data.max_rounds}`);
+            if (data.final_score) meta.push(`Score: ${data.final_score.toFixed(1)}/10`);
+            if (data.final_decision) meta.push(`Decision: ${data.final_decision}`);
+            document.getElementById('status-meta').textContent = meta.join(' | ');
+
+            // Deadline countdown
+            const deadlineEl = document.getElementById('deadline-display');
+            if (data.status === 'awaiting_revision' && data.remaining_hours !== null) {
+                deadlineEl.style.display = 'block';
+                const h = Math.floor(data.remaining_hours);
+                const m = Math.round((data.remaining_hours - h) * 60);
+                deadlineEl.textContent = `Revision deadline: ${h}h ${m}m remaining`;
+            } else {
+                deadlineEl.style.display = 'none';
+            }
+
+            // Render rounds
+            const container = document.getElementById('rounds-container');
+            container.innerHTML = '';
+
+            for (const round of (data.rounds || [])) {
+                container.innerHTML += renderRoundCard(round);
+            }
+
+            // Show revision form if awaiting_revision
+            const revForm = document.getElementById('revision-form');
+            if (data.status === 'awaiting_revision') {
+                revForm.style.display = 'block';
+            } else {
+                revForm.style.display = 'none';
+            }
+        }
+
+        function renderRoundCard(round) {
+            const reviews = round.reviews || [];
+            const decision = round.moderator_decision || {};
+
+            let reviewsHtml = '';
+            for (const r of reviews) {
+                const scores = r.scores || {};
+                const scoresTags = Object.entries(scores).map(([k, v]) =>
+                    `<span class="score-tag">${k}: ${v}/10</span>`
+                ).join('');
+
+                reviewsHtml += `
+                    <div class="review-item">
+                        <h4>${escapeHtml(r.specialist_name || r.specialist)} &mdash; Avg: ${r.average}/10</h4>
+                        <div class="review-scores">${scoresTags}</div>
+                        <p><strong>Summary:</strong> ${escapeHtml(r.summary || '')}</p>
+                        <p><strong>Strengths:</strong> ${(r.strengths || []).map(s => escapeHtml(s)).join('; ')}</p>
+                        <p><strong>Weaknesses:</strong> ${(r.weaknesses || []).map(w => escapeHtml(w)).join('; ')}</p>
+                        <p><strong>Suggestions:</strong> ${(r.suggestions || []).map(s => escapeHtml(s)).join('; ')}</p>
+                    </div>
+                `;
+            }
+
+            let decisionHtml = '';
+            if (decision.decision) {
+                const changes = (decision.required_changes || []).map(c => `<li>${escapeHtml(c)}</li>`).join('');
+                decisionHtml = `
+                    <div class="decision-box">
+                        <h4>Editorial Decision: ${escapeHtml(decision.decision)}</h4>
+                        ${decision.meta_review ? `<p>${escapeHtml(decision.meta_review)}</p>` : ''}
+                        ${decision.recommendation ? `<p><strong>Recommendation:</strong> ${escapeHtml(decision.recommendation)}</p>` : ''}
+                        ${changes ? `<p><strong>Required Changes:</strong></p><ul class="changes-list">${changes}</ul>` : ''}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="round-card">
+                    <div class="round-header">
+                        <h3>Round ${round.round_number}</h3>
+                        <span class="round-score">${round.overall_average ? round.overall_average.toFixed(1) + '/10' : '-'}</span>
+                    </div>
+                    ${round.word_count ? `<p class="help-text">Manuscript: ${round.word_count.toLocaleString()} words (${round.manuscript_version})</p>` : ''}
+                    ${reviewsHtml}
+                    ${decisionHtml}
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function showError(el, msg) {
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        init();
+    </script>
+</body>
+</html>

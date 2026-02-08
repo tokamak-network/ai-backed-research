@@ -5,10 +5,9 @@ import asyncio
 import json
 import os
 import re
-import secrets
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Callable
 
@@ -19,12 +18,14 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from research_cli.agents.team_composer import TeamComposerAgent
-from research_cli.categories import suggest_category_from_topic, get_expert_pool
+from research_cli.categories import suggest_category_from_topic, suggest_category_llm, get_expert_pool
 from research_cli.workflow.orchestrator import WorkflowOrchestrator
 from research_cli.workflow.collaborative_workflow import CollaborativeWorkflowOrchestrator
 from research_cli.models.expert import ExpertConfig
 from research_cli.models.author import AuthorRole, WriterTeam
 from research_cli.utils.citation_manager import CitationManager
+from research_cli import db as appdb
+from research_cli.model_config import get_role_config, get_reviewer_models, get_pricing, get_all_pricing, create_llm_for_role
 
 
 app = FastAPI(title="AI-Backed Research API")
@@ -72,51 +73,25 @@ if _raw_keys:
 
 ADMIN_API_KEY = os.environ.get("RESEARCH_ADMIN_KEY", "")
 
-# --- Dynamic key file management ---
-KEYS_FILE = Path("keys.json")
-
-
-def load_keys_from_file() -> list:
-    """Load dynamic keys from keys.json."""
-    if not KEYS_FILE.exists():
-        return []
-    try:
-        with open(KEYS_FILE) as f:
-            data = json.load(f)
-        return data.get("keys", [])
-    except (json.JSONDecodeError, IOError):
-        return []
-
-
-def save_keys_to_file(keys: list):
-    """Save dynamic keys to keys.json."""
-    with open(KEYS_FILE, "w") as f:
-        json.dump({"keys": keys}, f, indent=2)
-
-
-def sync_keys_from_file():
-    """Sync keys.json entries into ALLOWED_API_KEYS set."""
-    for entry in load_keys_from_file():
-        ALLOWED_API_KEYS.add(entry["key"])
-
-
-# Load dynamic keys on module init
-sync_keys_from_file()
-
 
 async def verify_api_key(request: Request) -> str:
-    """FastAPI dependency: validate X-API-Key header."""
+    """FastAPI dependency: validate X-API-Key header (env var keys + SQLite)."""
     key = request.headers.get("X-API-Key")
     if not ALLOWED_API_KEYS and not ADMIN_API_KEY:
         # No keys configured → auth disabled (dev mode)
         return key or "anonymous"
     if ADMIN_API_KEY and key == ADMIN_API_KEY:
         return key  # admin key is always valid
-    if not ALLOWED_API_KEYS:
-        return key or "anonymous"
-    if not key or key not in ALLOWED_API_KEYS:
+    if not key:
         raise HTTPException(status_code=403, detail="Invalid or missing API key")
-    return key
+    # Check env var keys
+    if key in ALLOWED_API_KEYS:
+        return key
+    # Check SQLite
+    db_key = appdb.get_api_key(key)
+    if db_key:
+        return key
+    raise HTTPException(status_code=403, detail="Invalid or missing API key")
 
 
 async def verify_admin_key(request: Request) -> str:
@@ -150,7 +125,8 @@ async def check_rate_limit(api_key: str):
 
 @app.on_event("startup")
 async def startup_event():
-    """Scan for interrupted workflows and start job workers on startup."""
+    """Initialize DB, scan for interrupted workflows, start job workers."""
+    appdb.init_db()
     await scan_interrupted_workflows()
     for i in range(MAX_CONCURRENT_WORKERS):
         asyncio.create_task(job_worker(i))
@@ -180,6 +156,7 @@ async def scan_interrupted_workflows():
 
                 # Add to workflow_status as "interrupted"
                 workflow_status[project_id] = {
+                    "topic": checkpoint.get("topic", ""),
                     "status": "interrupted",
                     "current_round": checkpoint.get("current_round", 0),
                     "total_rounds": checkpoint.get("max_rounds", 3),
@@ -279,7 +256,6 @@ class SubmitArticleRequest(BaseModel):
     content: str  # Markdown content
     author: Optional[str] = "Anonymous"
     category: Optional[CategoryInfo] = None
-    review_requested: Optional[bool] = False
 
 
 class ExpertStatus(BaseModel):
@@ -365,8 +341,8 @@ async def propose_team(request: ProposeTeamRequest, api_key: str = Depends(verif
 
         proposals = await composer.propose_team(request.topic, num_experts, additional_context)
 
-        # Suggest category based on topic
-        suggested_category = suggest_category_from_topic(request.topic)
+        # Suggest category based on topic (LLM-based, works for any language)
+        suggested_category = await suggest_category_llm(request.topic)
 
         # Estimate time based on number of experts and rounds
         # Rough estimate: 5 min draft + (num_experts * 2 min per round * 2 rounds) + 3 min revision
@@ -421,6 +397,17 @@ async def start_workflow(request: StartWorkflowRequest, api_key: str = Depends(v
     # Rate limit check
     await check_rate_limit(api_key)
 
+    # Quota check (SQLite keys only; legacy/anonymous keys skip quota)
+    if api_key not in ("anonymous", ADMIN_API_KEY):
+        db_key = appdb.get_api_key(api_key)
+        if db_key:
+            quota = appdb.check_quota(api_key)
+            if not quota["allowed"]:
+                raise HTTPException(
+                    status_code=429,
+                    detail=f"Daily quota exceeded ({quota['used']}/{quota['limit']}). Try again tomorrow."
+                )
+
     try:
         # Generate unique project ID (sanitize: lowercase, hyphens, strip control chars)
         project_id = re.sub(r'[^a-z0-9\-]', '-', request.topic.lower().replace(" ", "-"))
@@ -428,8 +415,17 @@ async def start_workflow(request: StartWorkflowRequest, api_key: str = Depends(v
         # Truncate overly long slugs, add timestamp for uniqueness
         project_id = f"{project_id[:80]}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
+        # Record usage and ownership in SQLite
+        if api_key not in ("anonymous",):
+            try:
+                appdb.record_usage(api_key, "/api/start-workflow", project_id)
+                appdb.record_ownership(project_id, api_key)
+            except Exception:
+                pass  # Non-critical
+
         # Initialize status
         workflow_status[project_id] = {
+            "topic": request.topic,
             "status": "queued",
             "current_round": 0,
             "total_rounds": request.max_rounds,
@@ -567,6 +563,7 @@ async def resume_workflow(project_id: str, api_key: str = Depends(verify_api_key
         # Reset workflow status to queued (handles both new and failed/interrupted)
         workflow_status[project_id] = {
             "project_id": project_id,
+            "topic": checkpoint.get("topic", ""),
             "status": "queued",
             "current_round": checkpoint["current_round"],
             "total_rounds": checkpoint["max_rounds"],
@@ -637,14 +634,7 @@ def add_activity_log(project_id: str, level: str, message: str, details: dict = 
 
 def calculate_cost_estimate(input_tokens: int, output_tokens: int, model: str = "claude-opus-4.5") -> dict:
     """Calculate cost estimate based on tokens and model."""
-    # Pricing per 1M tokens (as of 2026)
-    pricing = {
-        "claude-opus-4.5": {"input": 15.0, "output": 75.0},
-        "claude-sonnet-4": {"input": 3.0, "output": 15.0},
-        "claude-haiku-4": {"input": 0.8, "output": 4.0}
-    }
-
-    model_price = pricing.get(model, pricing["claude-opus-4.5"])
+    model_price = get_pricing(model)
     input_cost = (input_tokens / 1_000_000) * model_price["input"]
     output_cost = (output_tokens / 1_000_000) * model_price["output"]
 
@@ -742,19 +732,16 @@ def _generate_reviewers_from_category(category: dict, topic: str) -> List[Expert
         return []
 
     # Cross-assign reviewer models across providers for rate limit distribution
-    reviewer_models = [
-        ("anthropic", "claude-sonnet-4"),
-        ("openai", "gpt-5.2-pro"),
-        ("openai", "gpt-5.2-pro"),
-    ]
+    reviewer_model_list = get_reviewer_models()
 
     reviewers = []
-    for i, expert_id in enumerate(pool[:3]):
+    for i, expert_id in enumerate(pool):
         # Convert snake_case ID to human-readable name
         name = expert_id.replace("_expert", "").replace("_", " ").title() + " Expert"
         domain = expert_id.replace("_expert", "").replace("_", " ").title()
 
-        provider, model = reviewer_models[i % len(reviewer_models)]
+        rm = reviewer_model_list[i % len(reviewer_model_list)]
+        provider, model = rm["provider"], rm["model"]
 
         config = ExpertConfig(
             id=f"reviewer-{i+1}",
@@ -794,16 +781,18 @@ async def run_workflow_background(
 
         # Convert expert dicts to ExpertConfig objects
         # Reviewers use Sonnet for speed; writer (WriterAgent) uses Opus separately
+        reviewer_model_list = get_reviewer_models()
         expert_configs = []
         for i, exp in enumerate(experts):
+            rm = reviewer_model_list[i % len(reviewer_model_list)]
             config = ExpertConfig(
                 id=f"expert-{i+1}",
                 name=exp.get("expert_domain", f"Expert {i+1}"),
                 domain=exp.get("expert_domain", "General"),
                 focus_areas=exp.get("focus_areas", []),
                 system_prompt="",  # Will be generated by SpecialistFactory
-                provider="anthropic",
-                model="claude-sonnet-4"
+                provider=rm["provider"],
+                model=rm["model"]
             )
             expert_configs.append(config)
             add_activity_log(
@@ -1133,16 +1122,26 @@ def _build_project_summary(project_dir: Path) -> Optional[dict]:
         total_tokens += sum(rev.get("tokens", 0) for rev in rd.get("reviews", []))
         total_tokens += rd.get("moderator_decision", {}).get("tokens", 0)
 
-    # Calculate elapsed time from actual processing duration (not wall-clock)
-    # Sum all round durations from performance metrics for accurate total
-    perf_rounds = performance.get("rounds", [])
-    if perf_rounds:
-        elapsed_seconds = int(sum(r.get("review_duration", 0) + (r.get("revision_time", 0) or 0) for r in perf_rounds))
-        # Add initial draft time and team composition time
-        elapsed_seconds += int(performance.get("initial_draft_time", 0))
-        elapsed_seconds += int(performance.get("team_composition_time", 0))
-    else:
+    # Calculate elapsed time: prefer wall-clock (workflow_start → workflow_end),
+    # then total_duration, then sum of round durations as last resort
+    elapsed_seconds = 0
+    ws = performance.get("workflow_start", "")
+    we = performance.get("workflow_end", "")
+    if ws and we:
+        try:
+            start_dt_perf = datetime.fromisoformat(ws)
+            end_dt_perf = datetime.fromisoformat(we)
+            elapsed_seconds = int((end_dt_perf - start_dt_perf).total_seconds())
+        except (ValueError, TypeError):
+            pass
+    if not elapsed_seconds:
         elapsed_seconds = int(performance.get("total_duration", 0))
+    if not elapsed_seconds:
+        perf_rounds = performance.get("rounds", [])
+        if perf_rounds:
+            elapsed_seconds = int(sum(r.get("review_duration", 0) + (r.get("revision_time", 0) or 0) for r in perf_rounds))
+            elapsed_seconds += int(performance.get("initial_draft_time", 0))
+            elapsed_seconds += int(performance.get("team_composition_time", 0))
 
     # Use performance total_tokens if available (more comprehensive than round-level sum)
     perf_tokens = performance.get("total_tokens", 0)
@@ -1274,14 +1273,9 @@ Reviewers to profile:
 Return ONLY a JSON array of reviewer objects. No markdown fences, no explanation."""
 
     try:
-        import anthropic
-        client = anthropic.AsyncAnthropic()
-        response = await client.messages.create(
-            model="claude-haiku-4.5",
-            max_tokens=2000,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        result_text = response.content[0].text.strip()
+        llm = create_llm_for_role("propose_reviewers")
+        response = await llm.generate(prompt=prompt, max_tokens=2000, temperature=0.7)
+        result_text = response.content.strip()
         # Strip markdown fences if present
         if result_text.startswith("```"):
             result_text = re.sub(r'^```(?:json)?\s*', '', result_text)
@@ -1368,11 +1362,18 @@ async def delete_workflow(project_id: str, api_key: str = Depends(verify_admin_k
 
 @app.get("/api/admin/keys")
 async def list_keys(api_key: str = Depends(verify_admin_key)):
-    """List all dynamic API keys (admin only)."""
-    keys = load_keys_from_file()
-    # Mask keys: show first 8 chars only
+    """List all API keys (admin only)."""
+    keys = appdb.list_api_keys()
     return {"keys": [
-        {"key_prefix": entry["key"][:8] + "...", "label": entry.get("label", ""), "created": entry.get("created", "")}
+        {
+            "key_prefix": entry["key"][:8] + "...",
+            "label": entry.get("label", ""),
+            "created": entry.get("created_at", ""),
+            "revoked": entry.get("revoked_at"),
+            "daily_quota": entry.get("daily_quota", 10),
+            "researcher_name": entry.get("name"),
+            "researcher_email": entry.get("email"),
+        }
         for entry in keys
     ]}
 
@@ -1384,26 +1385,17 @@ class CreateKeyRequest(BaseModel):
 @app.post("/api/admin/keys")
 async def create_key(request: CreateKeyRequest, api_key: str = Depends(verify_admin_key)):
     """Generate a new API key (admin only)."""
-    new_key = secrets.token_urlsafe(24)
-    keys = load_keys_from_file()
-    keys.append({"key": new_key, "label": request.label, "created": datetime.now().isoformat()})
-    save_keys_to_file(keys)
-    ALLOWED_API_KEYS.add(new_key)
-    return {"key": new_key, "label": request.label, "message": "Key created. Copy it now — it will not be shown again."}
+    result = appdb.create_api_key_direct(label=request.label)
+    return {"key": result["key"], "label": request.label, "message": "Key created. Copy it now — it will not be shown again."}
 
 
 @app.delete("/api/admin/keys/{key_prefix}")
 async def delete_key(key_prefix: str, api_key: str = Depends(verify_admin_key)):
-    """Delete an API key by its prefix (admin only)."""
-    keys = load_keys_from_file()
-    to_remove = [entry for entry in keys if entry["key"].startswith(key_prefix)]
-    if not to_remove:
+    """Revoke an API key by its prefix (admin only)."""
+    revoked = appdb.revoke_api_key(key_prefix)
+    if not revoked:
         raise HTTPException(status_code=404, detail="Key not found")
-    for entry in to_remove:
-        ALLOWED_API_KEYS.discard(entry["key"])
-    keys = [entry for entry in keys if not entry["key"].startswith(key_prefix)]
-    save_keys_to_file(keys)
-    return {"message": "Key deleted", "deleted": len(to_remove)}
+    return {"message": "Key revoked", "deleted": revoked}
 
 
 @app.post("/api/submit-article")
@@ -1499,7 +1491,6 @@ async def submit_article(request: SubmitArticleRequest, api_key: str = Depends(v
                     <span class="meta-item"><strong>Author:</strong> {request.author}</span>
                     <span class="meta-item"><strong>Source:</strong> Direct Submission</span>
                     <span class="meta-item"><strong>Date:</strong> {datetime.now().strftime("%Y-%m-%d")}</span>
-                    {"<span class='meta-item'><strong>Review:</strong> Requested</span>" if request.review_requested else ""}
                 </div>
             </header>
             <div id="article-content"></div>
@@ -1587,7 +1578,6 @@ async def submit_article(request: SubmitArticleRequest, api_key: str = Depends(v
             "final_decision": "DIRECT_SUBMISSION",
             "source": "direct_submission",
             "author": request.author,
-            "review_requested": request.review_requested,
         }
 
         index_data["projects"].insert(0, new_entry)
@@ -1607,9 +1597,660 @@ async def submit_article(request: SubmitArticleRequest, api_key: str = Depends(v
         raise HTTPException(status_code=500, detail=f"Failed to submit article: {str(e)}")
 
 
+# --- Manuscript Submission (External Peer Review) ---
+
+class SubmitManuscriptRequest(BaseModel):
+    title: str
+    content: str  # Markdown
+    category: CategoryInfo
+    deadline_hours: Optional[int] = 72
+
+
+class ReviseManuscriptRequest(BaseModel):
+    content: str  # Revised Markdown
+
+
+def _check_expired_submission(sub: dict) -> dict:
+    """Check if an awaiting_revision submission is past its deadline; expire it if so."""
+    if sub["status"] == "awaiting_revision" and sub.get("revision_deadline"):
+        try:
+            deadline = datetime.fromisoformat(sub["revision_deadline"])
+            now = datetime.now(timezone.utc)
+            if now > deadline:
+                appdb.update_submission_status(
+                    sub["id"], "expired",
+                    final_decision="EXPIRED",
+                )
+                sub["status"] = "expired"
+                sub["final_decision"] = "EXPIRED"
+        except (ValueError, TypeError):
+            pass
+    return sub
+
+
+@app.post("/api/submit-manuscript")
+async def submit_manuscript(request: SubmitManuscriptRequest, api_key: str = Depends(verify_api_key)):
+    """Submit a manuscript for AI peer review."""
+    # Rate limit
+    await check_rate_limit(api_key)
+
+    # Validate content
+    word_count = len(request.content.split())
+    if word_count < 500:
+        raise HTTPException(status_code=400, detail=f"Manuscript too short ({word_count} words). Minimum 500 words required.")
+    if word_count > 50000:
+        raise HTTPException(status_code=400, detail=f"Manuscript too long ({word_count} words). Maximum 50,000 words.")
+    if not request.title or not request.title.strip():
+        raise HTTPException(status_code=400, detail="Title is required.")
+    if not request.category or not request.category.major or not request.category.subfield:
+        raise HTTPException(status_code=400, detail="Category (major + subfield) is required.")
+
+    # Get researcher_id from api_key
+    db_key = appdb.get_api_key(api_key)
+    researcher_id = db_key["researcher_id"] if db_key else None
+
+    # Validate deadline_hours
+    deadline_hours = request.deadline_hours or 72
+    if deadline_hours < 1 or deadline_hours > 336:  # max 14 days
+        deadline_hours = 72
+
+    # Create DB record
+    sub = appdb.create_submission(
+        researcher_id=researcher_id,
+        api_key=api_key,
+        title=request.title,
+        category_major=request.category.major,
+        category_subfield=request.category.subfield,
+        deadline_hours=deadline_hours,
+    )
+    submission_id = sub["id"]
+
+    # Save manuscript file
+    sub_dir = Path(f"results/submissions/{submission_id}")
+    sub_dir.mkdir(parents=True, exist_ok=True)
+    (sub_dir / "manuscript_v1.md").write_text(request.content, encoding="utf-8")
+
+    # Record usage
+    if api_key not in ("anonymous",):
+        try:
+            appdb.record_usage(api_key, "/api/submit-manuscript", submission_id)
+        except Exception:
+            pass
+
+    # Enqueue background review job
+    await job_queue.put({
+        "_fn": run_submission_review_background,
+        "project_id": f"sub-{submission_id}",
+        "submission_id": submission_id,
+        "round_number": 1,
+        "is_first_round": True,
+    })
+
+    return {
+        "submission_id": submission_id,
+        "status": "pending",
+        "message": "Manuscript submitted. Review will begin shortly.",
+    }
+
+
+@app.get("/api/submission/{submission_id}")
+async def get_submission(submission_id: str, api_key: str = Depends(verify_api_key)):
+    """Get submission details (owner only)."""
+    sub = appdb.get_submission(submission_id)
+    if not sub:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    # Ownership check
+    if sub["api_key"] != api_key and api_key != ADMIN_API_KEY:
+        # Dev mode: no admin key configured → allow all
+        if ADMIN_API_KEY:
+            raise HTTPException(status_code=403, detail="Not authorized to view this submission")
+
+    # Check expiration
+    sub = _check_expired_submission(sub)
+
+    # Calculate remaining hours for awaiting_revision
+    remaining_hours = None
+    if sub["status"] == "awaiting_revision" and sub.get("revision_deadline"):
+        try:
+            deadline = datetime.fromisoformat(sub["revision_deadline"])
+            now = datetime.now(timezone.utc)
+            remaining = (deadline - now).total_seconds() / 3600
+            remaining_hours = max(0, round(remaining, 1))
+        except (ValueError, TypeError):
+            pass
+
+    return {
+        "id": sub["id"],
+        "title": sub["title"],
+        "status": sub["status"],
+        "current_round": sub["current_round"],
+        "max_rounds": sub["max_rounds"],
+        "category_major": sub["category_major"],
+        "category_subfield": sub["category_subfield"],
+        "final_decision": sub.get("final_decision"),
+        "final_score": sub.get("final_score"),
+        "revision_deadline": sub.get("revision_deadline"),
+        "remaining_hours": remaining_hours,
+        "deadline_hours": sub.get("deadline_hours", 72),
+        "created_at": sub["created_at"],
+        "updated_at": sub["updated_at"],
+        "rounds": [
+            {
+                "round_number": rd["round_number"],
+                "manuscript_version": rd["manuscript_version"],
+                "word_count": rd.get("word_count"),
+                "reviews": rd.get("reviews_json", []),
+                "overall_average": rd.get("overall_average"),
+                "moderator_decision": rd.get("moderator_decision_json"),
+                "started_at": rd.get("started_at"),
+                "completed_at": rd.get("completed_at"),
+            }
+            for rd in sub.get("rounds", [])
+        ],
+    }
+
+
+@app.post("/api/submission/{submission_id}/revise")
+async def revise_submission(submission_id: str, request: ReviseManuscriptRequest, api_key: str = Depends(verify_api_key)):
+    """Submit a revised manuscript for the next review round."""
+    await check_rate_limit(api_key)
+
+    sub = appdb.get_submission(submission_id)
+    if not sub:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    # Ownership check
+    if sub["api_key"] != api_key and api_key != ADMIN_API_KEY:
+        if ADMIN_API_KEY:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+    # Check expiration first
+    sub = _check_expired_submission(sub)
+
+    if sub["status"] != "awaiting_revision":
+        raise HTTPException(status_code=400, detail=f"Cannot revise: submission status is '{sub['status']}', expected 'awaiting_revision'")
+
+    # Validate content
+    word_count = len(request.content.split())
+    if word_count < 500:
+        raise HTTPException(status_code=400, detail=f"Revised manuscript too short ({word_count} words).")
+    if word_count > 50000:
+        raise HTTPException(status_code=400, detail=f"Revised manuscript too long ({word_count} words). Maximum 50,000 words.")
+
+    next_round = sub["current_round"] + 1
+    if next_round > sub["max_rounds"]:
+        raise HTTPException(status_code=400, detail="Maximum review rounds reached.")
+
+    # Save revised manuscript
+    sub_dir = Path(f"results/submissions/{submission_id}")
+    sub_dir.mkdir(parents=True, exist_ok=True)
+    (sub_dir / f"manuscript_v{next_round}.md").write_text(request.content, encoding="utf-8")
+
+    # Update status
+    appdb.update_submission_status(submission_id, "reviewing", current_round=next_round)
+
+    # Enqueue review
+    await job_queue.put({
+        "_fn": run_submission_review_background,
+        "project_id": f"sub-{submission_id}-r{next_round}",
+        "submission_id": submission_id,
+        "round_number": next_round,
+        "is_first_round": False,
+    })
+
+    return {
+        "submission_id": submission_id,
+        "status": "reviewing",
+        "round": next_round,
+        "message": f"Revised manuscript submitted for round {next_round} review.",
+    }
+
+
+@app.get("/api/my-submissions")
+async def get_my_submissions(api_key: str = Depends(verify_api_key)):
+    """Get all submissions for the authenticated user."""
+    # Expire overdue first
+    appdb.expire_overdue_submissions()
+
+    subs = appdb.get_submissions_by_key(api_key)
+
+    results = []
+    for s in subs:
+        remaining_hours = None
+        if s["status"] == "awaiting_revision" and s.get("revision_deadline"):
+            try:
+                deadline = datetime.fromisoformat(s["revision_deadline"])
+                now = datetime.now(timezone.utc)
+                remaining = (deadline - now).total_seconds() / 3600
+                remaining_hours = max(0, round(remaining, 1))
+            except (ValueError, TypeError):
+                pass
+
+        results.append({
+            "id": s["id"],
+            "title": s["title"],
+            "status": s["status"],
+            "current_round": s["current_round"],
+            "max_rounds": s["max_rounds"],
+            "final_decision": s.get("final_decision"),
+            "final_score": s.get("final_score"),
+            "remaining_hours": remaining_hours,
+            "created_at": s["created_at"],
+            "updated_at": s["updated_at"],
+        })
+
+    return {"submissions": results}
+
+
+async def run_submission_review_background(
+    project_id: str,
+    submission_id: str,
+    round_number: int,
+    is_first_round: bool = False,
+):
+    """Run AI peer review for an externally submitted manuscript."""
+    from research_cli.agents.desk_editor import DeskEditorAgent
+    from research_cli.agents.moderator import ModeratorAgent
+    from research_cli.agents.specialist_factory import SpecialistFactory
+    from research_cli.workflow.orchestrator import generate_review
+    from research_cli.performance import PerformanceTracker
+
+    try:
+        sub = appdb.get_submission(submission_id)
+        if not sub:
+            return
+
+        # Load manuscript
+        sub_dir = Path(f"results/submissions/{submission_id}")
+        manuscript_file = sub_dir / f"manuscript_v{round_number}.md"
+        if not manuscript_file.exists():
+            appdb.update_submission_status(submission_id, "rejected", final_decision="ERROR")
+            return
+        manuscript = manuscript_file.read_text(encoding="utf-8")
+        word_count = len(manuscript.split())
+
+        # Update status
+        appdb.update_submission_status(submission_id, "desk_review" if is_first_round else "reviewing", current_round=round_number)
+
+        # Round 1: desk screening
+        if is_first_round:
+            desk_editor = DeskEditorAgent()
+            desk_result = await desk_editor.screen(manuscript, sub["title"])
+
+            if desk_result["decision"] == "DESK_REJECT":
+                appdb.update_submission_status(
+                    submission_id, "rejected",
+                    final_decision="DESK_REJECT",
+                )
+                # Save desk reject as round data
+                appdb.save_submission_round(
+                    submission_id, round_number,
+                    reviews=[],
+                    overall_average=0,
+                    moderator_decision={"decision": "DESK_REJECT", "reason": desk_result["reason"]},
+                    word_count=word_count,
+                )
+                # Save to file
+                with open(sub_dir / "round_1_decision.json", "w") as f:
+                    json.dump({"decision": "DESK_REJECT", "reason": desk_result["reason"]}, f, indent=2)
+                return
+
+            appdb.update_submission_status(submission_id, "reviewing", current_round=round_number)
+
+        # Generate reviewers from category
+        category = {"major": sub["category_major"], "subfield": sub["category_subfield"]}
+        reviewer_configs = _generate_reviewers_from_category(category, sub["title"])
+
+        if not reviewer_configs:
+            # Fallback: generate generic reviewers
+            reviewer_model_list = get_reviewer_models()
+            reviewer_configs = [
+                ExpertConfig(
+                    id=f"reviewer-{i+1}",
+                    name=f"Reviewer {i+1}",
+                    domain="General Research",
+                    focus_areas=[],
+                    system_prompt="",
+                    provider=reviewer_model_list[i % len(reviewer_model_list)]["provider"],
+                    model=reviewer_model_list[i % len(reviewer_model_list)]["model"],
+                )
+                for i in range(3)
+            ]
+
+        # Build specialists dict for review
+        specialists = {}
+        for rc in reviewer_configs:
+            spec = SpecialistFactory.create_specialist(rc, sub["title"])
+            specialists[rc.id] = spec
+
+        # Get previous round data for context
+        previous_reviews = None
+        previous_manuscript = None
+        if round_number > 1 and sub.get("rounds"):
+            prev_round = next(
+                (r for r in sub["rounds"] if r["round_number"] == round_number - 1),
+                None
+            )
+            if prev_round:
+                previous_reviews = prev_round.get("reviews_json", [])
+                prev_ms_file = sub_dir / f"manuscript_v{round_number - 1}.md"
+                if prev_ms_file.exists():
+                    previous_manuscript = prev_ms_file.read_text(encoding="utf-8")
+
+        # Run reviews concurrently
+        tracker = PerformanceTracker()
+        tracker.start_round(round_number)
+
+        review_tasks = [
+            generate_review(
+                specialist_id=sid,
+                specialist=spec,
+                manuscript=manuscript,
+                round_number=round_number,
+                tracker=tracker,
+                previous_reviews=previous_reviews,
+                previous_manuscript=previous_manuscript,
+            )
+            for sid, spec in specialists.items()
+        ]
+
+        reviews = []
+        for coro in asyncio.as_completed(review_tasks):
+            review = await coro
+            reviews.append(review)
+
+        overall_average = sum(r["average"] for r in reviews) / len(reviews) if reviews else 0
+
+        # Get previous rounds for moderator trajectory analysis
+        previous_rounds = []
+        if sub.get("rounds"):
+            for rd in sub["rounds"]:
+                previous_rounds.append({
+                    "round": rd["round_number"],
+                    "overall_average": rd.get("overall_average", 0),
+                    "moderator_decision": rd.get("moderator_decision_json", {}),
+                })
+
+        # Moderator decision
+        moderator = ModeratorAgent()
+        decision = await moderator.make_decision(
+            manuscript=manuscript,
+            reviews=reviews,
+            round_number=round_number,
+            max_rounds=sub["max_rounds"],
+            previous_rounds=previous_rounds if previous_rounds else None,
+        )
+
+        # Save round data to DB
+        appdb.save_submission_round(
+            submission_id, round_number,
+            reviews=reviews,
+            overall_average=overall_average,
+            moderator_decision=decision,
+            word_count=word_count,
+        )
+
+        # Save to files
+        with open(sub_dir / f"round_{round_number}_reviews.json", "w") as f:
+            json.dump(reviews, f, indent=2)
+        with open(sub_dir / f"round_{round_number}_decision.json", "w") as f:
+            json.dump(decision, f, indent=2)
+
+        # Process decision
+        mod_decision = decision.get("decision", "REJECT").upper()
+
+        if mod_decision == "ACCEPT":
+            appdb.update_submission_status(
+                submission_id, "accepted",
+                final_decision="ACCEPT",
+                final_score=overall_average,
+            )
+            # Save completion
+            with open(sub_dir / "submission_complete.json", "w") as f:
+                json.dump({
+                    "submission_id": submission_id,
+                    "decision": "ACCEPT",
+                    "final_score": overall_average,
+                    "total_rounds": round_number,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }, f, indent=2)
+
+        elif mod_decision == "REJECT":
+            appdb.update_submission_status(
+                submission_id, "rejected",
+                final_decision="REJECT",
+                final_score=overall_average,
+            )
+
+        elif mod_decision in ("MAJOR_REVISION", "MINOR_REVISION"):
+            if round_number >= sub["max_rounds"]:
+                # Max rounds reached → reject
+                appdb.update_submission_status(
+                    submission_id, "rejected",
+                    final_decision="REJECT",
+                    final_score=overall_average,
+                )
+            else:
+                # Set revision deadline
+                deadline_hours = sub.get("deadline_hours", 72)
+                deadline = datetime.now(timezone.utc) + timedelta(hours=deadline_hours)
+                appdb.update_submission_status(
+                    submission_id, "awaiting_revision",
+                    revision_deadline=deadline.isoformat(),
+                )
+        else:
+            # Unknown decision, treat as reject
+            appdb.update_submission_status(
+                submission_id, "rejected",
+                final_decision=mod_decision,
+                final_score=overall_average,
+            )
+
+    except Exception as e:
+        print(f"  Submission review error ({submission_id}): {e}")
+        try:
+            appdb.update_submission_status(submission_id, "rejected", final_decision="ERROR")
+        except Exception:
+            pass
+
+
+# --- Researcher Application System ---
+
+# Rate limit store for application submissions (IP-based)
+apply_rate_limit: Dict[str, list] = {}  # ip → [timestamp, ...]
+
+APPLY_RATE_LIMIT_PER_HOUR = 3
+
+
+class ApplyRequest(BaseModel):
+    name: str
+    email: str
+    affiliation: str = ""
+    research_interests: List[str] = []
+    sample_works: List[dict] = []  # [{type, url, description}]
+    bio: str = ""
+
+
+class ApplicationStatusRequest(BaseModel):
+    email: str
+
+
+class ApproveRequest(BaseModel):
+    admin_notes: str = ""
+
+
+class RejectRequest(BaseModel):
+    reason: str = ""
+
+
+@app.post("/api/apply")
+async def apply_for_key(request: Request, body: ApplyRequest):
+    """Submit a researcher application (public, rate-limited by IP)."""
+    # IP rate limit: max 3 per hour
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    timestamps = apply_rate_limit.get(client_ip, [])
+    timestamps = [t for t in timestamps if now - t < 3600]
+    if len(timestamps) >= APPLY_RATE_LIMIT_PER_HOUR:
+        raise HTTPException(status_code=429, detail="Too many applications. Try again later.")
+    timestamps.append(now)
+    apply_rate_limit[client_ip] = timestamps
+
+    # Validate required fields
+    if not body.name or not body.name.strip():
+        raise HTTPException(status_code=400, detail="Name is required")
+    if not body.email or not body.email.strip():
+        raise HTTPException(status_code=400, detail="Email is required")
+    # Basic email format check
+    if "@" not in body.email or "." not in body.email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
+    # Validate sample work URLs
+    for work in body.sample_works:
+        url = work.get("url", "")
+        if url and not url.startswith(("http://", "https://")):
+            raise HTTPException(status_code=400, detail=f"Invalid URL: {url}. Only HTTP/HTTPS allowed.")
+
+    try:
+        result = appdb.create_researcher(
+            email=body.email,
+            name=body.name,
+            affiliation=body.affiliation,
+            research_interests=body.research_interests,
+            sample_works=body.sample_works,
+            bio=body.bio,
+        )
+        return {
+            "status": "submitted",
+            "message": "Application submitted successfully. You will be notified once reviewed.",
+            "email": result["email"],
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+@app.get("/api/application-status/{email}")
+async def get_application_status(email: str):
+    """Check application status by email (public)."""
+    result = appdb.get_application_status_by_email(email)
+    if not result:
+        raise HTTPException(status_code=404, detail="No application found for this email")
+    return result
+
+
+@app.get("/api/my-profile")
+async def get_my_profile(api_key: str = Depends(verify_api_key)):
+    """Get profile for the authenticated researcher."""
+    db_key = appdb.get_api_key(api_key)
+    if not db_key or not db_key.get("researcher_id"):
+        raise HTTPException(status_code=404, detail="No researcher profile linked to this key")
+    researcher = appdb.get_researcher(db_key["researcher_id"])
+    if not researcher:
+        raise HTTPException(status_code=404, detail="Researcher not found")
+    # Remove internal fields
+    researcher.pop("id", None)
+    return researcher
+
+
+@app.get("/api/my-workflows")
+async def get_my_workflows(api_key: str = Depends(verify_api_key)):
+    """Get workflows owned by the authenticated researcher."""
+    db_key = appdb.get_api_key(api_key)
+    if db_key and db_key.get("researcher_id"):
+        workflows = appdb.get_researcher_workflows(db_key["researcher_id"])
+    else:
+        workflows = appdb.get_key_workflows(api_key)
+
+    # Enrich with project summaries
+    enriched = []
+    for wf in workflows:
+        project_dir = Path("results") / wf["project_id"]
+        summary = _build_project_summary(project_dir) if project_dir.exists() else None
+        enriched.append({
+            "project_id": wf["project_id"],
+            "created_at": wf["created_at"],
+            "summary": summary,
+        })
+    return {"workflows": enriched}
+
+
+@app.get("/api/my-quota")
+async def get_my_quota(api_key: str = Depends(verify_api_key)):
+    """Get remaining daily quota for the authenticated key."""
+    quota = appdb.check_quota(api_key)
+    return quota
+
+
+# --- Admin Application Management ---
+
+@app.get("/api/admin/applications")
+async def list_applications(status: str = "pending", api_key: str = Depends(verify_admin_key)):
+    """List applications (admin only)."""
+    if status == "all":
+        apps = appdb.list_all_applications()
+    else:
+        apps = appdb.list_pending_applications()
+    return {"applications": apps}
+
+
+@app.get("/api/admin/applications/{application_id}")
+async def get_application_detail(application_id: str, api_key: str = Depends(verify_admin_key)):
+    """Get full application details (admin only)."""
+    app_data = appdb.get_application(application_id)
+    if not app_data:
+        raise HTTPException(status_code=404, detail="Application not found")
+    return app_data
+
+
+@app.post("/api/admin/applications/{application_id}/approve")
+async def approve_application(application_id: str, body: ApproveRequest, api_key: str = Depends(verify_admin_key)):
+    """Approve an application and generate API key (admin only)."""
+    try:
+        result = appdb.approve_application(application_id, reviewed_by="admin", admin_notes=body.admin_notes)
+        return {
+            "status": "approved",
+            "api_key": result["api_key"],
+            "message": "Application approved. API key generated.",
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/admin/applications/{application_id}/reject")
+async def reject_application(application_id: str, body: RejectRequest, api_key: str = Depends(verify_admin_key)):
+    """Reject an application (admin only)."""
+    try:
+        appdb.reject_application(application_id, reason=body.reason, reviewed_by="admin")
+        return {"status": "rejected", "message": "Application rejected."}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.put("/api/admin/keys/{key_prefix}/quota")
+async def update_key_quota(key_prefix: str, daily_quota: int, api_key: str = Depends(verify_admin_key)):
+    """Update daily quota for a key (admin only)."""
+    if daily_quota < 0 or daily_quota > 1000:
+        raise HTTPException(status_code=400, detail="Quota must be between 0 and 1000")
+    updated = appdb.update_key_quota(key_prefix, daily_quota)
+    if not updated:
+        raise HTTPException(status_code=404, detail="No active key found with this prefix")
+    return {"message": f"Quota updated to {daily_quota}", "updated": updated}
+
+
+@app.post("/api/admin/keys/{key_prefix}/revoke")
+async def revoke_key(key_prefix: str, api_key: str = Depends(verify_admin_key)):
+    """Revoke an API key (admin only)."""
+    revoked = appdb.revoke_api_key(key_prefix)
+    if not revoked:
+        raise HTTPException(status_code=404, detail="No active key found with this prefix")
+    return {"message": "Key revoked", "revoked": revoked}
+
+
 # Serve web/ directory as static files (must be last — catches all unmatched routes)
 app.mount("/", StaticFiles(directory="web", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
