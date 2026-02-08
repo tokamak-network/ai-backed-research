@@ -13,7 +13,7 @@ class GeminiLLM(BaseLLM):
     Uses the official Google Generative AI Python SDK.
     """
 
-    def __init__(self, api_key: str, model: str = "gemini-2.0-flash-exp"):
+    def __init__(self, api_key: str, model: str = "gemini-3-flash"):
         """Initialize Gemini client.
 
         Args:

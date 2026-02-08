@@ -97,7 +97,7 @@ class Config:
             os.getenv("DEFAULT_WRITER_MODEL", "claude-opus-4.5")
         )
         self.default_reviewer_model = self._normalize_model_name(
-            os.getenv("DEFAULT_REVIEWER_MODEL", "claude-sonnet-4")
+            os.getenv("DEFAULT_REVIEWER_MODEL", "claude-sonnet-4.5")
         )
 
         # Workflow settings
@@ -140,8 +140,8 @@ class Config:
         if not model:
             model_defaults = {
                 "anthropic": self.default_reviewer_model,
-                "openai": "gpt-4-turbo-preview",
-                "google": "gemini-2.0-flash-exp",
+                "openai": "gpt-5.2-pro",
+                "google": "gemini-3-flash",
             }
             model = model_defaults.get(provider, "unknown")
 

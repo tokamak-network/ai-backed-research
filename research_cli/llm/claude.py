@@ -13,7 +13,7 @@ class ClaudeLLM(BaseLLM):
     Uses the official Anthropic Python SDK.
     """
 
-    def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514", base_url: Optional[str] = None):
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4.5", base_url: Optional[str] = None):
         """Initialize Claude client.
 
         Args:

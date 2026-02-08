@@ -579,7 +579,7 @@ async def _run_collaborative_workflow(
             focus_areas=[],
             system_prompt="",  # SpecialistFactory will auto-generate
             provider="anthropic",
-            model="claude-sonnet-4"
+            model="claude-sonnet-4.5"
         ))
 
     console.print(f"  ✓ {len(reviewer_configs)} external reviewers assigned from {get_category_name(major_field, subfield)}")

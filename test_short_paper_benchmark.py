@@ -85,7 +85,7 @@ async def main():
             focus_areas=[],
             system_prompt="",
             provider="anthropic",
-            model="claude-sonnet-4",
+            model="claude-sonnet-4.5",
         ))
 
     print(f"Lead: {lead_author.name} ({lead_author.model})")

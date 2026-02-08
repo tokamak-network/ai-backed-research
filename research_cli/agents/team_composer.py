@@ -136,7 +136,7 @@ Respond in the following JSON format:
         "<specific aspect 2>",
         "<specific aspect 3>"
       ],
-      "suggested_model": "claude-sonnet-4",
+      "suggested_model": "claude-sonnet-4.5",
       "suggested_provider": "anthropic"
     }
   ]
@@ -147,7 +147,7 @@ REQUIREMENTS:
 - Each expert should have a DISTINCT domain (no overlap)
 - Focus areas should be SPECIFIC to this research topic
 - Rationale should explain why this expertise is needed for THIS topic
-- Use claude-sonnet-4 for reviewers (fast, high-quality reviews)
+- Use claude-sonnet-4.5 for reviewers (fast, high-quality reviews)
 - Ensure comprehensive coverage of the topic's key technical dimensions
 
 Focus on technical expertise most relevant to the research topic."""

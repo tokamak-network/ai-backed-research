@@ -13,7 +13,7 @@ class OpenAILLM(BaseLLM):
     Uses the official OpenAI Python SDK.
     """
 
-    def __init__(self, api_key: str, model: str = "gpt-4-turbo-preview", base_url: Optional[str] = None):
+    def __init__(self, api_key: str, model: str = "gpt-5.2-pro", base_url: Optional[str] = None):
         """Initialize OpenAI client.
 
         Args:
