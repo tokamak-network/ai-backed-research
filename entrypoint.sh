@@ -10,12 +10,23 @@ if [ -d "/app/persistent" ]; then
   mkdir -p /app/persistent/web-data
   mkdir -p /app/persistent/web-articles
 
-  # Seed: merge bundled data into volume (no-clobber: existing files are never overwritten)
+  # Seed: merge bundled data into volume (copy new directories only)
   if [ -d "/app/seed-data" ]; then
-    echo "[seed] Merging seed data into volume (no-clobber)..."
+    echo "[seed] Merging seed data into volume..."
+    # Copy each subdirectory individually if it doesn't exist
+    for dir in /app/seed-data/results/*; do
+      if [ -d "$dir" ]; then
+        dirname=$(basename "$dir")
+        if [ ! -d "/app/persistent/results/$dirname" ]; then
+          echo "[seed] Adding new report: $dirname"
+          cp -r "$dir" "/app/persistent/results/$dirname"
+        fi
+      fi
+    done
+    # Copy web-articles and web-data (no-clobber for files)
     cp -rn /app/seed-data/web-articles/* /app/persistent/web-articles/ 2>/dev/null || true
     cp -rn /app/seed-data/web-data/* /app/persistent/web-data/ 2>/dev/null || true
-    cp -rn /app/seed-data/results/* /app/persistent/results/ 2>/dev/null || true
+    echo "[seed] Seed data merged successfully"
     # DB: only seed if missing (never overwrite running database)
     if [ ! -f /app/persistent/data/research.db ]; then
       echo "[seed] Seeding initial database..."
