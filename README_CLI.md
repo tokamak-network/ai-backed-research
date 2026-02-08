@@ -73,9 +73,14 @@ cp .env.example .env
 Edit `.env` and add your API keys:
 
 ```env
-ANTHROPIC_API_KEY=your_claude_api_key_here
-OPENAI_API_KEY=your_openai_api_key_here
-GOOGLE_API_KEY=your_gemini_api_key_here
+# Shared router key (LiteLLM/OpenRouter — covers all providers)
+LLM_API_KEY=your_router_key_here
+LLM_BASE_URL=https://your-endpoint/v1
+
+# Or use provider-specific keys (override LLM_API_KEY)
+# ANTHROPIC_API_KEY=your_claude_api_key_here
+# OPENAI_API_KEY=your_openai_api_key_here
+# GOOGLE_API_KEY=your_gemini_api_key_here
 ```
 
 ### 4. Verify Setup

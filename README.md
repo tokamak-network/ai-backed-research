@@ -47,15 +47,18 @@ Publication <-- Moderator Decision <-- Peer Review <--------+
 
 | Variable | Description |
 |----------|-------------|
-| `ANTHROPIC_API_KEY` | Anthropic API key |
+| `LLM_API_KEY` | Shared LLM API key (LiteLLM/OpenRouter router key) |
+| `LLM_BASE_URL` | Shared LLM base URL (router endpoint) |
 | `RESEARCH_API_KEYS` | Comma-separated allowed API keys for users |
 | `RESEARCH_ADMIN_KEY` | Admin API key for privileged operations |
 
-### Optional
+### Optional (provider-specific overrides)
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key (for GPT models) | - |
+| `ANTHROPIC_API_KEY` | Anthropic direct API key (overrides `LLM_API_KEY`) | - |
+| `OPENAI_API_KEY` | OpenAI direct API key (overrides `LLM_API_KEY`) | - |
+| `GOOGLE_API_KEY` | Google API key | - |
 | `DEFAULT_WRITER_MODEL` | Writer model override | `claude-sonnet-4-20250514` |
 | `DEFAULT_REVIEWER_MODEL` | Reviewer model override | `claude-sonnet-4-20250514` |
 | `MAX_REVIEW_ROUNDS` | Max review iterations | `3` |
@@ -69,7 +72,8 @@ Publication <-- Moderator Decision <-- Peer Review <--------+
 pip install -r requirements.txt
 
 # Set environment variables
-export ANTHROPIC_API_KEY=your-key
+export LLM_API_KEY=your-router-key
+export LLM_BASE_URL=https://your-litellm-endpoint/v1
 export RESEARCH_API_KEYS=your-api-key
 export RESEARCH_ADMIN_KEY=your-admin-key
 
@@ -82,7 +86,8 @@ python -m uvicorn api_server:app --reload --port 8000
 ```bash
 docker build -t auto-research-press .
 docker run -p 8000:8000 \
-  -e ANTHROPIC_API_KEY=your-key \
+  -e LLM_API_KEY=your-router-key \
+  -e LLM_BASE_URL=https://your-litellm-endpoint/v1 \
   -e RESEARCH_API_KEYS=your-api-key \
   -e RESEARCH_ADMIN_KEY=your-admin-key \
   auto-research-press

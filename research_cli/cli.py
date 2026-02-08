@@ -328,8 +328,8 @@ async def _run_workflow(
 
     # Check API key
     if not config.anthropic_api_key:
-        console.print("[red]Error: ANTHROPIC_API_KEY not configured[/red]")
-        console.print("Set environment variable or create .env file")
+        console.print("[red]Error: No LLM API key configured[/red]")
+        console.print("Set LLM_API_KEY or ANTHROPIC_API_KEY environment variable (or create .env file)")
         return 1
 
     console.print(Panel.fit(

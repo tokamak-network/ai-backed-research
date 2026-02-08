@@ -59,16 +59,22 @@ for ca in self.writer_team.coauthors:
 1. **Writer timeout fallback**: Opus → Sonnet after 180s timeout or connection error (`writer.py:_call_llm_once`)
 2. **Writer auto-continuation**: On `stop_reason="max_tokens"`, retries up to 3x stitching output (`writer.py:_generate_with_fallback`)
 3. **Propose-reviewers fallback**: If AI call fails, returns static default reviewer profiles (`api_server.py`)
-4. **OpenRouter reuse**: If `OPENAI_API_KEY` missing, reuses Anthropic key + base_url for OpenAI provider (`config.py`)
+4. **LLM_API_KEY fallback**: If provider-specific key missing, falls back to shared `LLM_API_KEY` + `LLM_BASE_URL` (`model_config.py`, `config.py`)
 
 ## Environment Variables
 
 ```bash
-ANTHROPIC_API_KEY=...                          # Required
-ANTHROPIC_BASE_URL=...                         # Optional (OpenRouter proxy)
-OPENAI_API_KEY=...                             # Optional (or falls back to Anthropic)
-OPENAI_BASE_URL=...                            # Optional (OpenRouter)
+# Shared router key (covers all providers via LiteLLM/OpenRouter)
+LLM_API_KEY=...                                # Required (shared key)
+LLM_BASE_URL=...                               # Required (router endpoint)
+
+# Provider-specific overrides (optional, take priority over LLM_API_KEY)
+ANTHROPIC_API_KEY=...                          # Optional (direct Anthropic)
+ANTHROPIC_BASE_URL=...                         # Optional (custom endpoint)
+OPENAI_API_KEY=...                             # Optional (direct OpenAI)
+OPENAI_BASE_URL=...                            # Optional (custom endpoint)
 GOOGLE_API_KEY=...                             # Optional (Gemini)
+
 DEFAULT_WRITER_MODEL=claude-opus-4-5-20251101  # Override writer model
 DEFAULT_REVIEWER_MODEL=claude-sonnet-4-20250514 # Override reviewer model
 ```

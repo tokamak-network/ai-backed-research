@@ -487,7 +487,7 @@ async def main():
     # Check API key
     config = get_config()
     if not config.anthropic_api_key:
-        console.print("[red]Error: ANTHROPIC_API_KEY not configured[/red]")
+        console.print("[red]Error: No LLM API key configured. Set LLM_API_KEY or ANTHROPIC_API_KEY.[/red]")
         return 1
 
     try:

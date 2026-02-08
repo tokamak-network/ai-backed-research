@@ -37,8 +37,8 @@ async def test_basic_setup():
         print(f"   {status} {provider}: {'configured' if configured else 'missing'}")
 
     if not validation["anthropic"]:
-        print("\n   [WARNING] Anthropic API key not found.")
-        print("   Set ANTHROPIC_API_KEY in .env file to test LLM functionality.")
+        print("\n   [WARNING] No LLM API key found.")
+        print("   Set LLM_API_KEY or ANTHROPIC_API_KEY in .env file to test LLM functionality.")
         return True  # Not a failure, just can't test LLM
 
     # Test 3: LLM provider instantiation

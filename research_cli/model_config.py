@@ -92,13 +92,12 @@ def get_role_config(role: str) -> RoleConfig:
 def _get_api_key(provider: str) -> str:
     """Get API key for a provider from environment.
 
-    Handles OpenRouter fallback: if OPENAI_API_KEY is not set but
-    ANTHROPIC_API_KEY + ANTHROPIC_BASE_URL exist, reuse them for OpenAI provider.
+    Priority: provider-specific key > LLM_API_KEY (shared/router key).
     """
     config = _load_config()
     provider_cfg = config.get("provider_config", {}).get(provider, {})
 
-    # Try primary env key
+    # Try provider-specific env key
     env_key = provider_cfg.get("env_key", "")
     api_key = os.environ.get(env_key, "") if env_key else ""
 
@@ -108,40 +107,37 @@ def _get_api_key(provider: str) -> str:
         if alt_key:
             api_key = os.environ.get(alt_key, "")
 
-    # OpenRouter fallback: reuse Anthropic key for OpenAI provider
-    if not api_key and provider == "openai":
-        anthropic_cfg = config.get("provider_config", {}).get("anthropic", {})
-        anthropic_key = os.environ.get(anthropic_cfg.get("env_key", ""), "")
-        if not anthropic_key:
-            anthropic_key = os.environ.get(anthropic_cfg.get("env_key_alt", ""), "")
-        anthropic_base = os.environ.get(anthropic_cfg.get("env_base_url", ""), "")
-        if anthropic_key and anthropic_base:
-            api_key = anthropic_key
+    # Fallback to shared LLM_API_KEY (e.g. LiteLLM/OpenRouter router key)
+    if not api_key:
+        llm_cfg = config.get("provider_config", {}).get("llm", {})
+        llm_key = llm_cfg.get("env_key", "")
+        if llm_key:
+            api_key = os.environ.get(llm_key, "")
 
     if not api_key:
         raise ValueError(
             f"No API key for provider '{provider}'. "
-            f"Set {env_key} environment variable."
+            f"Set {env_key} or LLM_API_KEY environment variable."
         )
     return api_key
 
 
 def _get_base_url(provider: str) -> Optional[str]:
-    """Get base URL for a provider from environment."""
+    """Get base URL for a provider from environment.
+
+    Priority: provider-specific base_url > LLM_BASE_URL (shared/router URL).
+    """
     config = _load_config()
     provider_cfg = config.get("provider_config", {}).get(provider, {})
     env_base_url = provider_cfg.get("env_base_url", "")
     base_url = os.environ.get(env_base_url, "") if env_base_url else ""
 
-    # OpenRouter fallback: reuse Anthropic base_url for OpenAI provider
-    if not base_url and provider == "openai":
-        anthropic_cfg = config.get("provider_config", {}).get("anthropic", {})
-        anthropic_base = os.environ.get(anthropic_cfg.get("env_base_url", ""), "")
-        anthropic_key = os.environ.get(anthropic_cfg.get("env_key", ""), "")
-        if not anthropic_key:
-            anthropic_key = os.environ.get(anthropic_cfg.get("env_key_alt", ""), "")
-        if anthropic_key and anthropic_base and not os.environ.get("OPENAI_API_KEY", ""):
-            base_url = anthropic_base
+    # Fallback to shared LLM_BASE_URL (e.g. LiteLLM/OpenRouter endpoint)
+    if not base_url:
+        llm_cfg = config.get("provider_config", {}).get("llm", {})
+        llm_base = llm_cfg.get("env_base_url", "")
+        if llm_base:
+            base_url = os.environ.get(llm_base, "")
 
     return base_url or None
 

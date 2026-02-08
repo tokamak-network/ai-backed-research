@@ -77,19 +77,20 @@ class Config:
         else:
             load_dotenv()  # Load from default .env location
 
-        # API Keys
-        self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN")
-        self.anthropic_base_url = os.getenv("ANTHROPIC_BASE_URL")
-        self.openai_api_key = os.getenv("OPENAI_API_KEY")
-        self.openai_base_url = os.getenv("OPENAI_BASE_URL")
-        self.google_api_key = os.getenv("GOOGLE_API_KEY")
+        # Shared LLM key (LiteLLM/OpenRouter router key)
+        self.llm_api_key = os.getenv("LLM_API_KEY")
+        self.llm_base_url = os.getenv("LLM_BASE_URL")
 
-        # OpenRouter fallback: if OPENAI_API_KEY not set but ANTHROPIC key + base_url exist,
-        # reuse Anthropic credentials for OpenAI provider (same OpenRouter key)
-        if not self.openai_api_key and self.anthropic_api_key and self.anthropic_base_url:
-            self.openai_api_key = self.anthropic_api_key
-            if not self.openai_base_url:
-                self.openai_base_url = self.anthropic_base_url
+        # Provider-specific keys (take priority over LLM_API_KEY)
+        self.anthropic_api_key = (
+            os.getenv("ANTHROPIC_API_KEY")
+            or os.getenv("ANTHROPIC_AUTH_TOKEN")
+            or self.llm_api_key
+        )
+        self.anthropic_base_url = os.getenv("ANTHROPIC_BASE_URL") or self.llm_base_url
+        self.openai_api_key = os.getenv("OPENAI_API_KEY") or self.llm_api_key
+        self.openai_base_url = os.getenv("OPENAI_BASE_URL") or self.llm_base_url
+        self.google_api_key = os.getenv("GOOGLE_API_KEY")
 
         # Default models
         self.default_writer_model = self._normalize_model_name(

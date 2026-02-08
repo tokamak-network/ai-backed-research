@@ -165,12 +165,17 @@ python -m research_cli.cli run "Cross-Chain Bridge Security" \
 
 ## Troubleshooting
 
-### "ANTHROPIC_API_KEY not configured"
+### "No LLM API key configured"
 Set your API key:
 ```bash
-export ANTHROPIC_API_KEY="your-key-here"
-# Or create .env file
-echo "ANTHROPIC_API_KEY=your-key-here" > .env
+# Option 1: Shared router key (LiteLLM/OpenRouter)
+export LLM_API_KEY="your-router-key"
+export LLM_BASE_URL="https://your-endpoint/v1"
+
+# Option 2: Direct provider key
+export ANTHROPIC_API_KEY="your-anthropic-key"
+
+# Or create .env file with the above variables
 ```
 
 ### Workflow takes too long
