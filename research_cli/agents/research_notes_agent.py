@@ -6,6 +6,7 @@ from pathlib import Path
 import json
 
 from ..model_config import create_llm_for_role
+from ..utils.json_repair import repair_json
 from ..models.research_notes import (
     ResearchNotebook,
     LiteratureNote,
@@ -130,19 +131,7 @@ Take research notes now. Include 3-5 relevant sources."""
         )
 
         # Parse JSON
-        content = response.content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
-
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse literature notes: {e}\n{content[:200]}")
+        data = repair_json(response.content)
 
         notes = []
         for source_data in data.get("sources", []):
@@ -309,19 +298,7 @@ Identify 3-5 key gaps."""
             max_tokens=2048
         )
 
-        content = response.content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
-
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse questions: {e}\n{content[:200]}")
+        data = repair_json(response.content)
 
         questions = []
         for q_data in data.get("questions", []):

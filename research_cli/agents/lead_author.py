@@ -1,8 +1,8 @@
 """Lead Author agent for collaborative research and writing."""
 
-import json
 from typing import List, Dict, Optional
 from ..model_config import create_llm_for_role
+from ..utils.json_repair import repair_json
 from ..models.collaborative_research import (
     CollaborativeResearchNotes,
     Finding,
@@ -109,16 +109,7 @@ Return your response in JSON format:
         )
 
         # Parse response
-        try:
-            data = json.loads(response.content)
-        except json.JSONDecodeError:
-            # Extract JSON from markdown code blocks if needed
-            content = response.content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-            else:
-                raise
+        data = repair_json(response.content)
 
         # Create research notes object
         notes = CollaborativeResearchNotes(
@@ -189,15 +180,7 @@ Return JSON:
         )
 
         # Parse response
-        try:
-            data = json.loads(response.content)
-        except json.JSONDecodeError:
-            content = response.content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-            else:
-                raise
+        data = repair_json(response.content)
 
         # Create task objects
         tasks = []
@@ -287,15 +270,7 @@ Return JSON:
         )
 
         # Parse response
-        try:
-            data = json.loads(response.content)
-        except json.JSONDecodeError:
-            content = response.content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-            else:
-                raise
+        data = repair_json(response.content)
 
         # Create plan object
         sections = []
@@ -405,15 +380,10 @@ Return JSON:
 
         # Parse response
         try:
-            data = json.loads(response.content)
-        except json.JSONDecodeError:
-            content = response.content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-            else:
-                # If parsing fails, return original plan
-                return original_plan
+            data = repair_json(response.content)
+        except ValueError:
+            # If parsing fails even after repair, return original plan
+            return original_plan
 
         # Extract final plan
         final_plan_data = data.get("final_plan", {})

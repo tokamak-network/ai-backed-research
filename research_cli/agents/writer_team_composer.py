@@ -1,8 +1,8 @@
 """Writer Team Composer agent - AI proposes optimal writer team for topic."""
 
-import json
 from typing import Dict
 from ..model_config import create_llm_for_role
+from ..utils.json_repair import repair_json
 
 
 class WriterTeamComposerAgent:
@@ -107,15 +107,7 @@ Return JSON format:
         )
 
         # Parse response
-        try:
-            team_proposal = json.loads(response.content)
-        except json.JSONDecodeError:
-            content = response.content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                team_proposal = json.loads(json_str)
-            else:
-                raise
+        team_proposal = repair_json(response.content)
 
         return team_proposal
 

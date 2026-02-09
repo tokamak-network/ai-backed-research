@@ -1,8 +1,8 @@
 """Co-author agent for collaborative research."""
 
-import json
 from typing import List
 from ..model_config import create_llm_for_role
+from ..utils.json_repair import repair_json
 from ..models.collaborative_research import (
     ResearchTask,
     ResearchContribution,
@@ -141,15 +141,7 @@ Return your research in JSON format:
         )
 
         # Parse response
-        try:
-            data = json.loads(response.content)
-        except json.JSONDecodeError:
-            content = response.content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-            else:
-                raise
+        data = repair_json(response.content)
 
         # Create Finding objects
         findings = []
@@ -246,15 +238,7 @@ Return JSON:
         )
 
         # Parse response
-        try:
-            feedback = json.loads(response.content)
-        except json.JSONDecodeError:
-            content = response.content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                feedback = json.loads(json_str)
-            else:
-                raise
+        feedback = repair_json(response.content)
 
         feedback["reviewer"] = self.name
         feedback["expertise"] = self.expertise
@@ -321,14 +305,6 @@ Return JSON:
         )
 
         # Parse response
-        try:
-            feedback = json.loads(response.content)
-        except json.JSONDecodeError:
-            content = response.content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                feedback = json.loads(json_str)
-            else:
-                raise
+        feedback = repair_json(response.content)
 
         return feedback

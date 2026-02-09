@@ -480,3 +480,66 @@ pending → desk_review → reviewing → accepted (publish)
 - [ ] E2E: GET /api/submission/{id} → review feedback visible
 - [ ] E2E: POST /api/submission/{id}/revise → round 2 → decision
 - [ ] E2E: Deadline expiry → status auto-expires on access
+
+---
+
+## Workflow Fault Tolerance (JSON Repair + Initial Checkpoint + Partial Failure)
+
+### Part A: JSON Parsing Recovery — Done
+- [x] `research_cli/utils/json_repair.py` — **NEW**: `repair_json()` utility
+  - Strategy 1: Direct `json.loads()`
+  - Strategy 2: Extract ```json code block
+  - Strategy 3: First `{` to last `}` extraction
+  - Strategy 4: Truncated JSON repair (close open quotes/brackets/braces)
+  - Strategy 5: Aggressive repair (binary search for longest parseable prefix)
+- [x] `research_cli/utils/__init__.py` — **NEW**: empty init
+- [x] Applied `repair_json()` to all agent files (12 JSON parsing sites):
+  - `agents/coauthor.py` (3 sites)
+  - `agents/lead_author.py` (4 sites)
+  - `agents/research_notes_agent.py` (2 sites)
+  - `agents/paper_writer_agent.py` (1 site)
+  - `agents/research_planner.py` (1 site)
+  - `agents/writer_team_composer.py` (1 site)
+- [x] Applied `repair_json()` to `workflow/orchestrator.py` `generate_review()`
+
+### Part B: Initial Checkpoint — Done
+- [x] `workflow/orchestrator.py` `_run_impl()`: Save checkpoint at round 0 after manuscript_v1.md
+- [x] `workflow/orchestrator.py` `_resume_workflow_impl()`: Handle empty `all_rounds` (round 0 checkpoint)
+
+### Part C: Partial Failure Tolerance — Done
+- [x] `workflow/collaborative_research.py` `_conduct_parallel_research()`:
+  - `asyncio.gather(return_exceptions=True)` + skip failed tasks
+  - Raise only if ALL tasks fail
+- [x] `workflow/orchestrator.py` `run_review_round()`:
+  - `asyncio.gather(return_exceptions=True)` + `_build_on_leave_review()` for failures
+  - `overall_average` excludes `on_leave` reviewers
+  - Score table shows "on leave" for failed reviewers
+  - Raise only if ALL reviewers fail
+- [x] `_detect_reviewer_outliers()`: Excludes `on_leave` reviewers
+- [x] `web/review.html`: `renderReview()` shows "On Leave" card for failed reviewers
+  - Carbon-style CSS: dashed border, 60% opacity, italic message
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `research_cli/utils/json_repair.py` | **NEW** — `repair_json()` utility |
+| `research_cli/utils/__init__.py` | **NEW** — empty init |
+| `research_cli/agents/coauthor.py` | `repair_json()` (3 sites) |
+| `research_cli/agents/lead_author.py` | `repair_json()` (4 sites) |
+| `research_cli/agents/research_notes_agent.py` | `repair_json()` (2 sites) |
+| `research_cli/agents/paper_writer_agent.py` | `repair_json()` (1 site) |
+| `research_cli/agents/research_planner.py` | `repair_json()` (1 site) |
+| `research_cli/agents/writer_team_composer.py` | `repair_json()` (1 site) |
+| `research_cli/workflow/orchestrator.py` | Round 0 checkpoint + reviewer failure tolerance + `repair_json()` |
+| `research_cli/workflow/collaborative_research.py` | Co-author failure tolerance |
+| `web/review.html` | On-leave reviewer display + CSS |
+| `tests/test_json_repair.py` | **NEW** — 18 unit tests |
+
+### Verification
+- [x] `repair_json()`: 18 unit tests pass (truncated JSON, code blocks, edge cases)
+- [x] All 10 modified Python files pass `ast.parse()` syntax check
+- [x] All key functions/classes present in orchestrator.py
+- [ ] E2E: Co-author failure → remaining co-authors continue → workflow completes
+- [ ] E2E: Reviewer failure → "On Leave" card in review.html → score excludes failed
+- [ ] E2E: Interrupt during review → resume from checkpoint (round 0) → continues from round 1
+- [ ] E2E: Truncated JSON from LLM → `repair_json()` recovers → no crash

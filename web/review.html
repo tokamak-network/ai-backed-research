@@ -615,6 +615,26 @@
             min-width: 0;
         }
 
+        .review-card.on-leave {
+            opacity: 0.6;
+            border-style: dashed;
+        }
+
+        .on-leave-badge {
+            background: var(--background-hover);
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 0;
+        }
+
+        .on-leave-message {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-style: italic;
+            padding: 1rem 0;
+        }
+
         .reviewer-header {
             display: flex;
             justify-content: space-between;
@@ -1443,6 +1463,20 @@
         }
 
         function renderReview(review) {
+            if (review.on_leave) {
+                return `
+                    <div class="review-card on-leave">
+                        <div class="reviewer-header">
+                            <div class="reviewer-name">${review.specialist_name}</div>
+                            <div class="reviewer-score on-leave-badge">On Leave</div>
+                        </div>
+                        <div class="on-leave-message">
+                            This reviewer was unavailable during this round.
+                            The editorial decision was made based on the remaining reviewers' assessments.
+                        </div>
+                    </div>
+                `;
+            }
             return `
                 <div class="review-card">
                     <div class="reviewer-header">

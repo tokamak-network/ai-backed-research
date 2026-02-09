@@ -1,8 +1,8 @@
 """Research planner agent for creating section-level writing plans."""
 
 from typing import List
-import json
 from ..model_config import create_llm_for_role
+from ..utils.json_repair import repair_json
 from ..models.section import ResearchPlan, SectionSpec
 
 
@@ -134,22 +134,7 @@ Create the complete research plan now."""
         )
 
         # Parse JSON response
-        content = response.content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
-
-        try:
-            plan_data = json.loads(content)
-        except json.JSONDecodeError as e:
-            raise ValueError(
-                f"Failed to parse research plan as JSON: {e}\n"
-                f"Content preview: {content[:500]}..."
-            )
+        plan_data = repair_json(response.content)
 
         # Convert to ResearchPlan object
         sections = [

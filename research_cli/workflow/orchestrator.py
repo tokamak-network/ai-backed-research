@@ -12,6 +12,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from ..model_config import _create_llm
+from ..utils.json_repair import repair_json
 from ..agents import WriterAgent, ModeratorAgent
 from ..agents.writer import validate_manuscript_completeness
 from ..agents.desk_editor import DeskEditorAgent
@@ -209,53 +210,8 @@ Be honest and constructive. Focus on your domain of expertise.
     duration = tracker.end_operation(f"review_{specialist_id}")
     tracker.record_reviewer_time(specialist_id, duration)
 
-    # Parse JSON — extract from response even if surrounded by text
-    content = response.content.strip()
-    if content.startswith("```json"):
-        content = content[7:]
-    if content.startswith("```"):
-        content = content[3:]
-    if content.endswith("```"):
-        content = content[:-3]
-    content = content.strip()
-
-    def _parse_json_lenient(text: str):
-        """Parse JSON leniently: allow control chars in strings (strict=False)."""
-        return json.loads(text, strict=False)
-
-    try:
-        review_data = _parse_json_lenient(content)
-    except json.JSONDecodeError:
-        # Try extracting JSON block from within the text
-        import re
-        json_match = re.search(r'```json\s*\n(.*?)\n```', response.content, re.DOTALL)
-        if json_match:
-            try:
-                review_data = _parse_json_lenient(json_match.group(1).strip())
-            except json.JSONDecodeError as e2:
-                raise ValueError(
-                    f"Failed to parse review from {specialist_id} as JSON: {e2}\n"
-                    f"Raw response length: {len(response.content)}\n"
-                    f"Content preview: {response.content[:300]}..."
-                )
-        else:
-            # Try finding raw JSON object
-            brace_match = re.search(r'\{.*\}', response.content, re.DOTALL)
-            if brace_match:
-                try:
-                    review_data = _parse_json_lenient(brace_match.group(0))
-                except json.JSONDecodeError as e3:
-                    raise ValueError(
-                        f"Failed to parse review from {specialist_id} as JSON: {e3}\n"
-                        f"Raw response length: {len(response.content)}\n"
-                        f"Content preview: {response.content[:300]}..."
-                    )
-            else:
-                raise ValueError(
-                    f"No JSON found in review from {specialist_id}\n"
-                    f"Raw response length: {len(response.content)}\n"
-                    f"Content preview: {response.content[:300]}..."
-                )
+    # Parse JSON (with truncation repair)
+    review_data = repair_json(response.content)
     scores = review_data["scores"]
     average = sum(scores.values()) / len(scores)
 
@@ -322,20 +278,29 @@ async def run_review_round(
             task = progress.add_task(f"[cyan]{specialist_name}...", total=None)
             tasks[specialist_id] = task
 
-        # Generate reviews concurrently
-        review_tasks = [
-            generate_review(specialist_id, specialist, manuscript, round_number, tracker, previous_reviews, previous_manuscript, author_response, article_length, audience_level, research_type)
-            for specialist_id, specialist in specialists.items()
+        # Generate reviews concurrently, tolerating individual failures
+        specialist_items = list(specialists.items())
+        review_coros = [
+            generate_review(sid, spec, manuscript, round_number, tracker, previous_reviews, previous_manuscript, author_response, article_length, audience_level, research_type)
+            for sid, spec in specialist_items
         ]
+        results = await asyncio.gather(*review_coros, return_exceptions=True)
 
-        for review_result in asyncio.as_completed(review_tasks):
-            review = await review_result
-            reviews.append(review)
-            specialist_id = review["specialist"]
+        for (specialist_id, specialist), result in zip(specialist_items, results):
+            if isinstance(result, Exception):
+                console.print(f"[yellow]⚠ {specialist['name']} failed: {result}[/yellow]")
+                failed_review = _build_on_leave_review(specialist_id, specialist, str(result))
+                reviews.append(failed_review)
+            else:
+                reviews.append(result)
+                console.print(f"[green]✓[/green] {result['specialist_name']} complete (avg: {result['average']}/10)")
             progress.update(tasks[specialist_id], completed=True)
-            console.print(f"[green]✓[/green] {review['specialist_name']} complete (avg: {review['average']}/10)")
 
-    overall_average = sum(r["average"] for r in reviews) / len(reviews)
+    # Compute average excluding on_leave reviewers
+    active_reviews = [r for r in reviews if not r.get("on_leave")]
+    if not active_reviews:
+        raise RuntimeError("All reviewers failed. Cannot continue workflow.")
+    overall_average = sum(r["average"] for r in active_reviews) / len(active_reviews)
 
     # Display scores
     table = Table(title=f"\nRound {round_number} Scores", show_header=True)
@@ -349,6 +314,13 @@ async def run_review_round(
     table.add_column("Average", justify="center", style="bold")
 
     for review in reviews:
+        if review.get("on_leave"):
+            table.add_row(
+                f"[dim]{review['specialist_name']}[/dim]",
+                "-", "-", "-", "-", "-", "-",
+                "[yellow]on leave[/yellow]"
+            )
+            continue
         scores = review["scores"]
         table.add_row(
             review["specialist_name"],
@@ -377,19 +349,39 @@ async def run_review_round(
     return reviews, overall_average
 
 
+def _build_on_leave_review(specialist_id: str, specialist: dict, error_msg: str) -> dict:
+    """Build a placeholder review for a reviewer that failed during this round."""
+    return {
+        "specialist": specialist_id,
+        "specialist_name": specialist["name"],
+        "model": specialist.get("model", ""),
+        "on_leave": True,
+        "error": error_msg,
+        "scores": {"accuracy": 0, "completeness": 0, "clarity": 0, "novelty": 0, "rigor": 0, "citations": 0},
+        "average": 0,
+        "summary": "",
+        "strengths": [],
+        "weaknesses": [],
+        "suggestions": [],
+        "detailed_feedback": "",
+    }
+
+
 def _detect_reviewer_outliers(reviews: List[Dict]) -> Optional[str]:
     """Detect if any reviewer gave a significantly harsher score than others.
 
     Returns a string describing outlier reviewers, or None if scores are consistent.
     """
-    if len(reviews) < 2:
+    # Exclude on_leave reviewers from outlier detection
+    active = [r for r in reviews if not r.get("on_leave")]
+    if len(active) < 2:
         return None
 
-    scores = [r["average"] for r in reviews]
+    scores = [r["average"] for r in active]
     avg = sum(scores) / len(scores)
 
     outliers = []
-    for r in reviews:
+    for r in active:
         deviation = avg - r["average"]
         # Flag reviewers scoring 1.5+ points below average
         if deviation >= 1.5:
@@ -402,7 +394,7 @@ def _detect_reviewer_outliers(reviews: List[Dict]) -> Optional[str]:
         return None
 
     # Compute what the average would be without the outlier(s)
-    non_outlier_scores = [r["average"] for r in reviews if (avg - r["average"]) < 1.5]
+    non_outlier_scores = [r["average"] for r in active if (avg - r["average"]) < 1.5]
     adjusted_avg = sum(non_outlier_scores) / len(non_outlier_scores) if non_outlier_scores else avg
 
     return (
@@ -589,6 +581,9 @@ class WorkflowOrchestrator:
         manuscript_v1_path = self.output_dir / "manuscript_v1.md"
         manuscript_v1_path.write_text(manuscript)
         console.print(f"[dim]Saved: {manuscript_v1_path}[/dim]")
+
+        # Save initial checkpoint (enables resume from review phase if interrupted)
+        self._save_checkpoint(0, manuscript, [])
 
         # Track all rounds
         all_rounds = []
@@ -1208,74 +1203,81 @@ class WorkflowOrchestrator:
         """
         self.tracker.start_workflow()
 
-        # Check last round's decision
-        last_round = all_rounds[-1]
-        last_decision = last_round["moderator_decision"]["decision"]
+        # Handle round 0 checkpoint (no reviews yet — start fresh from round 1)
+        if not all_rounds:
+            console.print(f"[cyan]Resuming from initial manuscript (no reviews completed yet)[/cyan]")
+            console.print(f"[cyan]Starting review from Round 1...[/cyan]\n")
+            # Fall through to the iteration loop below with start_round=0
+            # which will iterate range(1, max_rounds+1)
+        else:
+            # Check last round's decision
+            last_round = all_rounds[-1]
+            last_decision = last_round["moderator_decision"]["decision"]
 
-        console.print(f"[cyan]Last decision: {last_decision}[/cyan]")
+            console.print(f"[cyan]Last decision: {last_decision}[/cyan]")
 
-        # If already accepted, finalize
-        if last_decision == "ACCEPT":
-            console.print(f"[green]✓ Paper already accepted in Round {start_round}[/green]")
-            return await self._finalize_workflow(all_rounds)
+            # If already accepted, finalize
+            if last_decision == "ACCEPT":
+                console.print(f"[green]✓ Paper already accepted in Round {start_round}[/green]")
+                return await self._finalize_workflow(all_rounds)
 
-        # If at max rounds, finalize
-        if start_round >= self.max_rounds:
-            console.print(f"[yellow]⚠ Already at max rounds ({self.max_rounds})[/yellow]")
-            return await self._finalize_workflow(all_rounds)
+            # If at max rounds, finalize
+            if start_round >= self.max_rounds:
+                console.print(f"[yellow]⚠ Already at max rounds ({self.max_rounds})[/yellow]")
+                return await self._finalize_workflow(all_rounds)
 
-        # Check if revision was interrupted: last decision needed revision but revised manuscript missing
-        self._current_stage = f"resuming from round {start_round}"
-        revised_path = self.output_dir / f"manuscript_v{start_round + 1}.md"
-        if last_decision in ("MINOR_REVISION", "MAJOR_REVISION") and not revised_path.exists():
-            self._current_stage = f"re-running interrupted revision (round {start_round})"
-            console.print(f"[yellow]Revision for round {start_round} was interrupted — re-running revision...[/yellow]")
+            # Check if revision was interrupted: last decision needed revision but revised manuscript missing
+            self._current_stage = f"resuming from round {start_round}"
+            revised_path = self.output_dir / f"manuscript_v{start_round + 1}.md"
+            if last_decision in ("MINOR_REVISION", "MAJOR_REVISION") and not revised_path.exists():
+                self._current_stage = f"re-running interrupted revision (round {start_round})"
+                console.print(f"[yellow]Revision for round {start_round} was interrupted — re-running revision...[/yellow]")
 
-            if self.status_callback:
-                self.status_callback("revising", start_round, f"Round {start_round}: Re-running interrupted revision...")
+                if self.status_callback:
+                    self.status_callback("revising", start_round, f"Round {start_round}: Re-running interrupted revision...")
 
-            prev_reviews = last_round.get("reviews", [])
-            prev_author_response = last_round.get("author_response")
+                prev_reviews = last_round.get("reviews", [])
+                prev_author_response = last_round.get("author_response")
 
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console
-            ) as progress:
-                task = progress.add_task("[cyan]Writer revising manuscript (resumed)...", total=None)
-                self.tracker.start_operation("revision")
-                revised_manuscript = await self.writer.revise_manuscript(
-                    current_manuscript,
-                    prev_reviews,
-                    start_round,
-                    references=self.sources if self.sources else None,
-                    domain=self.domain_desc,
-                    article_length=self.article_length,
-                    author_response=prev_author_response,
-                    audience_level=self.audience_level,
-                    research_type=self.research_type,
-                )
-                revision_time = self.tracker.end_operation("revision")
-                self.tracker.record_revision_time(revision_time)
-                self.tracker.record_revision(**self.writer.get_last_token_usage())
-                progress.update(task, completed=True)
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    console=console
+                ) as progress:
+                    task = progress.add_task("[cyan]Writer revising manuscript (resumed)...", total=None)
+                    self.tracker.start_operation("revision")
+                    revised_manuscript = await self.writer.revise_manuscript(
+                        current_manuscript,
+                        prev_reviews,
+                        start_round,
+                        references=self.sources if self.sources else None,
+                        domain=self.domain_desc,
+                        article_length=self.article_length,
+                        author_response=prev_author_response,
+                        audience_level=self.audience_level,
+                        research_type=self.research_type,
+                    )
+                    revision_time = self.tracker.end_operation("revision")
+                    self.tracker.record_revision_time(revision_time)
+                    self.tracker.record_revision(**self.writer.get_last_token_usage())
+                    progress.update(task, completed=True)
 
-            new_word_count = len(revised_manuscript.split())
-            console.print(f"[green]✓ Revision complete[/green] — {new_word_count:,} words")
+                new_word_count = len(revised_manuscript.split())
+                console.print(f"[green]✓ Revision complete[/green] — {new_word_count:,} words")
 
-            revised_path.write_text(revised_manuscript)
-            current_manuscript = revised_manuscript
+                revised_path.write_text(revised_manuscript)
+                current_manuscript = revised_manuscript
 
-            # Update last round data with revision diff
-            last_round["manuscript_diff"] = {
-                "words_added": new_word_count - len(current_manuscript.split()),
-                "previous_version": f"v{start_round}",
-                "current_version": f"v{start_round + 1}"
-            }
-            last_round["revised_word_count"] = new_word_count
+                # Update last round data with revision diff
+                last_round["manuscript_diff"] = {
+                    "words_added": new_word_count - len(current_manuscript.split()),
+                    "previous_version": f"v{start_round}",
+                    "current_version": f"v{start_round + 1}"
+                }
+                last_round["revised_word_count"] = new_word_count
 
-            # Update checkpoint with revised manuscript
-            self._save_checkpoint(start_round, current_manuscript, all_rounds)
+                # Update checkpoint with revised manuscript
+                self._save_checkpoint(start_round, current_manuscript, all_rounds)
 
         # Continue iteration from next round
         previous_manuscript = current_manuscript

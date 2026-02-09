@@ -104,20 +104,8 @@ Plan 5-8 sections."""
         )
 
         # Parse response
-        import json
-        content = response.content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
-
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse paper plan: {e}\n{content[:200]}")
+        from ..utils.json_repair import repair_json
+        data = repair_json(response.content)
 
         sections = []
         for s in data["sections"]:

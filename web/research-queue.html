@@ -2199,7 +2199,7 @@
             if (isDone) {
                 const statsItems = [];
 
-                const startTime = wf.start_time ? new Date(wf.start_time) : null;
+                const startTime = wf.start_time ? parseUTCTimestamp(wf.start_time) : null;
                 if (startTime && !isNaN(startTime)) {
                     const startStr = startTime.toLocaleString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false});
                     statsItems.push(`<div class="stat-item"><span class="stat-label">Requested</span><span class="stat-value">${startStr}</span></div>`);
@@ -2386,7 +2386,7 @@
                     </div>
                     <div class="activity-content">
                         <div class="activity-message">${escapeHtml(activity.message)}${badge}</div>
-                        <div class="activity-timestamp">${new Date(activity.timestamp).toLocaleTimeString()}</div>
+                        <div class="activity-timestamp">${parseUTCTimestamp(activity.timestamp).toLocaleTimeString()}</div>
                     </div>
                 </div>
             `;}).join('');
@@ -2542,9 +2542,17 @@
             }
         }
 
+        function parseUTCTimestamp(isoString) {
+            // If no timezone info, assume UTC (backward compat with old server timestamps)
+            if (isoString && !isoString.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(isoString)) {
+                isoString = isoString + 'Z';
+            }
+            return new Date(isoString);
+        }
+
         function formatTimestamp(isoString) {
             if (!isoString) return '';
-            const date = new Date(isoString);
+            const date = parseUTCTimestamp(isoString);
             return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 

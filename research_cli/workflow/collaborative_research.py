@@ -209,8 +209,20 @@ class CollaborativeResearchPhase:
             if agent:
                 task_futures.append(research_task(task, agent))
 
-        # Execute in parallel
-        contributions = await asyncio.gather(*task_futures)
+        # Execute in parallel, tolerating individual failures
+        results = await asyncio.gather(*task_futures, return_exceptions=True)
+
+        contributions = []
+        for r in results:
+            if isinstance(r, Exception):
+                console.print(f"  [yellow]⚠ Research task failed: {r}[/yellow]")
+            else:
+                contributions.append(r)
+
+        if not contributions:
+            raise RuntimeError(
+                "All co-author research tasks failed. Cannot continue workflow."
+            )
 
         return contributions
 
