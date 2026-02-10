@@ -778,8 +778,11 @@
             </div>
 
             <div class="button-group">
-                <button id="analyze-btn" class="btn btn-primary" onclick="analyzeTopicAndProposeTeam()">
-                    Analyze Topic & Propose Team
+                <button id="analyze-btn" class="btn btn-primary" onclick="analyzeTopic()">
+                    Analyze Topic
+                </button>
+                <button id="generate-team-btn" class="btn btn-primary" onclick="generateTeamAndReviewers()" style="display:none;">
+                    Generate Team & Reviewers
                 </button>
             </div>
             <div id="topic-error" class="error-box"></div>
@@ -1293,9 +1296,9 @@
         }
 
         // Analyze topic and propose team
-        async function analyzeTopicAndProposeTeam() {
+        // Step 1: Analyze topic and classify category
+        async function analyzeTopic() {
             const topic = document.getElementById('topic').value.trim();
-            const researchType = document.querySelector('.research-type-option.selected').dataset.type;
             const errorDiv = document.getElementById('topic-error');
             const btn = document.getElementById('analyze-btn');
 
@@ -1307,16 +1310,13 @@
 
             errorDiv.style.display = 'none';
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading-spinner"></span> Analyzing topic...';
+            btn.innerHTML = '<span class="loading-spinner"></span> Analyzing topic & classifying category...';
 
             try {
-                const response = await fetch(`${API_BASE}/api/propose-team`, {
+                const response = await fetch(`${API_BASE}/api/classify-topic`, {
                     method: 'POST',
                     headers: apiHeaders(),
-                    body: JSON.stringify({
-                        topic: topic,
-                        research_type: researchType
-                    })
+                    body: JSON.stringify({ topic: topic })
                 });
 
                 if (!response.ok) {
@@ -1324,44 +1324,27 @@
                     throw new Error(`HTTP ${response.status}: ${await response.text()}`);
                 }
 
-                const proposal = await response.json();
-                currentProposal = proposal;
+                const classification = await response.json();
 
-                // Show category section
+                // Store classification
+                selectedCategory = {
+                    major: classification.primary_major,
+                    subfield: classification.primary_subfield
+                };
+
+                // Show category result
                 document.getElementById('category-section').classList.add('active');
+                document.getElementById('major-field').value = classification.primary_major;
+                onMajorFieldChange();
+                document.getElementById('subfield').value = classification.primary_subfield;
+                onSubfieldChange();
 
-                // Set suggested category (if returned from API)
-                if (proposal.suggested_category) {
-                    document.getElementById('major-field').value = proposal.suggested_category.major;
-                    onMajorFieldChange();
-                    document.getElementById('subfield').value = proposal.suggested_category.subfield;
-                    onSubfieldChange();
-                } else {
-                    // Default to computer_science/security for blockchain topics
-                    if (topic.toLowerCase().includes('blockchain') ||
-                        topic.toLowerCase().includes('crypto') ||
-                        topic.toLowerCase().includes('rollup') ||
-                        topic.toLowerCase().includes('ethereum')) {
-                        document.getElementById('major-field').value = 'computer_science';
-                        onMajorFieldChange();
-                        document.getElementById('subfield').value = 'security';
-                        onSubfieldChange();
-                    }
-                }
+                // Show generate team button
+                btn.style.display = 'none';
+                const generateBtn = document.getElementById('generate-team-btn');
+                generateBtn.style.display = 'inline-block';
 
-                // Display team
-                displayTeam(proposal);
-
-                // Apply current workflow mode visibility (co-authors hidden in standard)
-                const currentMode = document.querySelector('#workflow-mode-selector .research-type-option.selected')?.dataset.mode || 'standard';
-                selectWorkflowMode(currentMode);
-
-                // Enrich reviewer profiles with AI if category is set
-                if (selectedCategory.major && selectedCategory.subfield) {
-                    enrichReviewerPool(topic);
-                }
-
-                // Show team section (category banner is at the top of it)
+                // Scroll to category section
                 document.getElementById('step-team').classList.add('active');
                 document.getElementById('step-team').scrollIntoView({ behavior: 'smooth' });
 
@@ -1370,8 +1353,110 @@
                 errorDiv.style.display = 'block';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Analyze Topic & Propose Team';
+                btn.innerHTML = 'Analyze Topic';
             }
+        }
+
+        // Step 2: Generate team (authors) and reviewers
+        async function generateTeamAndReviewers() {
+            const topic = document.getElementById('topic').value.trim();
+            const researchType = document.querySelector('.research-type-option.selected').dataset.type;
+            const errorDiv = document.getElementById('topic-error');
+            const btn = document.getElementById('generate-team-btn');
+
+            errorDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Generating team & reviewers...';
+
+            try {
+                // Call propose-team for authors
+                const teamResponse = await fetch(`${API_BASE}/api/propose-team`, {
+                    method: 'POST',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({
+                        topic: topic,
+                        research_type: researchType
+                    })
+                });
+
+                if (!teamResponse.ok) {
+                    if (handleApiError(teamResponse, errorDiv)) return;
+                    throw new Error(`HTTP ${teamResponse.status}: ${await teamResponse.text()}`);
+                }
+
+                const proposal = await teamResponse.json();
+                currentProposal = proposal;
+
+                // Call propose-reviewers for reviewers
+                btn.innerHTML = '<span class="loading-spinner"></span> Generating reviewers...';
+
+                const reviewerResponse = await fetch(`${API_BASE}/api/propose-reviewers`, {
+                    method: 'POST',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({
+                        topic: topic,
+                        major_field: selectedCategory.major,
+                        subfield: selectedCategory.subfield
+                    })
+                });
+
+                if (!reviewerResponse.ok) {
+                    throw new Error(`Reviewer generation failed: ${reviewerResponse.status}`);
+                }
+
+                const reviewerData = await reviewerResponse.json();
+
+                // Store reviewer data
+                window.proposedReviewers = reviewerData.proposed_reviewers || [];
+
+                // Display team (authors)
+                displayTeam(proposal);
+
+                // Display reviewers
+                displayReviewers(reviewerData.proposed_reviewers || []);
+
+                // Apply current workflow mode visibility (co-authors hidden in standard)
+                const currentMode = document.querySelector('#workflow-mode-selector .research-type-option.selected')?.dataset.mode || 'standard';
+                selectWorkflowMode(currentMode);
+
+                // Enable submit section
+                document.getElementById('step-submit').classList.add('active');
+                document.getElementById('step-submit').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Generate Team & Reviewers';
+            }
+        }
+
+        function displayReviewers(reviewers) {
+            const container = document.getElementById('reviewers-container');
+
+            if (!reviewers || reviewers.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">No reviewers generated.</p>';
+                return;
+            }
+
+            container.innerHTML = reviewers.map((reviewer, idx) => `
+                <div class="author-card reviewer">
+                    <div class="author-header">
+                        <h4 class="author-name">${reviewer.display_name}</h4>
+                        <span class="author-model">Reviewer ${idx + 1}</span>
+                    </div>
+                    <div class="author-rationale">${reviewer.description || reviewer.relevance_to_topic}</div>
+                    <div class="author-focus-areas">
+                        ${(reviewer.focus_areas || []).map(area => `<span class="focus-tag">${area}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Keep old function for backward compatibility
+        async function analyzeTopicAndProposeTeam() {
+            await analyzeTopic();
         }
 
         function displayTeam(proposal) {

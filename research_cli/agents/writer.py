@@ -312,38 +312,59 @@ CITATION RULES:
             length_requirement = "- 3,000-5,000 words"
             length_guidance = ""
 
-        # Type-specific required sections
-        if research_type == "survey":
-            sections_guidance = """
-Required sections for survey paper:
-## TL;DR (2-3 sentence summary of key findings — no citations, plain language)
-## Executive Summary (scope & motivation)
-## Introduction (scope, motivation, and survey methodology including search criteria)
-## Thematic Analysis / Taxonomy (organized review of literature)
-## Comparative Analysis (with tables if applicable)
-## Open Challenges & Future Directions
-## Conclusion
-## References"""
-        elif research_type == "explainer":
-            sections_guidance = """
-Required sections for explainer article:
-## TL;DR (2-3 sentence plain language summary)
-## Introduction (what this topic is and why it matters)
-## Core Concepts (main ideas explained step-by-step)
-## How It Works (detailed mechanism/process explanation with examples)
-## Practical Applications (real-world use cases)
-## Key Takeaways
-## Further Reading
-## References"""
-        else:
-            sections_guidance = """
-- Start with ## TL;DR (2-3 sentence summary of key findings — no citations, plain language)
-- Include executive summary
-- Structured sections with clear headings
-- Technical depth appropriate for experts
-- Cite specific examples, protocols, and data
-- Include practical implications
-- Forward-looking analysis of trends"""
+        # Audience-level determines summary format ONLY
+        # Let LLM design section structure freely based on topic and research_type
+        if audience_level == "professional":
+            summary_section = """START WITH: ## Abstract
+Write a formal academic abstract (150-250 words):
+- Background/context (1-2 sentences)
+- Research objectives/questions
+- Key findings/contributions
+- Implications and significance
+Use precise technical language and cite key references."""
+
+            structure_guidance = f"""
+Design your own section structure appropriate for this {research_type} paper in {domain}.
+Choose section names and organization that best serve the content.
+Common patterns (but feel free to adapt):
+- Survey papers often use: Introduction, Background, Taxonomy/Classification, Comparative Analysis, Future Directions
+- Explainer papers often use: Introduction, Core Concepts, Technical Details, Applications
+- Research papers often use: Introduction, Related Work, Methodology, Results, Discussion
+End with ## References section."""
+
+        elif audience_level == "intermediate":
+            summary_section = """START WITH: ## TL;DR
+Write a 3-5 sentence summary hitting the key points (no citations needed, plain language).
+
+THEN: ## Key Takeaways
+List 3-5 main points as bullet points:
+- Each takeaway should be a complete, actionable insight
+- Focus on practical implications and what readers should remember"""
+
+            structure_guidance = f"""
+Design your own section structure appropriate for this {research_type} content.
+Use clear, descriptive section headings that guide readers.
+Focus on practical value and actionable insights.
+Organize content logically for readers with basic domain knowledge.
+End with ## References section."""
+
+        else:  # beginner
+            summary_section = """START WITH: ## TL;DR
+Write a 3-5 sentence summary in everyday language (imagine explaining to a friend with no background).
+
+THEN: ## Why This Matters
+Write 1-2 paragraphs explaining:
+- Why should anyone care about this topic?
+- What real-world problems does it address?
+- How might it affect readers' lives or work?
+Use zero jargon - if you must use a technical term, define it immediately."""
+
+            structure_guidance = f"""
+Design your own section structure that makes this {research_type} content accessible.
+Use question-based or descriptive headings (e.g., "What Is X?", "How Does It Work?", "Real-World Examples").
+Build up from simple concepts to more complex ones.
+Use analogies, examples, and storytelling to make ideas concrete.
+End with ## References section (can call it "Learn More" or "Further Reading" for this audience)."""
 
         prompt = f"""Write a comprehensive research report on the following topic:
 
@@ -352,13 +373,18 @@ TOPIC: {topic}
 PROFILE: {profile}
 {refs_block}
 Requirements:
-{length_requirement}
-{sections_guidance}{length_guidance}
-{"- Include inline citations [1], [2] and a References section at the end" if references else ""}
+{length_requirement}{length_guidance}
 
-Format: Markdown with proper headings (##, ###). Write in flowing academic prose paragraphs.
-Do NOT use bullet-point lists for analysis or discussion. Reserve lists only for
-enumerating specific technical items (e.g., protocol requirements, system specifications).
+SUMMARY FORMAT:
+{summary_section}
+
+STRUCTURE GUIDANCE:
+{structure_guidance}
+{"- Include inline citations [1], [2] throughout and a References section at the end" if references else ""}
+
+Format: Markdown with proper headings (##, ###). Write in flowing prose paragraphs.
+Do NOT use bullet-point lists for analysis or discussion (except in Key Takeaways section if present).
+Reserve lists only for enumerating specific technical items (e.g., protocol requirements, system specifications).
 Never truncate content with "..." or leave sentences incomplete.
 
 Write the complete manuscript now."""

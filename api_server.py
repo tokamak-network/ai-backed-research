@@ -259,14 +259,54 @@ async def scan_interrupted_workflows():
             except Exception as e:
                 print(f"  Error loading checkpoint for {project_id}: {e}")
 
+        # Orphan directory: has files but no checkpoint and no complete marker
+        # (e.g., crashed during team formation or early research phase)
+        elif not checkpoint_file.exists() and not complete_file.exists():
+            has_files = any(project_dir.iterdir())
+            if has_files:
+                project_id = project_dir.name
+                workflow_status[project_id] = {
+                    "topic": project_id.rsplit("-", 2)[0].replace("-", " ") if "-" in project_id else project_id,
+                    "status": "failed",
+                    "current_round": 0,
+                    "total_rounds": 0,
+                    "progress_percentage": 0,
+                    "message": "Failed during early phase (no checkpoint). Retry to start fresh.",
+                    "error": "Workflow crashed before checkpoint was created",
+                    "expert_status": [],
+                    "cost_estimate": None,
+                    "start_time": _utcnow().isoformat(),
+                    "elapsed_time_seconds": 0,
+                    "estimated_time_remaining_seconds": None,
+                    "can_resume": True
+                }
+                activity_logs[project_id] = [{
+                    "timestamp": _utcnow().isoformat(),
+                    "level": "error",
+                    "message": "Workflow failed before checkpoint was saved. Click Retry to start fresh.",
+                    "details": {"orphan_files": [f.name for f in project_dir.iterdir()]}
+                }]
+                interrupted_count += 1
+                print(f"  Found orphan workflow: {project_id} (no checkpoint, has files)")
+
     if interrupted_count > 0:
-        print(f"✓ Found {interrupted_count} interrupted workflow(s) - available for resume")
+        print(f"✓ Found {interrupted_count} interrupted/orphan workflow(s) - available for resume")
 
 
 # Request/Response Models
 class ExpertContext(BaseModel):
     type: str  # "description", "url", "pdf"
     content: str
+
+class ClassifyTopicRequest(BaseModel):
+    topic: str
+
+class ClassifyTopicResponse(BaseModel):
+    primary_major: str
+    primary_subfield: str
+    secondary_major: Optional[str] = None
+    secondary_subfield: Optional[str] = None
+    confidence: float
 
 class ProposeTeamRequest(BaseModel):
     topic: str
@@ -374,6 +414,66 @@ async def queue_status():
             if s["status"] in ("queued", "composing_team", "writing", "desk_screening", "reviewing", "revising", "research", "writing_sections")
         )
     }
+
+
+@app.post("/api/classify-topic", response_model=ClassifyTopicResponse)
+async def classify_topic(request: ClassifyTopicRequest, api_key: str = Depends(verify_api_key)):
+    """Classify research topic into academic categories using gemini-flash."""
+    try:
+        from research_cli.utils.json_repair import repair_json
+
+        llm = create_llm_for_role("categorizer")
+
+        # Build category reference for LLM
+        from research_cli.categories import ACADEMIC_CATEGORIES
+        category_ref = []
+        for major_id, major_data in ACADEMIC_CATEGORIES.items():
+            subfields = list(major_data["subfields"].keys())
+            category_ref.append(f"  {major_id}: {major_data['name']} (subfields: {', '.join(subfields)})")
+        category_list = "\n".join(category_ref)
+
+        prompt = f"""Classify this research topic into academic categories.
+
+TOPIC: {request.topic}
+
+AVAILABLE CATEGORIES:
+{category_list}
+
+Classify into:
+1. PRIMARY category (major + subfield) - the main field this research belongs to
+2. SECONDARY category (major + subfield) - optional, only if the research has significant overlap with another field
+
+Respond in JSON format:
+{{
+  "primary_major": "<major_id>",
+  "primary_subfield": "<subfield_id>",
+  "secondary_major": "<major_id or null>",
+  "secondary_subfield": "<subfield_id or null>",
+  "confidence": <0.0-1.0>,
+  "reasoning": "<brief explanation>"
+}}
+
+Use ONLY the exact major_id and subfield_id values from the category list above."""
+
+        response = await llm.generate(
+            prompt=prompt,
+            system="You classify research topics into academic categories. Respond with ONLY JSON.",
+            temperature=0.3,
+            max_tokens=512,
+        )
+
+        data = repair_json(response.content)
+
+        return ClassifyTopicResponse(
+            primary_major=data.get("primary_major", "computer_science"),
+            primary_subfield=data.get("primary_subfield", "ai_ml"),
+            secondary_major=data.get("secondary_major"),
+            secondary_subfield=data.get("secondary_subfield"),
+            confidence=data.get("confidence", 0.8),
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Classification failed: {str(e)}")
 
 
 @app.post("/api/propose-team", response_model=TeamProposalResponse)
@@ -989,16 +1089,18 @@ Respond with ONLY valid JSON in this exact format:
         return []
 
     reviewers = []
-    for i, expert_id in enumerate(pool):
+    for i, expert_id in enumerate(pool[:3]):  # Take first 3
         name = expert_id.replace("_expert", "").replace("_", " ").title() + " Expert"
         domain = expert_id.replace("_expert", "").replace("_", " ").title()
+        # Extract focus from expert_id as fallback
+        focus_keyword = expert_id.replace("_expert", "").replace("_", " ").title()
 
         rm = reviewer_model_list[i % len(reviewer_model_list)]
         config = ExpertConfig(
             id=f"reviewer-{i+1}",
             name=name,
             domain=domain,
-            focus_areas=[],
+            focus_areas=[focus_keyword],  # At least one focus area from expert_id
             system_prompt="",
             provider=rm["provider"],
             model=rm["model"],
@@ -1548,25 +1650,30 @@ class ProposeReviewersRequest(BaseModel):
 
 @app.post("/api/propose-reviewers")
 async def propose_reviewers(request: ProposeReviewersRequest):
-    """Return static reviewer pool (AI enrichment disabled)."""
-    pool = get_expert_pool(request.major_field, request.subfield)
-    if not pool:
-        raise HTTPException(status_code=400, detail="No expert pool found for this category")
+    """Generate reviewers dynamically using gemini-flash based on topic and category."""
+    try:
+        category = {"major": request.major_field, "subfield": request.subfield}
+        reviewer_configs = await _generate_reviewers_from_category(category, request.topic)
 
-    expert_names = [eid.replace("_expert", "").replace("_", " ").title() + " Expert" for eid in pool]
+        if not reviewer_configs:
+            raise HTTPException(status_code=500, detail="Failed to generate reviewers for this category")
 
-    # Return static profiles (AI enrichment removed to avoid compatibility issues)
-    static_profiles = [
-        {
-            "expert_id": eid,
-            "display_name": name,
-            "description": f"Specializes in {name.replace(' Expert', '').lower()} within {request.subfield}.",
-            "focus_areas": [name.replace(' Expert', '')],
-            "relevance_to_topic": f"Provides domain expertise in {name.replace(' Expert', '').lower()}.",
-        }
-        for eid, name in zip(pool, expert_names)
-    ]
-    return {"proposed_reviewers": static_profiles}
+        # Convert ExpertConfig to response format
+        reviewer_profiles = [
+            {
+                "expert_id": config.id,
+                "display_name": config.name,
+                "description": config.domain,
+                "focus_areas": config.focus_areas,
+                "relevance_to_topic": f"Specializes in {config.domain}",
+            }
+            for config in reviewer_configs
+        ]
+
+        return {"proposed_reviewers": reviewer_profiles}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Reviewer generation failed: {str(e)}")
 
 
 @app.get("/api/check-admin")

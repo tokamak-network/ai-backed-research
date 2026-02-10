@@ -407,6 +407,13 @@
             font-size: 1.375rem;
             font-weight: 700;
             letter-spacing: -0.02em;
+            /* Truncate long titles with ellipsis */
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
         }
 
         .review-status-badge {
@@ -1209,7 +1216,7 @@
 
                 <div class="section">
                     <div class="project-header">
-                        <h1 class="project-title">${data.topic}</h1>
+                        <h1 class="project-title">${data.title || data.topic}</h1>
                         <div style="display:flex;gap:0.5rem;align-items:center;flex-shrink:0;">
                             ${data.research_type ? `<span class="review-status-badge" style="color:${data.research_type === 'survey' ? '#8a3ffc' : data.research_type === 'explainer' ? '#198038' : '#0f62fe'};border-color:${data.research_type === 'survey' ? '#d4bbff' : data.research_type === 'explainer' ? '#a7f0ba' : '#a6c8ff'};">${data.research_type === 'survey' ? 'SURVEY' : data.research_type === 'explainer' ? 'EXPLAINER' : 'ORIGINAL'}</span>` : ''}
                             <span class="review-status-badge">${finalDecision}</span>

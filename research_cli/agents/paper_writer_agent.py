@@ -108,15 +108,15 @@ Plan 5-8 sections."""
         data = repair_json(response.content)
 
         sections = []
-        for s in data["sections"]:
+        for idx, s in enumerate(data.get("sections", []), 1):
             spec = SectionSpec(
-                id=s["id"],
-                title=s["title"],
-                key_points=s["key_points"],
+                id=s.get("id", f"section_{idx}"),
+                title=s.get("title", f"Section {idx}"),
+                key_points=s.get("key_points", []),
                 dependencies=s.get("dependencies", []),
                 estimated_tokens=s.get("estimated_tokens", 3000),
                 depth_level=s.get("depth_level", "detailed"),
-                order=s.get("order", len(sections) + 1)
+                order=s.get("order", idx)
             )
             sections.append(spec)
 

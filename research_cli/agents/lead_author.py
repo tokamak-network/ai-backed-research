@@ -275,21 +275,21 @@ Return JSON:
 
         # Create plan object
         sections = []
-        for sec_data in data.get("sections", []):
+        for idx, sec_data in enumerate(data.get("sections", []), 1):
             section = SectionSpec(
-                id=sec_data["id"],
-                title=sec_data["title"],
-                order=sec_data["order"],
-                purpose=sec_data["purpose"],
-                key_points=sec_data["key_points"],
-                target_length=sec_data["target_length"],
+                id=sec_data.get("id", f"section_{idx}"),
+                title=sec_data.get("title", f"Section {idx}"),
+                order=sec_data.get("order", idx),
+                purpose=sec_data.get("purpose", ""),
+                key_points=sec_data.get("key_points", []),
+                target_length=sec_data.get("target_length", 500),
                 subsections=sec_data.get("subsections", [])
             )
             sections.append(section)
 
         plan = ManuscriptPlan(
-            title=data["title"],
-            abstract_outline=data["abstract_outline"],
+            title=data.get("title", "Untitled"),
+            abstract_outline=data.get("abstract_outline", ""),
             sections=sections,
             target_length=data.get("target_length", target_length),
             overall_narrative=data.get("overall_narrative", "")
@@ -391,12 +391,12 @@ Return JSON:
 
         # Create section specs
         sections = []
-        for sec_data in final_plan_data.get("sections", []):
+        for idx, sec_data in enumerate(final_plan_data.get("sections", []), 1):
             section = SectionSpec(
-                id=sec_data["id"],
-                title=sec_data["title"],
-                order=sec_data["order"],
-                purpose=sec_data["purpose"],
+                id=sec_data.get("id", f"section_{idx}"),
+                title=sec_data.get("title", f"Section {idx}"),
+                order=sec_data.get("order", idx),
+                purpose=sec_data.get("purpose", ""),
                 key_points=sec_data.get("key_points", []),
                 target_length=sec_data.get("target_length", 500),
                 subsections=sec_data.get("subsections", [])

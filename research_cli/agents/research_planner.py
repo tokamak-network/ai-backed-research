@@ -139,22 +139,22 @@ Create the complete research plan now."""
         # Convert to ResearchPlan object
         sections = [
             SectionSpec(
-                id=s["id"],
-                title=s["title"],
-                key_points=s["key_points"],
+                id=s.get("id", f"section_{idx}"),
+                title=s.get("title", f"Section {idx}"),
+                key_points=s.get("key_points", []),
                 dependencies=s.get("dependencies", []),
                 estimated_tokens=s.get("estimated_tokens", 3000),
                 depth_level=s.get("depth_level", "detailed"),
                 order=s.get("order", idx)
             )
-            for idx, s in enumerate(plan_data["sections"], 1)
+            for idx, s in enumerate(plan_data.get("sections", []), 1)
         ]
 
         total_tokens = sum(s.estimated_tokens for s in sections)
 
         plan = ResearchPlan(
-            topic=plan_data["topic"],
-            research_questions=plan_data["research_questions"],
+            topic=plan_data.get("topic", ""),
+            research_questions=plan_data.get("research_questions", []),
             sections=sections,
             total_estimated_tokens=total_tokens,
             recommended_experts=plan_data.get("recommended_experts", [])

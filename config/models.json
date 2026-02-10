@@ -37,7 +37,8 @@
     "author_response": { "tier": "light", "temperature": 0.7, "max_tokens": 4096 },
     "propose_reviewers": { "tier": "light", "temperature": 0.7, "max_tokens": 2048 },
     "desk_editor": { "tier": "light", "temperature": 0.1, "max_tokens": 1024 },
-    "categorizer": { "tier": "light", "temperature": 0.0, "max_tokens": 512 }
+    "categorizer": { "tier": "light", "temperature": 0.3, "max_tokens": 512 },
+    "title_generator": { "tier": "light", "temperature": 0.7, "max_tokens": 100 }
   },
   "provider_config": {
     "llm": {

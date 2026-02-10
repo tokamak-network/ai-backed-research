@@ -30,6 +30,7 @@ class ModeratorAgent:
         domain: str = "interdisciplinary research",
         completeness_warning: str = None,
         outlier_info: str = None,
+        threshold: float = 7.0,
     ) -> Dict:
         """Make accept/reject decision based on peer reviews.
 
@@ -42,6 +43,7 @@ class ModeratorAgent:
             domain: Domain description for editorial context
             completeness_warning: Warning about manuscript completeness issues
             outlier_info: Description of outlier reviewers detected
+            threshold: Acceptance threshold score (papers >= threshold should be accepted)
 
         Returns:
             Dictionary with decision, reasoning, and meta-review
@@ -130,6 +132,7 @@ When one reviewer scores significantly lower than others, consider:
 SUBMISSION STATUS:
 - Round: {round_number} of {max_rounds}
 - Average reviewer score: {overall_avg:.1f}/10
+- **Acceptance threshold: {threshold}/10** (papers meeting or exceeding this threshold should be accepted unless fundamental flaws exist)
 {"- **FINAL ROUND**: You MUST make a binary decision: ACCEPT or REJECT. No further revisions are possible. Consider the full trajectory, improvement shown, and whether remaining issues are minor enough to overlook." if round_number >= max_rounds else ""}
 {trajectory_summary}
 
@@ -181,15 +184,20 @@ Make your decision in JSON format:
 }}
 
 {f"FINAL ROUND — Binary decision only: ACCEPT or REJECT. No more revisions possible. If the paper has shown improvement and remaining issues are minor, ACCEPT. If fundamental problems persist, REJECT." if round_number >= max_rounds else "DECISION GUIDANCE (not strict rules):"}
-{f"" if round_number >= max_rounds else "- ACCEPT: Contribution is valuable, major issues resolved (7.0+ or notable contribution with outlier reviewer)"}
+{f"" if round_number >= max_rounds else f"- ACCEPT: Score >= {threshold} OR notable contribution with outlier reviewer OR valuable contribution with strong improvement"}
 {f"" if round_number >= max_rounds else "- MINOR_REVISION: Specific small fixes needed"}
 {f"" if round_number >= max_rounds else "- MAJOR_REVISION: Substantial problems remain"}
 {f"" if round_number >= max_rounds else "- REJECT: Fundamental flaws or insufficient contribution"}
 
-Remember: You are an EDITOR, not a score calculator. The average score is advisory, not binding.
-A paper near 7.0 with strong improvement trajectory and substantive contribution SHOULD be accepted.
-A paper well below 7.0 but with a harsh outlier reviewer may still merit acceptance if other reviewers are positive.
-If an article makes a clear contribution to the field, err on the side of acceptance.
+**CRITICAL THRESHOLD GUIDANCE**:
+- If average score >= {threshold}/10 and no fundamental flaws exist, you SHOULD accept.
+- Scores at or above {threshold} indicate the paper meets publication standards.
+- Only reject papers above {threshold} if there are clear fundamental problems (plagiarism, fabricated data, completely wrong methodology, etc.).
+- Editorial judgment is for borderline cases ({threshold-1.0}-{threshold}), not to override clear threshold success.
+
+Remember: You are an EDITOR, not a score calculator, but the threshold ({threshold}) represents the editorial board's agreed standard.
+A paper at or above {threshold} with substantive contribution should be accepted unless exceptional circumstances exist.
+If an article makes a clear contribution to the field and meets the threshold, accept it.
 
 Exercise your judgment now."""
 

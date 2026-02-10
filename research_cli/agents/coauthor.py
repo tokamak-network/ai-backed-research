@@ -148,9 +148,9 @@ Return your research in JSON format:
         for i, f_data in enumerate(data.get("findings", [])):
             finding = Finding(
                 id=f"{self.author_id}_finding_{i+1}",
-                title=f_data["title"],
-                description=f_data["description"],
-                evidence=f_data["evidence"],
+                title=f_data.get("title", f"Finding {i+1}"),
+                description=f_data.get("description", ""),
+                evidence=f_data.get("evidence", []),
                 citations=[],  # Will be filled when references are assigned IDs
                 author=self.name,
                 confidence=f_data.get("confidence", "medium")
@@ -162,10 +162,10 @@ Return your research in JSON format:
         for r_data in data.get("references", []):
             reference = Reference(
                 id=0,  # Will be assigned later
-                authors=r_data["authors"],
-                title=r_data["title"],
-                venue=r_data["venue"],
-                year=r_data["year"],
+                authors=r_data.get("authors", []),
+                title=r_data.get("title", "Untitled"),
+                venue=r_data.get("venue", ""),
+                year=r_data.get("year", 0),
                 url=r_data.get("url"),
                 doi=r_data.get("doi"),
                 summary=r_data.get("summary", "")

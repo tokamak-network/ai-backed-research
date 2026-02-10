@@ -734,6 +734,7 @@ class WorkflowOrchestrator:
                         domain=self.domain_desc,
                         completeness_warning=completeness_warning,
                         outlier_info=outlier_info,
+                        threshold=self.threshold,
                     )
                     moderator_time = self.tracker.end_operation("moderator")
                     self.tracker.record_moderator_time(moderator_time)
@@ -1019,6 +1020,12 @@ class WorkflowOrchestrator:
         else:
             console.print(f"[green]✓ Manuscript completeness check passed[/green]")
 
+        # Generate academic title from manuscript content
+        console.print("\n[cyan]Generating academic title...[/cyan]")
+        from ..utils.title_generator import generate_title_from_manuscript
+        self.generated_title = await generate_title_from_manuscript(manuscript, self.topic)
+        console.print(f"[green]✓ Title: {self.generated_title}[/green]")
+
         console.print()
         return manuscript
 
@@ -1070,6 +1077,7 @@ class WorkflowOrchestrator:
         # Save complete workflow
         workflow_data = {
             "topic": self.topic,
+            "title": getattr(self, 'generated_title', self.topic),
             "output_directory": str(self.output_dir),
             "max_rounds": self.max_rounds,
             "threshold": self.threshold,
@@ -1359,6 +1367,7 @@ class WorkflowOrchestrator:
                         domain=self.domain_desc,
                         completeness_warning=completeness_warning,
                         outlier_info=outlier_info,
+                        threshold=self.threshold,
                     )
                     moderator_time = self.tracker.end_operation("moderator")
                     self.tracker.record_moderator_time(moderator_time)

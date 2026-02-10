@@ -136,9 +136,9 @@ Take research notes now. Include 3-5 relevant sources."""
         notes = []
         for source_data in data.get("sources", []):
             note = LiteratureNote(
-                source=source_data["source"],
-                source_type=source_data["source_type"],
-                key_findings=source_data["key_findings"],
+                source=source_data.get("source", "Unknown source"),
+                source_type=source_data.get("source_type", "unknown"),
+                key_findings=source_data.get("key_findings", []),
                 quotes=source_data.get("quotes", []),
                 questions_raised=source_data.get("questions_raised", []),
                 relevance=source_data.get("relevance", "")
@@ -303,8 +303,8 @@ Identify 3-5 key gaps."""
         questions = []
         for q_data in data.get("questions", []):
             question = QuestionNote(
-                question=q_data["question"],
-                why_important=q_data["why_important"],
+                question=q_data.get("question", ""),
+                why_important=q_data.get("why_important", ""),
                 potential_approaches=q_data.get("potential_approaches", []),
                 answered=False
             )

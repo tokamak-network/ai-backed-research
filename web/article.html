@@ -65,6 +65,76 @@
         .tldr-box p {
             margin: 0;
         }
+        /* Key Takeaways box (intermediate audience) */
+        .key-takeaways-box {
+            background: linear-gradient(135deg, rgba(15, 98, 254, 0.03) 0%, rgba(15, 98, 254, 0.01) 100%);
+            border: 1px solid var(--border-subtle, #e0e0e0);
+            border-left: 4px solid #0f62fe;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 2px;
+        }
+        .key-takeaways-box h2 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-tertiary, #6f6f6f);
+            margin: 0 0 1rem 0;
+        }
+        .key-takeaways-box ul {
+            margin: 0;
+            padding-left: 1.5rem;
+            list-style: none;
+        }
+        .key-takeaways-box li {
+            position: relative;
+            padding-left: 0.5rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+        .key-takeaways-box li:before {
+            content: "▸";
+            position: absolute;
+            left: -1rem;
+            color: #0f62fe;
+            font-weight: bold;
+        }
+        /* Why This Matters box (beginner audience) */
+        .why-matters-box {
+            background: linear-gradient(135deg, rgba(24, 160, 251, 0.05) 0%, rgba(15, 98, 254, 0.02) 100%);
+            border: 1px solid var(--border-subtle, #e0e0e0);
+            border-left: 4px solid #18a0fb;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 2px;
+        }
+        .why-matters-box h2 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-tertiary, #6f6f6f);
+            margin: 0 0 1rem 0;
+        }
+        /* Abstract box (professional audience) */
+        .abstract-box {
+            background: var(--layer-01, #f4f4f4);
+            border: 1px solid var(--border-subtle, #e0e0e0);
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 2rem;
+            border-radius: 2px;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+        .abstract-box h2 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-tertiary, #6f6f6f);
+            margin: 0 0 1rem 0;
+        }
         /* Citation hyperlinks */
         /* Download button */
         .download-report-btn {
@@ -231,9 +301,10 @@
                 const expertTeam = meta.expert_team || [];
                 const audienceLevel = meta.audience_level || 'professional';
                 const researchType = meta.research_type || null;
+                const displayTitle = meta.title || meta.topic;
 
                 // Update page title
-                document.title = `${meta.topic} | Autonomous Research Press`;
+                document.title = `${displayTitle} | Autonomous Research Press`;
 
                 // Render article header
                 const header = document.getElementById('article-header');
@@ -247,7 +318,7 @@
                             <a href="review.html?id=${id}" style="color: #3b82f6; text-decoration: underline; font-weight: 600;">View full review board</a> to see all versions, reviewer feedback, and revision history.
                         </span>
                     </div>
-                    <h1 class="article-title">${meta.topic}</h1>
+                    <h1 class="article-title">${displayTitle}</h1>
                     <div class="article-meta">
                         ${researchType ? `<span class="meta-item" style="padding:2px 8px;background:var(--layer-01);border:1px solid var(--border-subtle);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:${researchType === 'survey' ? '#8a3ffc' : '#0f62fe'};">${researchType === 'survey' ? 'Survey' : 'Original Research'}</span>` : ''}
                         <span class="meta-item"><strong>Version:</strong> ${version}</span>
