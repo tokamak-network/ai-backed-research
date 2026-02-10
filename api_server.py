@@ -1676,6 +1676,27 @@ async def propose_reviewers(request: ProposeReviewersRequest):
         raise HTTPException(status_code=500, detail=f"Reviewer generation failed: {str(e)}")
 
 
+@app.get("/api/version")
+async def get_version():
+    """Get system version and changelog information."""
+    version_file = Path("VERSION")
+    changelog_file = Path("CHANGELOG.md")
+
+    version = "unknown"
+    if version_file.exists():
+        version = version_file.read_text().strip()
+
+    changelog = ""
+    if changelog_file.exists():
+        changelog = changelog_file.read_text()
+
+    return {
+        "version": version,
+        "changelog": changelog,
+        "updated_at": datetime.now().isoformat()
+    }
+
+
 @app.get("/api/check-admin")
 async def check_admin(request: Request):
     """Check if the current API key has admin privileges."""
