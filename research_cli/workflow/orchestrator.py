@@ -210,6 +210,24 @@ SCORING ADJUSTMENTS (intermediate audience — APPLY THESE):
 
 """
 
+    if round_number > 1:
+        citations_guidance = (
+            "Score using the same 1-10 criteria as Round 1. "
+            "Focus on whether previous issues were addressed.\n\n"
+            "Citations scoring (same criteria as Round 1):\n"
+            "- 9-10: All claims properly cited with verifiable, real references\n"
+            "- 5-6: Some citations but gaps or dubious references\n"
+            "- 1-2: No bibliography or fabricated references\n"
+            "- A bibliography existing does NOT automatically earn 9-10. Verify reference quality."
+        )
+    else:
+        citations_guidance = (
+            "Citations scoring:\n"
+            "- 9-10: All claims properly cited with verifiable, real references\n"
+            "- 5-6: Some citations but gaps or dubious references\n"
+            "- 1-2: No bibliography or fabricated references"
+        )
+
     review_prompt = f"""Review this research manuscript (Round {round_number}) from your expert perspective.
 
 {short_paper_note}{audience_note}{research_type_note}{previous_context}
@@ -283,10 +301,7 @@ Provide your review in the following JSON format:
   "detailed_feedback": "<paragraph of detailed feedback from your domain expertise>"
 }}
 
-{"Score using the same 1-10 criteria as Round 1. Focus on whether previous issues were addressed.\n\nCitations scoring (same criteria as Round 1):\n- 9-10: All claims properly cited with verifiable, real references\n- 5-6: Some citations but gaps or dubious references\n- 1-2: No bibliography or fabricated references\n- A bibliography existing does NOT automatically earn 9-10. Verify reference quality." if round_number > 1 else """Citations scoring:
-- 9-10: All claims properly cited with verifiable, real references
-- 5-6: Some citations but gaps or dubious references
-- 1-2: No bibliography or fabricated references"""}
+{citations_guidance}
 
 Penalize: unsupported claims, fabricated citations. Reward: inline [1], [2] citations, real DOIs/URLs."""
 
