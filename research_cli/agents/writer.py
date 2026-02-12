@@ -505,6 +505,7 @@ Keep each point to ONE sentence. Address the most important concerns from each r
         author_response: Optional[str] = None,
         audience_level: str = "professional",
         research_type: str = "survey",
+        coauthor_notes: Optional[List[str]] = None,
     ) -> str:
         """Revise manuscript based on specialist feedback.
 
@@ -518,6 +519,7 @@ Keep each point to ONE sentence. Address the most important concerns from each r
             author_response: Author's response/rebuttal from this round (for revision accountability)
             audience_level: "beginner", "intermediate", or "professional"
             research_type: "survey" or "research" — adjusts revision focus
+            coauthor_notes: Optional list of revision notes from co-authors (collaborative workflow only)
 
         Returns:
             Revised manuscript text
@@ -597,6 +599,23 @@ CITATION RULES FOR REVISION:
 - Use sequential [1], [2], [3]... numbered by order of first appearance
 - If reviewers noted weak/missing citations, add more from this list
 - Ensure ## References section is complete, with one blank line between entries
+"""
+
+        # Build co-author revision notes block
+        coauthor_block = ""
+        if coauthor_notes:
+            notes_text = "\n\n".join(
+                f"--- Co-Author {i+1} ---\n{note}"
+                for i, note in enumerate(coauthor_notes) if note
+            )
+            if notes_text:
+                coauthor_block = f"""
+CO-AUTHOR REVISION NOTES (domain experts from your writing team):
+{notes_text}
+
+These notes are from your co-authors who have domain expertise.
+Incorporate their domain-specific suggestions alongside the reviewer feedback.
+
 """
 
         # Build accountability block from author response
@@ -687,7 +706,7 @@ REVISION CHECKLIST (you must address every item):
 {checklist}
 
 ---
-{accountability_block}
+{coauthor_block}{accountability_block}
 REVISION INSTRUCTIONS:
 
 1. Read all reviews carefully and the revision checklist above

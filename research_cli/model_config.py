@@ -115,7 +115,7 @@ def get_reviewer_rotation() -> List[ModelSpec]:
     roles = config.get("roles", {})
     rotation = roles.get("reviewer_rotation", [])
     if rotation:
-        return [ModelSpec(**r) for r in rotation]
+        return [ModelSpec(model=r["model"], provider=r["provider"]) for r in rotation]
     # Fallback: use default reviewer model for all
     rc = get_role_config("reviewer")
     return [rc.primary]

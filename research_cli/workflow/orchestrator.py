@@ -646,6 +646,10 @@ class WorkflowOrchestrator:
         # Phase timings from collaborative workflow (set externally before run)
         self.phase_timings: List[dict] = []
 
+        # Co-author agents for collaborative workflow (set externally before run)
+        # When populated, coauthors analyze reviews and provide revision notes to the writer
+        self.coauthor_agents: list = []
+
     @contextmanager
     def _spinner(self, description: str):
         """Context manager for optional Rich Progress spinner.
@@ -1012,6 +1016,20 @@ class WorkflowOrchestrator:
 
             previous_manuscript = current_manuscript
 
+            # Gather co-author revision notes (parallel) before writer revises
+            coauthor_notes = []
+            if self.coauthor_agents:
+                if self.status_callback:
+                    self.status_callback("revising", round_num,
+                        f"Round {round_num}: Co-authors analyzing reviewer feedback...")
+                console.print(f"[cyan]Co-authors analyzing reviewer feedback ({len(self.coauthor_agents)} agents)...[/cyan]")
+
+                coauthor_notes = await asyncio.gather(*[
+                    agent.analyze_reviews(reviews, current_manuscript)
+                    for agent in self.coauthor_agents
+                ])
+                console.print(f"[green]✓ Co-author revision notes collected[/green]")
+
             # Generate revision
             self._current_stage = f"manuscript revision (round {round_num})"
             if self.status_callback:
@@ -1029,6 +1047,7 @@ class WorkflowOrchestrator:
                     article_length=self.article_length,
                     audience_level=self.audience_level,
                     research_type=self.research_type,
+                    coauthor_notes=coauthor_notes if coauthor_notes else None,
                 )
                 revision_time = self.tracker.end_operation("revision")
                 self.tracker.record_revision_time(revision_time)
@@ -1660,6 +1679,20 @@ Research Type: {self.research_type}
 
             previous_manuscript = current_manuscript
 
+            # Gather co-author revision notes (parallel) before writer revises
+            coauthor_notes = []
+            if self.coauthor_agents:
+                if self.status_callback:
+                    self.status_callback("revising", round_num,
+                        f"Round {round_num}: Co-authors analyzing reviewer feedback...")
+                console.print(f"[cyan]Co-authors analyzing reviewer feedback ({len(self.coauthor_agents)} agents)...[/cyan]")
+
+                coauthor_notes = await asyncio.gather(*[
+                    agent.analyze_reviews(reviews, current_manuscript)
+                    for agent in self.coauthor_agents
+                ])
+                console.print(f"[green]✓ Co-author revision notes collected[/green]")
+
             # Generate revision
             self._current_stage = f"manuscript revision (round {round_num})"
             if self.status_callback:
@@ -1677,6 +1710,7 @@ Research Type: {self.research_type}
                     article_length=self.article_length,
                     audience_level=self.audience_level,
                     research_type=self.research_type,
+                    coauthor_notes=coauthor_notes if coauthor_notes else None,
                 )
                 revision_time = self.tracker.end_operation("revision")
                 self.tracker.record_revision_time(revision_time)

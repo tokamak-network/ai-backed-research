@@ -181,6 +181,9 @@ class CollaborativeWorkflowOrchestrator:
             writing_phase.phase_timing,
         ]
 
+        # Pass co-author agents so they can provide revision notes during peer review
+        review_workflow.coauthor_agents = writing_phase.coauthor_agents
+
         # Run review workflow with pre-written manuscript
         review_result = await review_workflow.run(
             initial_manuscript=manuscript_text

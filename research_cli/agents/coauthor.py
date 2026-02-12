@@ -1,6 +1,6 @@
 """Co-author agent for collaborative research."""
 
-from typing import List
+from typing import List, Dict
 from ..model_config import create_llm_for_role
 from ..utils.json_repair import repair_json
 from ..models.collaborative_research import (
@@ -305,3 +305,84 @@ Return JSON:
         feedback = repair_json(response.content)
 
         return feedback
+
+    async def analyze_reviews(
+        self,
+        reviews: List[Dict],
+        manuscript: str,
+    ) -> str:
+        """Analyze reviewer feedback and generate domain-specific revision notes.
+
+        Produces actionable revision guidance from this co-author's expertise
+        perspective, which the writer uses alongside reviewer feedback during
+        manuscript revision.
+
+        Args:
+            reviews: List of review dictionaries from specialists
+            manuscript: Current manuscript text
+
+        Returns:
+            Revision notes as plain text (for direct insertion into writer prompt)
+        """
+        system_prompt = f"""You are an expert researcher in {self.expertise}.
+
+Your specializations: {', '.join(self.focus_areas)}
+
+You are a co-author on this manuscript. External peer reviewers have provided feedback.
+Your job is to analyze their feedback through the lens of your domain expertise and
+produce specific, actionable revision notes for the lead writer."""
+
+        # Extract key review elements
+        review_summaries = []
+        for i, review in enumerate(reviews):
+            name = review.get('specialist_name', review.get('expert_name', f'Reviewer {i+1}'))
+            avg = review.get('average', 'N/A')
+            strengths = "\n".join(f"  - {s}" for s in review.get('strengths', []))
+            weaknesses = "\n".join(f"  - {w}" for w in review.get('weaknesses', []))
+            suggestions = "\n".join(f"  - {s}" for s in review.get('suggestions', []))
+            review_summaries.append(
+                f"### {name} (Score: {avg}/10)\n"
+                f"Strengths:\n{strengths}\n"
+                f"Weaknesses:\n{weaknesses}\n"
+                f"Suggestions:\n{suggestions}"
+            )
+
+        reviews_text = "\n\n".join(review_summaries)
+
+        prompt = f"""As a co-author with expertise in {self.expertise}, analyze the following peer reviews
+and provide revision guidance for the lead writer.
+
+CURRENT MANUSCRIPT (for context):
+{manuscript[:3000]}
+{"[...manuscript truncated for brevity...]" if len(manuscript) > 3000 else ""}
+
+---
+
+PEER REVIEWS:
+{reviews_text}
+
+---
+
+Provide revision notes covering:
+
+1. **Domain-Specific Interpretation**: Which reviewer concerns relate to your expertise?
+   Explain what the reviewers are really asking for from a domain perspective.
+
+2. **Specific Revision Suggestions**: For each relevant concern, provide concrete guidance:
+   - What content should be added, removed, or rewritten
+   - Specific technical details, examples, or frameworks to include
+   - Domain-accurate terminology or concepts the writer should use
+
+3. **Additional Domain Insights**: Anything the reviewers missed that your expertise
+   suggests should also be addressed in the revision.
+
+Be specific and actionable. The writer will use your notes directly during revision."""
+
+        response = await self.llm.generate(
+            prompt=prompt,
+            system=system_prompt,
+            temperature=0.7,
+            max_tokens=2048
+        )
+
+        return response.content
