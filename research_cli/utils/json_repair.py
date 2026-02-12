@@ -30,17 +30,28 @@ def repair_json(text: str) -> dict:
     except (json.JSONDecodeError, ValueError):
         pass
 
-    # Strategy 2: Extract ```json code block
-    json_block_match = re.search(r'```json\s*\n(.*?)(?:\n```|$)', text, re.DOTALL)
-    if json_block_match:
-        block = json_block_match.group(1).strip()
-        try:
-            return json.loads(block, strict=False)
-        except (json.JSONDecodeError, ValueError):
-            # Try repairing the code block content
-            repaired = _repair_truncated(block)
-            if repaired is not None:
-                return repaired
+    # Strategy 2: Extract markdown code block (```json or ``` with JSON content)
+    # Try multiple patterns for robustness
+    patterns = [
+        r'```json\s*\n(.*?)(?:\n```|$)',           # ```json\n{...}\n```
+        r'```json\s*(.*?)(?:```|$)',               # ```json{...}``` (no newline)
+        r'```\s*\n(\{.*?\})(?:\n```|$)',           # ```\n{...}\n``` (no language)
+        r'```\s*(\{.*?\})```',                     # ```{...}``` (compact)
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text, re.DOTALL)
+        if match:
+            block = match.group(1).strip()
+            try:
+                return json.loads(block, strict=False)
+            except (json.JSONDecodeError, ValueError):
+                # Try repairing the code block content
+                repaired = _repair_truncated(block)
+                if repaired is not None:
+                    return repaired
+            # If this pattern matched but failed, try next pattern
+            continue
 
     # Strategy 3: Extract from first { to last }
     first_brace = text.find('{')

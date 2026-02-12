@@ -28,7 +28,8 @@ class TeamComposerAgent:
         self,
         topic: str,
         num_experts: int = 3,
-        additional_context: str = ""
+        additional_context: str = "",
+        secondary_category: str = "",
     ) -> List[ExpertProposal]:
         """Analyze topic and propose optimal expert team.
 
@@ -36,18 +37,19 @@ class TeamComposerAgent:
             topic: Research topic to analyze
             num_experts: Number of expert reviewers to propose
             additional_context: Optional additional context about requirements
+            secondary_category: Optional secondary domain description for interdisciplinary topics
 
         Returns:
             List of ExpertProposal objects
         """
-        prompt = self._build_proposal_prompt(topic, num_experts, additional_context)
+        prompt = self._build_proposal_prompt(topic, num_experts, additional_context, secondary_category)
         system_prompt = self._get_system_prompt()
 
         response = await self.llm.generate(
             prompt=prompt,
             system=system_prompt,
             temperature=0.7,  # Allow creative team composition
-            max_tokens=4096
+            max_tokens=2048
         )
 
         # Parse JSON response
@@ -120,7 +122,8 @@ You propose high-quality, diverse expert teams for rigorous peer review."""
         self,
         topic: str,
         num_experts: int,
-        additional_context: str
+        additional_context: str,
+        secondary_category: str = "",
     ) -> str:
         """Build prompt for team proposal."""
         prompt = f"""Analyze the following research topic and propose an optimal team of {num_experts} expert reviewers.
@@ -128,6 +131,9 @@ You propose high-quality, diverse expert teams for rigorous peer review."""
 RESEARCH TOPIC:
 {topic}
 """
+
+        if secondary_category:
+            prompt += f"\nSECONDARY DOMAIN: {secondary_category}\nOne reviewer should specifically cover the intersection of the primary topic and this secondary domain.\n"
 
         if additional_context:
             prompt += f"\nADDITIONAL CONTEXT:\n{additional_context}\n"
@@ -143,7 +149,7 @@ Respond in the following JSON format:
   "analysis": "<brief analysis of topic and required expertise>",
   "experts": [
     {{
-      "expert_domain": "<specific domain, e.g., 'Zero-Knowledge Cryptography'>",
+      "expert_domain": "<specific domain — be precise, not broad. Examples by field: CS: 'Distributed Consensus Protocols', Medicine: 'Tumor Immunology & Checkpoint Therapy', Law: 'International Trade Law', Physics: 'Condensed Matter & Topological Insulators', Economics: 'Behavioral Finance & Market Microstructure', Humanities: 'Post-Colonial Literary Theory', Engineering: 'MEMS Sensor Design & Fabrication'>",
       "rationale": "<2-3 sentences: why this expertise is essential for this topic>",
       "focus_areas": [
         "<specific aspect 1>",

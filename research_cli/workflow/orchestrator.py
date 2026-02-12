@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from contextlib import contextmanager
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional
@@ -105,6 +106,8 @@ IMPORTANT: Consider the author's response when evaluating this revision:
 - Are their explanations/disagreements reasonable?
 - Does the revised manuscript reflect their stated changes?
 - Give credit for genuine engagement with feedback
+- For each change the author committed to, verify it was actually implemented
+- Flag any unimplemented commitments as a weakness
 
 ---
 """
@@ -129,6 +132,21 @@ IMPORTANT: Consider the author's response when evaluating this revision:
 - Content should progress from simple to complex
 - Penalize unnecessary jargon; reward clear, accessible explanations
 - Assess whether a non-specialist reader could understand the key points
+- Bullet-point summaries, "Key Takeaway" boxes, and informal structure are EXPECTED, not flaws
+
+SCORING ADJUSTMENTS (beginner audience — APPLY THESE):
+- Clarity is the PRIMARY quality criterion — weight it most heavily.
+- Citations: fabricated or misattributed references are still serious flaws (score ≤4),
+  but do NOT require dense inline [1],[2] citations for every claim. Fewer, well-placed
+  citations with a "Further Reading" section are acceptable. A score of 6-7 is appropriate
+  for a beginner article with a bibliography and a few well-placed citations.
+- Rigor: for beginner articles, rigor means FACTUAL ACCURACY and LOGICAL COHERENCE.
+  Do NOT expect formal proofs, reproducible methodology, or exhaustive evidence chains.
+  A well-reasoned, factually correct explanation deserves rigor 6-8, not 3-4.
+- Novelty: for beginner articles, interpret as PEDAGOGICAL QUALITY — are the explanations
+  fresh, engaging, and effective? Good analogies and clear exposition = high novelty.
+- Review depth: evaluate whether explanations are correct and accessible. Do not demand
+  coverage of additional protocols or papers beyond what aids reader understanding.
 
 """
     elif audience_level == "intermediate":
@@ -137,6 +155,17 @@ IMPORTANT: Consider the author's response when evaluating this revision:
 - Advanced or specialized terms should still be explained
 - Balance between theoretical depth and practical applicability
 - Assess whether someone with basic knowledge could follow the advanced arguments
+
+SCORING ADJUSTMENTS (intermediate audience — APPLY THESE):
+- Citations: fabricated or misattributed references are still serious flaws (score ≤4),
+  but moderate citation density is acceptable — not every claim needs an inline citation
+  if the argument is logically sound and well-reasoned. A score of 6-8 is appropriate
+  for an intermediate article with a bibliography and reasonable citation coverage.
+- Rigor: expect sound arguments and evidence for key claims, but allow more flexibility
+  in formal methodology descriptions compared to professional-level work. Well-reasoned
+  technical explanations without exhaustive citations deserve rigor 6-8.
+- Novelty: interpret as SYNTHESIS AND ACCESSIBILITY QUALITY — how well does the article
+  bridge the gap between introductory and expert material?
 
 """
 
@@ -150,18 +179,34 @@ IMPORTANT: Consider the author's response when evaluating this revision:
 - Do NOT penalize for lack of novel experimental results
 - Do NOT expect original hypotheses or experimental methodology
 - Evaluate the quality of synthesis, comparison, and critical analysis of existing work
+- For the "novelty" score, interpret as SYNTHESIS QUALITY: how useful is the taxonomy,
+  how insightful is the comparative analysis, and how well are research gaps identified?
+  Do NOT penalize for absence of original discoveries — that is not this paper's purpose.
 
 """
     elif research_type == "explainer":
         research_type_note = """NOTE: This is an EXPLAINER / TUTORIAL article. Evaluate accordingly:
-- Clarity: Are concepts explained in an understandable way?
-- Examples: Are there enough real-world examples and analogies?
-- Progression: Does the content build from simple to complex?
+- Concept-first structure: Are difficult/prerequisite concepts explained in a dedicated section BEFORE being used in technical discussion?
+- Clarity: Are concepts explained in an understandable way? Does each concept start with an intuitive explanation before the formal definition?
+- Examples: Are there enough real-world examples and analogies to ground abstract ideas?
+- Progression: Does the content build from simple to complex WITHOUT forward-referencing undefined terms?
 - Accuracy: Are the explanations technically correct (even if simplified)?
 - Do NOT penalize for lack of novel research or comprehensive literature coverage
 - Do NOT expect formal proofs, experimental results, or exhaustive citations
 - Evaluate the quality of pedagogy: would the target audience learn from this?
-- For the "novelty" score, interpret as: how fresh/unique is the explanation approach?
+- For the "novelty" score, interpret as PEDAGOGICAL VALUE: how effective, clear, and
+  engaging is the explanation approach? Does it use fresh analogies or perspectives?
+- PENALIZE if the article dives into technical details before establishing the necessary conceptual foundation
+
+"""
+    elif research_type == "original":
+        research_type_note = """NOTE: This is an ORIGINAL RESEARCH article. Evaluate accordingly:
+- Novelty: Does it present genuinely new contributions, analysis, or findings?
+- Methodology: Is the research methodology sound and well-justified?
+- Results: Are findings clearly presented with supporting evidence?
+- Rigor: Are claims backed by cited evidence, logical arguments, or formal analysis?
+- Do expect clear research questions, methodology, and original analysis
+- Evaluate the significance and potential impact of the contributions
 
 """
 
@@ -169,6 +214,52 @@ IMPORTANT: Consider the author's response when evaluating this revision:
 
 {short_paper_note}{audience_note}{research_type_note}{previous_context}
 {response_context}
+
+SCORING CALIBRATION:
+- 9-10: Reserved for truly exceptional, publication-ready work with zero significant flaws.
+- 7-8: Strong with only minor issues.
+- 5-6: Adequate but with clear gaps — appropriate when important aspects are missing.
+- 3-4: Weak, fundamental problems requiring major revision.
+- 1-2: Critically flawed.
+You MUST identify at least 3 genuine, substantive weaknesses.
+Vague praise like "could be slightly improved" is NOT an acceptable weakness.
+
+CITATION VERIFICATION (check all four levels):
+1. Existence: Is there a bibliography/references section? If not, citations score MUST be ≤3.
+2. Internal consistency: For each reference, are author names, title, venue, and year
+   plausible together? (e.g., a single author split into two entries is a red flag)
+3. Citation-context match: Does each inline [N] actually support the claim it accompanies?
+   A reference titled "MEV taxonomy" cited as evidence for "formal verification" is a mismatch.
+4. Identifier consistency: If DOI/ePrint/URL is provided, does it contradict the title or authors?
+   Flag clear mismatches, but do not flag references simply because you are unfamiliar with them.
+- Fabricated or misattributed references are serious flaws regardless of audience level.
+- Only flag a reference as fabricated if you are confident it is wrong.
+
+AUTHORING CONSTRAINTS (apply to ALL paper types):
+- Authors cannot conduct new experiments, collect primary data, or run simulations.
+- All content is based on synthesis of existing published literature and publicly available data.
+- Do NOT request new experimental results, original data collection, or laboratory work.
+- Suggestions should focus on: better synthesis, deeper analysis, additional literature coverage,
+  improved argumentation, and stronger citations.
+
+RIGOR (apply standards appropriate to this manuscript's domain):
+- Are key claims supported by evidence, formal arguments, or cited sources?
+- Are core concepts precisely defined rather than used loosely?
+- Are assumptions and scope limitations explicitly stated?
+- For empirical claims: is methodology described and reproducible?
+- For theoretical claims: are arguments logically complete with stated premises?
+- For comparative claims: are criteria defined and grounded in specifics?
+- For quantitative data (numbers, statistics, measurements): is the source cited?
+  Uncited numerical claims (e.g., "latency is ~5ms") should be flagged.
+- If the manuscript labels its analysis "quantitative," verify that actual data backs it.
+  Flag qualitative discussion presented as quantitative analysis.
+- Name specific gaps in rigor in your weaknesses — what is asserted without support?
+
+REVIEW DEPTH:
+- Your detailed_feedback MUST be 300-500 words with specific technical analysis.
+- Name specific tools, protocols, papers, or systems relevant to the claims.
+- Provide concrete examples of what is missing, not just that "more detail would help".
+
 MANUSCRIPT:
 {manuscript}
 
@@ -192,25 +283,12 @@ Provide your review in the following JSON format:
   "detailed_feedback": "<paragraph of detailed feedback from your domain expertise>"
 }}
 
-Scoring guide:
-- 9-10: Exceptional, publication-ready
-- 7-8: Strong, minor improvements needed
-- 5-6: Adequate, significant improvements needed
-- 3-4: Weak, major revisions required
-- 1-2: Poor, fundamental issues
+{"Score using the same 1-10 criteria as Round 1. Focus on whether previous issues were addressed.\n\nCitations scoring (same criteria as Round 1):\n- 9-10: All claims properly cited with verifiable, real references\n- 5-6: Some citations but gaps or dubious references\n- 1-2: No bibliography or fabricated references\n- A bibliography existing does NOT automatically earn 9-10. Verify reference quality." if round_number > 1 else """Citations scoring:
+- 9-10: All claims properly cited with verifiable, real references
+- 5-6: Some citations but gaps or dubious references
+- 1-2: No bibliography or fabricated references"""}
 
-Citations scoring guide:
-- 9-10: All major claims properly cited with verifiable references
-- 7-8: Most claims cited, references are real and checkable
-- 5-6: Some citations present but gaps exist, or some references look dubious
-- 3-4: Few citations, many unsupported claims
-- 1-2: No citations or clearly fabricated references
-
-Penalize: unsupported claims, unverifiable references, hallucinated citations.
-Reward: inline citations [1], [2], proper References section, real DOIs/URLs.
-
-Be honest and constructive. Focus on your domain of expertise.
-{"Note: This is a revision - check if previous issues were addressed." if round_number > 1 else ""}"""
+Penalize: unsupported claims, fabricated citations. Reward: inline [1], [2] citations, real DOIs/URLs."""
 
     tracker.start_operation(f"review_{specialist_id}")
     response = await llm.generate(
@@ -256,6 +334,7 @@ async def run_review_round(
     article_length: str = "full",
     audience_level: str = "professional",
     research_type: str = "survey",
+    quiet: bool = False,
 ) -> tuple[List[Dict], float]:
     """Run one round of peer review.
 
@@ -270,6 +349,7 @@ async def run_review_round(
         article_length: "full" or "short" — adjusts reviewer expectations
         audience_level: "beginner", "intermediate", or "professional"
         research_type: "survey" or "research" — adjusts review criteria
+        quiet: If True, suppress Rich Progress spinners
 
     Returns:
         (reviews, overall_average)
@@ -279,11 +359,22 @@ async def run_review_round(
     tracker.start_round(round_number)
     reviews = []
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console
-    ) as progress:
+    @contextmanager
+    def _review_spinner():
+        if quiet:
+            class _NoOp:
+                def add_task(self, *a, **kw): return 0
+                def update(self, *a, **kw): pass
+            yield _NoOp()
+        else:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console
+            ) as p:
+                yield p
+
+    with _review_spinner() as progress:
         tasks = {}
         for specialist_id, specialist in specialists.items():
             specialist_name = specialist["name"]
@@ -437,16 +528,8 @@ def _build_auto_accept_decision(
     return {
         "decision": "ACCEPT",
         "confidence": 5,
-        "meta_review": (
-            f"The manuscript achieved an average reviewer score of {overall_average:.1f}/10, "
-            f"meeting the acceptance threshold of {threshold}/10. "
-            f"All structural completeness checks passed. "
-            f"Auto-accepted based on reviewer consensus."
-        ),
-        "key_strengths": unique_strengths or ["Meets quality threshold"],
-        "key_weaknesses": [],
+        "note": f"Score {overall_average:.1f}/10 meets threshold {threshold}. Auto-accepted based on reviewer consensus.",
         "required_changes": [],
-        "recommendation": f"Accepted — score {overall_average:.1f} meets threshold {threshold}.",
         "round": round_number,
         "overall_average": round(overall_average, 1),
         "tokens": 0,
@@ -469,6 +552,7 @@ class WorkflowOrchestrator:
         article_length: str = "full",
         audience_level: str = "professional",
         research_type: str = "survey",
+        quiet: bool = False,
     ):
         """Initialize workflow orchestrator.
 
@@ -483,6 +567,7 @@ class WorkflowOrchestrator:
             article_length: "full" (3,000-5,000 words) or "short" (1,500-2,500 words)
             audience_level: "beginner", "intermediate", or "professional"
             research_type: "survey" or "research" — determines writing/review approach
+            quiet: If True, suppress Rich Progress spinners (for parallel execution)
         """
         self.expert_configs = expert_configs
         self.topic = topic
@@ -495,6 +580,7 @@ class WorkflowOrchestrator:
         self.article_length = article_length
         self.audience_level = audience_level
         self.research_type = research_type
+        self.quiet = quiet
         self._current_stage = "initializing"  # Track current pipeline stage for error context
 
         # Compute domain description from category
@@ -502,6 +588,12 @@ class WorkflowOrchestrator:
             self.domain_desc = get_domain_description(
                 category["major"], category.get("subfield", "")
             )
+            # Append secondary domain perspective if present
+            if category.get("secondary_major"):
+                secondary_desc = get_domain_description(
+                    category["secondary_major"], category.get("secondary_subfield", "")
+                )
+                self.domain_desc += f" with {secondary_desc} perspective"
         else:
             self.domain_desc = "interdisciplinary research"
 
@@ -520,6 +612,29 @@ class WorkflowOrchestrator:
 
         # Sources retrieved before writing (populated in _generate_initial_manuscript)
         self.sources: List[Reference] = []
+
+        # Phase timings from collaborative workflow (set externally before run)
+        self.phase_timings: List[dict] = []
+
+    @contextmanager
+    def _spinner(self, description: str):
+        """Context manager for optional Rich Progress spinner.
+
+        In quiet mode (parallel execution), yields a no-op object to avoid
+        Rich LiveError from concurrent Progress instances.
+        """
+        if self.quiet:
+            class _NoOp:
+                def add_task(self, *a, **kw): return 0
+                def update(self, *a, **kw): pass
+            yield _NoOp()
+        else:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console
+            ) as progress:
+                yield progress
 
     async def run(self, initial_manuscript: Optional[str] = None) -> dict:
         """Run the complete workflow.
@@ -565,11 +680,7 @@ class WorkflowOrchestrator:
             if self.status_callback:
                 self.status_callback("writing", 0, "Verifying and strengthening citations...")
 
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console
-            ) as progress:
+            with self._spinner("[cyan]Verifying citations...") as progress:
                 task = progress.add_task("[cyan]Verifying citations...", total=None)
                 self.tracker.start_operation("citation_verification")
                 manuscript = await self.citation_verifier.verify_citations(
@@ -608,11 +719,7 @@ class WorkflowOrchestrator:
             self.status_callback("desk_screening", 0, "Editor screening manuscript...")
 
         console.print("\n[cyan]Desk editor screening manuscript...[/cyan]")
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
-        ) as progress:
+        with self._spinner("[cyan]Desk editor screening...") as progress:
             task = progress.add_task("[cyan]Desk editor screening...", total=None)
             desk_result = await self.desk_editor.screen(current_manuscript, self.topic)
             self._desk_result = desk_result
@@ -687,6 +794,7 @@ class WorkflowOrchestrator:
                 self.article_length,
                 self.audience_level,
                 self.research_type,
+                quiet=self.quiet,
             )
 
             # Update status after reviews complete
@@ -698,8 +806,7 @@ class WorkflowOrchestrator:
             completeness_warning = None
             if not completeness["is_complete"]:
                 completeness_warning = (
-                    f"COMPLETENESS WARNING: {', '.join(completeness['issues'])}. "
-                    "An incomplete manuscript MUST NOT be accepted."
+                    f"COMPLETENESS WARNING: {', '.join(completeness['issues'])}."
                 )
                 console.print(f"[yellow]⚠ {completeness_warning}[/yellow]")
 
@@ -718,11 +825,7 @@ class WorkflowOrchestrator:
                 # Moderator decision
                 console.print("\n[cyan]Moderator evaluating...[/cyan]")
 
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    console=console
-                ) as progress:
+                with self._spinner("[cyan]Moderator evaluating...") as progress:
                     task = progress.add_task("[cyan]Moderator evaluating...", total=None)
                     self.tracker.start_operation("moderator")
                     moderator_decision = await self.moderator.make_decision(
@@ -760,12 +863,16 @@ class WorkflowOrchestrator:
                 "REJECT": "red"
             }.get(moderator_decision["decision"], "white")
 
+            # Build display text — supports both new (note) and legacy (meta_review) format
+            note_text = moderator_decision.get('note') or moderator_decision.get('recommendation') or moderator_decision.get('meta_review', '')
+            changes = moderator_decision.get('required_changes', [])
+            changes_text = "\n".join(f"• {c}" for c in changes) if changes else "(none)"
+
             console.print(Panel.fit(
                 f"[bold {decision_color}]Decision: {moderator_decision['decision']}[/bold {decision_color}]\n"
                 f"Confidence: {moderator_decision['confidence']}/5\n\n"
-                f"[bold]Meta-Review:[/bold]\n{moderator_decision['meta_review']}\n\n"
-                f"[bold]Required Changes:[/bold]\n" +
-                "\n".join(f"• {c}" for c in moderator_decision['required_changes']),
+                f"{note_text}\n\n"
+                f"[bold]Required Changes:[/bold]\n{changes_text}",
                 title="Moderator Decision",
                 border_style=decision_color
             ))
@@ -777,11 +884,7 @@ class WorkflowOrchestrator:
 
             if needs_revision and not is_final_round:
                 console.print("\n[cyan]Author preparing response...[/cyan]")
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    console=console
-                ) as progress:
+                with self._spinner("[cyan]Author writing response...") as progress:
                     task = progress.add_task("[cyan]Author writing response...", total=None)
                     self.tracker.start_operation("author_response")
                     author_response = await self.author_response_agent.write_author_response(
@@ -884,11 +987,7 @@ class WorkflowOrchestrator:
             if self.status_callback:
                 self.status_callback("revising", round_num, f"Round {round_num}: Revising manuscript based on feedback...")
 
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console
-            ) as progress:
+            with self._spinner("[cyan]Writer revising manuscript...") as progress:
                 task = progress.add_task("[cyan]Writer revising manuscript...", total=None)
                 self.tracker.start_operation("revision")
                 revised_manuscript = await self.writer.revise_manuscript(
@@ -970,11 +1069,7 @@ class WorkflowOrchestrator:
         if self.status_callback:
             self.status_callback("searching", 0, "Searching academic databases for real sources...")
 
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
-        ) as progress:
+        with self._spinner("[cyan]Retrieving sources...") as progress:
             task = progress.add_task("[cyan]Retrieving sources (OpenAlex, arXiv, ...)...", total=None)
             retriever = SourceRetriever()
             self.sources = await retriever.search_all(self.topic)
@@ -992,11 +1087,7 @@ class WorkflowOrchestrator:
         # --- Manuscript generation ---
         console.print("\n[cyan]Generating initial manuscript...[/cyan]\n")
 
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
-        ) as progress:
+        with self._spinner("[cyan]Writer generating manuscript...") as progress:
             task = progress.add_task("[cyan]Writer generating manuscript...", total=None)
             self.tracker.start_operation("initial_draft")
             manuscript = await self.writer.write_manuscript(
@@ -1118,6 +1209,7 @@ Research Type: {self.research_type}
             "passed": all_rounds[-1]["passed"],
             "total_rounds": len(all_rounds),
             "performance": metrics.to_dict(),
+            "phase_timings": self.phase_timings if self.phase_timings else None,
             "timestamp": datetime.now().isoformat()
         }
 
@@ -1286,11 +1378,7 @@ Research Type: {self.research_type}
                 prev_reviews = last_round.get("reviews", [])
                 prev_author_response = last_round.get("author_response")
 
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    console=console
-                ) as progress:
+                with self._spinner("[cyan]Writer revising manuscript (resumed)...") as progress:
                     task = progress.add_task("[cyan]Writer revising manuscript (resumed)...", total=None)
                     self.tracker.start_operation("revision")
                     revised_manuscript = await self.writer.revise_manuscript(
@@ -1352,6 +1440,7 @@ Research Type: {self.research_type}
                 self.article_length,
                 self.audience_level,
                 self.research_type,
+                quiet=self.quiet,
             )
 
             if self.status_callback:
@@ -1362,8 +1451,7 @@ Research Type: {self.research_type}
             completeness_warning = None
             if not completeness["is_complete"]:
                 completeness_warning = (
-                    f"COMPLETENESS WARNING: {', '.join(completeness['issues'])}. "
-                    "An incomplete manuscript MUST NOT be accepted."
+                    f"COMPLETENESS WARNING: {', '.join(completeness['issues'])}."
                 )
                 console.print(f"[yellow]⚠ {completeness_warning}[/yellow]")
 
@@ -1417,11 +1505,7 @@ Research Type: {self.research_type}
                     self.tracker.record_author_response(**self.author_response_agent.get_last_token_usage())
                     return result
 
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    console=console
-                ) as progress:
+                with self._spinner("[cyan]Moderator + Author response (parallel)...") as progress:
                     task = progress.add_task("[cyan]Moderator + Author response (parallel)...", total=None)
                     moderator_decision, speculative_author_response = await asyncio.gather(
                         _run_moderator_resume(),
@@ -1443,12 +1527,16 @@ Research Type: {self.research_type}
                 "REJECT": "red"
             }.get(moderator_decision["decision"], "white")
 
+            # Build display text — supports both new (note) and legacy (meta_review) format
+            note_text = moderator_decision.get('note') or moderator_decision.get('recommendation') or moderator_decision.get('meta_review', '')
+            changes = moderator_decision.get('required_changes', [])
+            changes_text = "\n".join(f"• {c}" for c in changes) if changes else "(none)"
+
             console.print(Panel.fit(
                 f"[bold {decision_color}]Decision: {moderator_decision['decision']}[/bold {decision_color}]\n"
                 f"Confidence: {moderator_decision['confidence']}/5\n\n"
-                f"[bold]Meta-Review:[/bold]\n{moderator_decision['meta_review']}\n\n"
-                f"[bold]Required Changes:[/bold]\n" +
-                "\n".join(f"• {c}" for c in moderator_decision['required_changes']),
+                f"{note_text}\n\n"
+                f"[bold]Required Changes:[/bold]\n{changes_text}",
                 title="Moderator Decision",
                 border_style=decision_color
             ))
@@ -1547,11 +1635,7 @@ Research Type: {self.research_type}
             if self.status_callback:
                 self.status_callback("revising", round_num, f"Round {round_num}: Revising manuscript based on feedback...")
 
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console
-            ) as progress:
+            with self._spinner("[cyan]Writer revising manuscript...") as progress:
                 task = progress.add_task("[cyan]Writer revising manuscript...", total=None)
                 self.tracker.start_operation("revision")
                 revised_manuscript = await self.writer.revise_manuscript(

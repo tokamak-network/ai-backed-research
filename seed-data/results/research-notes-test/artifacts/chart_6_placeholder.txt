@@ -1,3 +1,0 @@
-Chart: {'type': 'Stacked area chart: L2 blob usage', 'description': 'Blob consumption by different L2 rollups over time'}
-
-Visualization would be generated here.

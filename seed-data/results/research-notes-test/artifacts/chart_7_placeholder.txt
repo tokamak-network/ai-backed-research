@@ -1,3 +1,0 @@
-Chart: {'type': 'Box plot: Block-level blob distribution', 'description': 'Distribution of blobs per block showing median, quartiles, and outliers'}
-
-Visualization would be generated here.

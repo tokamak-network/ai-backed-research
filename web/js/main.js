@@ -1,4 +1,4 @@
-// AI-Backed Research - Main JavaScript
+// Autonomous Research Press - Main JavaScript
 
 // ====================================
 // Dark Mode
@@ -209,5 +209,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    console.log('🚀 AI-Backed Research loaded');
+    console.log('Autonomous Research Press loaded');
 });

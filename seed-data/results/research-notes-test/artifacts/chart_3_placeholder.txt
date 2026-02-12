@@ -1,3 +1,0 @@
-Chart: {'type': 'Utilization heatmap', 'description': 'Heatmap showing blob slot utilization by hour/day (0-6 blobs per block)'}
-
-Visualization would be generated here.

@@ -1,3 +1,0 @@
-Chart: {'type': 'Comparison table', 'description': 'Theoretical max vs. observed max vs. average throughput with percentage utilization'}
-
-Visualization would be generated here.

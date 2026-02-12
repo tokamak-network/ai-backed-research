@@ -142,7 +142,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 Autonomous Research Press. All rights reserved.</p>
+                <p>&copy; 2026 Autonomous Research Press. All rights reserved. <span id="system-version" style="color: var(--text-secondary); font-size: 0.9em;"></span></p>
                 <p class="footer-note">Research reports are AI-generated and peer-reviewed. Verify critical information independently.</p>
             </div>
         </div>
@@ -150,6 +150,22 @@
 
     <script src="js/main.js"></script>
     <script>
+        // Load system version
+        async function loadSystemVersion() {
+            try {
+                const response = await fetch('/api/version');
+                if (response.ok) {
+                    const data = await response.json();
+                    const versionEl = document.getElementById('system-version');
+                    if (versionEl && data.version) {
+                        versionEl.textContent = `v${data.version}`;
+                    }
+                }
+            } catch (e) {
+                console.log('Version info unavailable');
+            }
+        }
+
         // Load and display articles dynamically from index.json
         async function loadArticles() {
             try {
@@ -290,8 +306,9 @@
             `;
         }
 
-        // Load articles on page load
+        // Load articles and version on page load
         loadArticles();
+        loadSystemVersion();
     </script>
 </body>
 </html>

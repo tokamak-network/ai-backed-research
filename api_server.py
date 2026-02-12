@@ -28,7 +28,7 @@ from research_cli import db as appdb
 from research_cli.model_config import get_role_config, get_reviewer_models, get_pricing, get_all_pricing, create_llm_for_role
 
 
-app = FastAPI(title="AI-Backed Research API")
+app = FastAPI(title="Autonomous Research Press API")
 
 # Enable CORS for local development
 app.add_middleware(
@@ -202,9 +202,16 @@ async def scan_interrupted_workflows():
     if not results_dir.exists():
         return
 
+    # Skip test/benchmark directories from queue
+    SKIP_PATTERNS = ['benchmark-', '-test', 'test-']
+
     interrupted_count = 0
     for project_dir in results_dir.iterdir():
         if not project_dir.is_dir():
+            continue
+
+        # Skip test/benchmark directories
+        if any(pattern in project_dir.name for pattern in SKIP_PATTERNS):
             continue
 
         checkpoint_file = project_dir / "workflow_checkpoint.json"
@@ -342,6 +349,8 @@ class TeamProposalResponse(BaseModel):
 class CategoryInfo(BaseModel):
     major: Optional[str] = None
     subfield: Optional[str] = None
+    secondary_major: Optional[str] = None
+    secondary_subfield: Optional[str] = None
 
 class StartWorkflowRequest(BaseModel):
     topic: str
@@ -399,7 +408,7 @@ activity_logs: Dict[str, List[dict]] = {}
 @app.get("/api/health")
 async def health():
     """Health check endpoint."""
-    return {"status": "ok", "service": "AI-Backed Research API"}
+    return {"status": "ok", "service": "Autonomous Research Press API"}
 
 
 @app.get("/api/queue-status")
@@ -506,6 +515,7 @@ async def propose_team(request: ProposeTeamRequest, api_key: str = Depends(verif
             elif ctx.type == "pdf":
                 additional_context += f"Reference PDF uploaded: {ctx.content}\nPlease consider the research focus and methodology of the referenced paper when proposing reviewers.\n\n"
 
+        # Secondary category context is handled via suggest_category_llm below
         proposals = await composer.propose_team(request.topic, num_experts, additional_context)
 
         # Suggest category based on topic (LLM-based, works for any language)
@@ -1008,7 +1018,9 @@ async def resume_workflow_background(project_id: str, project_dir: Path):
                 workflow_status[project_id]["error_stage"] = stage_label
 
 
-async def _generate_reviewers_from_category(category: dict, topic: str) -> List[ExpertConfig]:
+async def _generate_reviewers_from_category(
+    category: dict, topic: str, secondary_category: Optional[dict] = None
+) -> List[ExpertConfig]:
     """Generate reviewer ExpertConfigs using LLM based on topic and category.
 
     The LLM creates 3 reviewers with expertise tailored to the specific
@@ -1017,6 +1029,7 @@ async def _generate_reviewers_from_category(category: dict, topic: str) -> List[
     Args:
         category: Dict with 'major' and 'subfield' keys.
         topic: Research topic for reviewer specialization.
+        secondary_category: Optional dict with 'major' and 'subfield' for interdisciplinary topics.
 
     Returns:
         List of 3 ExpertConfig reviewer objects.
@@ -1034,25 +1047,41 @@ async def _generate_reviewers_from_category(category: dict, topic: str) -> List[
     try:
         from research_cli.utils.json_repair import repair_json
 
+        # Build secondary category context
+        secondary_context = ""
+        if secondary_category and secondary_category.get("major") and secondary_category.get("subfield"):
+            secondary_name = get_category_name(secondary_category["major"], secondary_category["subfield"])
+            secondary_context = f"\nSECONDARY CATEGORY: {secondary_name}\nAt least one reviewer should cover the intersection of the primary topic and this secondary domain.\n"
+
         llm = create_llm_for_role("categorizer")
         prompt = f"""You are assembling a peer review panel for an academic paper.
 
 TOPIC: {topic}
 CATEGORY: {category_name}
-
+{secondary_context}
 Propose exactly 3 reviewers, each with a distinct area of expertise relevant to this specific topic.
 Each reviewer should bring a different perspective (e.g., theoretical, methodological, applied).
 
-Respond with ONLY valid JSON in this exact format:
+IMPORTANT: Use ONLY role-based titles. DO NOT use personal names like "Dr. Smith" or "Prof. Johnson".
+
+CORRECT FORMAT EXAMPLES:
+- "Machine Learning Expert"
+- "Quantum Algorithms Specialist"
+- "Clinical Psychology Researcher"
+- "Computational Fluid Dynamics Expert"
+
+Example output for a Machine Learning paper:
 {{"reviewers": [
-  {{"name": "Dr. [Realistic full name]", "domain": "[Specific expertise area]", "focus_areas": ["[area1]", "[area2]", "[area3]"]}},
-  {{"name": "Dr. [Realistic full name]", "domain": "[Specific expertise area]", "focus_areas": ["[area1]", "[area2]", "[area3]"]}},
-  {{"name": "Dr. [Realistic full name]", "domain": "[Specific expertise area]", "focus_areas": ["[area1]", "[area2]", "[area3]"]}}
-]}}"""
+  {{"name": "Deep Learning Expert", "domain": "Neural Networks", "focus_areas": ["CNNs", "Transformers", "GANs"]}},
+  {{"name": "Reinforcement Learning Specialist", "domain": "Sequential Decision Making", "focus_areas": ["Policy Optimization", "Multi-Agent RL", "Model-Based RL"]}},
+  {{"name": "Computer Vision Researcher", "domain": "Image Analysis", "focus_areas": ["Object Detection", "Segmentation", "3D Vision"]}}
+]}}
+
+Now generate 3 reviewers for the topic above. Respond with ONLY valid JSON:"""
 
         response = await llm.generate(
             prompt=prompt,
-            system="You propose academic peer reviewers. Respond with ONLY JSON, no markdown, no explanation.",
+            system="You propose academic peer reviewers. Use ONLY role-based titles, NOT personal names. Respond with ONLY JSON.",
             temperature=0.7,
             max_tokens=1024,
         )
@@ -1202,8 +1231,13 @@ async def run_workflow_background(
             for ca in coauthors:
                 add_activity_log(project_id, "info", f"Co-author: {ca.name}")
 
+            # Build secondary category dict if present
+            secondary_cat = None
+            if category and category.get("secondary_major") and category.get("secondary_subfield"):
+                secondary_cat = {"major": category["secondary_major"], "subfield": category["secondary_subfield"]}
+
             # Generate reviewers from category expert pool
-            reviewer_configs = await _generate_reviewers_from_category(category, topic)
+            reviewer_configs = await _generate_reviewers_from_category(category, topic, secondary_category=secondary_cat)
             if not reviewer_configs:
                 add_activity_log(project_id, "warning", "No category reviewers found, using default reviewers")
                 # Fallback: use first 2 expert configs as reviewers
@@ -1219,6 +1253,10 @@ async def run_workflow_background(
             major_field = category.get("major", "computer_science") if category else "computer_science"
             subfield = category.get("subfield", "theory") if category else "theory"
 
+            # Extract secondary fields
+            secondary_major = category.get("secondary_major") if category else None
+            secondary_subfield = category.get("secondary_subfield") if category else None
+
             orchestrator = CollaborativeWorkflowOrchestrator(
                 topic=topic,
                 major_field=major_field,
@@ -1233,6 +1271,8 @@ async def run_workflow_background(
                 status_callback=status_callback,
                 article_length=article_length,
                 research_type=research_type,
+                secondary_major=secondary_major,
+                secondary_subfield=secondary_subfield,
             )
 
             add_activity_log(project_id, "info", "Starting collaborative workflow execution")
@@ -1653,6 +1693,8 @@ class ProposeReviewersRequest(BaseModel):
     topic: str
     major_field: str
     subfield: str
+    secondary_major_field: Optional[str] = None
+    secondary_subfield: Optional[str] = None
 
 
 @app.post("/api/propose-reviewers")
@@ -1660,7 +1702,10 @@ async def propose_reviewers(request: ProposeReviewersRequest):
     """Generate reviewers dynamically using gemini-flash based on topic and category."""
     try:
         category = {"major": request.major_field, "subfield": request.subfield}
-        reviewer_configs = await _generate_reviewers_from_category(category, request.topic)
+        secondary = None
+        if request.secondary_major_field and request.secondary_subfield:
+            secondary = {"major": request.secondary_major_field, "subfield": request.secondary_subfield}
+        reviewer_configs = await _generate_reviewers_from_category(category, request.topic, secondary_category=secondary)
 
         if not reviewer_configs:
             raise HTTPException(status_code=500, detail="Failed to generate reviewers for this category")
@@ -2775,7 +2820,7 @@ async def download_report(project_id: str):
                         md_parts.append(f"- {s}")
                     md_parts.append("")
 
-            # Moderator decision
+            # Moderator decision (supports both new compact and legacy verbose format)
             mod = rd.get("moderator_decision", {})
             if mod:
                 decision = mod.get("decision", "")
@@ -2784,10 +2829,20 @@ async def download_report(project_id: str):
                 md_parts.append(f"**Confidence**: {confidence}/5")
                 md_parts.append("")
 
+                # New format: "note" field
+                if mod.get("note"):
+                    md_parts.append(mod["note"])
+                    md_parts.append("")
+
+                # Legacy format: "recommendation" + "meta_review"
+                if mod.get("recommendation") and not mod.get("note"):
+                    md_parts.append(mod["recommendation"])
+                    md_parts.append("")
                 if mod.get("meta_review"):
                     md_parts.append(mod["meta_review"])
                     md_parts.append("")
 
+                # Legacy: key_strengths / key_weaknesses
                 if mod.get("key_strengths"):
                     md_parts.append("**Key Strengths**:")
                     for s in mod["key_strengths"]:

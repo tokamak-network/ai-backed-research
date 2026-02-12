@@ -39,6 +39,10 @@ class CollaborativeWorkflowOrchestrator:
         status_callback: Optional[Callable] = None,
         article_length: str = "full",
         research_type: str = "survey",
+        audience_level: str = "professional",
+        quiet: bool = False,
+        secondary_major: Optional[str] = None,
+        secondary_subfield: Optional[str] = None,
     ):
         """Initialize collaborative workflow.
 
@@ -55,11 +59,16 @@ class CollaborativeWorkflowOrchestrator:
             research_cycles: Number of research note iterations (default 1)
             status_callback: Status update callback
             article_length: "full" or "short" — passed to reviewers for adjusted expectations
-            research_type: "survey" or "research" — determines writing/review approach
+            research_type: "explainer", "survey", or "original"
+            audience_level: "beginner", "intermediate", or "professional"
+            secondary_major: Optional secondary major field for interdisciplinary topics
+            secondary_subfield: Optional secondary subfield
         """
         self.topic = topic
         self.major_field = major_field
         self.subfield = subfield
+        self.secondary_major = secondary_major
+        self.secondary_subfield = secondary_subfield
         self.writer_team = writer_team
         self.reviewer_configs = reviewer_configs
         self.output_dir = output_dir
@@ -70,6 +79,8 @@ class CollaborativeWorkflowOrchestrator:
         self.status_callback = status_callback
         self.article_length = article_length
         self.research_type = research_type
+        self.audience_level = audience_level
+        self.quiet = quiet
 
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -118,7 +129,9 @@ class CollaborativeWorkflowOrchestrator:
             output_dir=self.output_dir,
             target_length=self.target_manuscript_length,
             status_callback=self.status_callback,
-            parallel=True
+            parallel=True,
+            audience_level=self.audience_level,
+            research_type=self.research_type,
         )
 
         manuscript = await writing_phase.run()
@@ -128,10 +141,26 @@ class CollaborativeWorkflowOrchestrator:
         console.print("[bold cyan] Phase 3: Peer Review[/bold cyan]")
         console.print("[bold]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold]\n")
 
-        # Convert manuscript to text for review
+        # Convert manuscript to full text for review (include abstract/TL;DR + references)
         manuscript_text = manuscript.content
+        if manuscript.abstract:
+            # Determine summary heading based on audience level
+            if self.audience_level in ("beginner", "intermediate"):
+                summary_heading = "## TL;DR"
+            else:
+                summary_heading = "## Abstract"
+            manuscript_text = f"{summary_heading}\n\n{manuscript.abstract}\n\n---\n\n{manuscript.content}"
+        # Append references section if available
+        if manuscript.references:
+            manuscript_text = f"{manuscript_text}\n\n---\n\n{manuscript.references}"
 
         # Create review workflow
+        category_dict = {"major": self.major_field, "subfield": self.subfield}
+        if self.secondary_major:
+            category_dict["secondary_major"] = self.secondary_major
+        if self.secondary_subfield:
+            category_dict["secondary_subfield"] = self.secondary_subfield
+
         review_workflow = WorkflowOrchestrator(
             topic=self.topic,
             expert_configs=self.reviewer_configs,
@@ -139,10 +168,18 @@ class CollaborativeWorkflowOrchestrator:
             max_rounds=self.max_rounds,
             threshold=self.threshold,
             status_callback=self.status_callback,
-            category={"major": self.major_field, "subfield": self.subfield},
+            category=category_dict,
             article_length=self.article_length,
+            audience_level=self.audience_level,
             research_type=self.research_type,
+            quiet=self.quiet,
         )
+
+        # Pass phase timings to review workflow for inclusion in output
+        review_workflow.phase_timings = [
+            research_phase.phase_timing,
+            writing_phase.phase_timing,
+        ]
 
         # Run review workflow with pre-written manuscript
         review_result = await review_workflow.run(
@@ -159,6 +196,9 @@ class CollaborativeWorkflowOrchestrator:
             "review_result": review_result,
             "output_directory": str(self.output_dir)
         }
+        if self.secondary_major and self.secondary_subfield:
+            from ..categories import get_category_name
+            result["secondary_category"] = get_category_name(self.secondary_major, self.secondary_subfield)
 
         console.print("\n[bold green]✓ Complete workflow finished![/bold green]\n")
 

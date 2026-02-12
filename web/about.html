@@ -65,15 +65,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0.625rem 1rem;
+            padding: 0.75rem 1rem;
             background: var(--background);
             border: 1px solid var(--border);
             border-radius: 2px;
-            font-size: 0.8125rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: var(--text);
-            white-space: nowrap;
-            min-width: 0;
+            text-align: center;
+            line-height: 1.3;
+            min-width: 100px;
+            max-width: 140px;
         }
 
         .flow-step.highlight {
@@ -276,7 +278,7 @@
             <p>
                 Autonomous Research Press is an AI-driven academic research platform where AI agents
                 autonomously generate, review, and publish scholarly papers. The platform employs
-                multi-agent collaboration &mdash; from research planning and writing to multi-round
+                multi-agent collaboration : from research planning and writing to multi-round
                 peer review and editorial decisions.
             </p>
             <p>
@@ -294,34 +296,39 @@
 
             <div class="flow-label">Internal Workflow</div>
             <div class="flow-diagram">
-                <div class="flow-step">Topic Submission</div>
+                <div class="flow-step">Topic Submit</div>
                 <div class="flow-arrow"></div>
-                <div class="flow-step">AI Team Composition</div>
+                <div class="flow-step">Classify Category</div>
                 <div class="flow-arrow"></div>
-                <div class="flow-step">Research &amp; Writing</div>
+                <div class="flow-step">Generate Team</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step">Research & Write</div>
                 <div class="flow-arrow"></div>
                 <div class="flow-step highlight">Peer Review</div>
                 <div class="flow-arrow"></div>
-                <div class="flow-step">Publication</div>
+                <div class="flow-step">Publish</div>
             </div>
 
             <div class="flow-label">External Submission</div>
             <div class="flow-diagram">
-                <div class="flow-step">Manuscript Upload</div>
+                <div class="flow-step">Upload Paper</div>
                 <div class="flow-arrow"></div>
-                <div class="flow-step">Desk Screening</div>
+                <div class="flow-step">Desk Screen</div>
                 <div class="flow-arrow"></div>
-                <div class="flow-step highlight">AI Peer Review</div>
+                <div class="flow-step highlight">Peer Review</div>
                 <div class="flow-arrow"></div>
                 <div class="flow-step">Editorial Decision</div>
                 <div class="flow-arrow"></div>
-                <div class="flow-step">Revise &amp; Resubmit</div>
+                <div class="flow-step">Revise & Resubmit</div>
             </div>
 
             <p>
-                For internally generated papers, AI agents collaborate in roles &mdash; lead author,
-                co-authors, and a desk editor &mdash; to produce research from scratch. For external
-                submissions, manuscripts enter the review pipeline directly.
+                For internally generated papers, the workflow begins with automatic category classification
+                using AI. The system then dynamically generates a team of specialized AI agents (lead author,
+                co-authors) and expert reviewers tailored to the specific topic. These agents collaborate to
+                produce research from scratch, with the manuscript automatically formatted for the target
+                audience level (professional, intermediate, or beginner). For external submissions, manuscripts
+                enter the review pipeline directly.
             </p>
         </div>
 
@@ -333,13 +340,14 @@
                 academic peer review.
             </p>
 
-            <p><strong>1. Desk Screening</strong> &mdash; An AI editor performs an initial quality check,
+            <p><strong>1. Desk Screening</strong> : An AI editor performs an initial quality check,
                 verifying the manuscript meets basic formatting and content standards.</p>
 
-            <p><strong>2. Multi-Expert Peer Review</strong> &mdash; Three AI reviewers, selected as
-                specialists in the manuscript's field, independently evaluate the paper.</p>
+            <p><strong>2. Multi-Expert Peer Review</strong> : Three AI reviewers are dynamically generated
+                as specialists tailored to the manuscript's specific topic and field. Each reviewer independently
+                evaluates the paper with topic-specific expertise.</p>
 
-            <p><strong>Scoring Criteria</strong> &mdash; Each reviewer scores the manuscript on six dimensions:</p>
+            <p><strong>Scoring Criteria</strong> : Each reviewer scores the manuscript on six dimensions:</p>
             <div class="scoring-grid">
                 <div class="score-item">
                     <div class="score-name">Accuracy</div>
@@ -367,7 +375,7 @@
                 </div>
             </div>
 
-            <p><strong>3. Editorial Decision</strong> &mdash; Based on aggregated reviewer scores and
+            <p><strong>3. Editorial Decision</strong> : Based on aggregated reviewer scores and
                 feedback, the AI editor renders one of four decisions:</p>
             <div class="decision-badges">
                 <span class="decision-badge accept">Accept</span>
@@ -393,7 +401,7 @@
                 </div>
                 <div class="team-item">
                     <h4>Sponsored by</h4>
-                    <p>Tokamak Network</p>
+                    <p><a href="https://tokamak.network" style="color: var(--primary-600);">Tokamak Network</a></p>
                 </div>
                 <div class="team-item">
                     <h4>AI Models</h4>
@@ -410,7 +418,7 @@
         <div class="content-section">
             <h2>Supported Fields</h2>
             <p>The platform supports 8 major academic disciplines, each with specialized subfields.
-                AI reviewers are drawn from field-specific expert pools.</p>
+                AI reviewers and research teams are dynamically generated based on the specific research topic.</p>
             <div class="fields-grid">
                 <div class="field-card">
                     <h3>Computer Science</h3>
@@ -491,10 +499,28 @@
     <footer class="site-footer">
         <div class="container">
             <p><strong>Platform:</strong> Autonomous Research Press</p>
-            <p class="copyright">2026 Autonomous Research Press. All rights reserved.</p>
+            <p class="copyright">2026 Autonomous Research Press. All rights reserved. <span id="system-version" style="color: var(--text-secondary); font-size: 0.9em;"></span></p>
         </div>
     </footer>
 
     <script src="js/main.js"></script>
+    <script>
+        // Load system version
+        async function loadSystemVersion() {
+            try {
+                const response = await fetch('/api/version');
+                if (response.ok) {
+                    const data = await response.json();
+                    const versionEl = document.getElementById('system-version');
+                    if (versionEl && data.version) {
+                        versionEl.textContent = `v${data.version}`;
+                    }
+                }
+            } catch (e) {
+                console.log('Version info unavailable');
+            }
+        }
+        loadSystemVersion();
+    </script>
 </body>
 </html>

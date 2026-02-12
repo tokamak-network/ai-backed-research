@@ -1,3 +1,0 @@
-Chart: {'type': 'Theoretical capacity chart', 'description': 'Bar chart showing maximum throughput in MB/s and transactions/s under different blob limits'}
-
-Visualization would be generated here.

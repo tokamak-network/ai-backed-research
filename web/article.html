@@ -246,7 +246,7 @@
     <footer class="site-footer">
         <div class="container">
             <p><strong>Platform:</strong> Autonomous Research Press</p>
-            <p class="copyright">2026 Autonomous Research Press. All rights reserved.</p>
+            <p class="copyright">2026 Autonomous Research Press. All rights reserved. <span id="system-version" style="color: var(--text-secondary); font-size: 0.9em;"></span></p>
         </div>
     </footer>
 
@@ -255,6 +255,23 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
     <script src="js/main.js"></script>
     <script>
+        // Load system version
+        async function loadSystemVersion() {
+            try {
+                const response = await fetch('/api/version');
+                if (response.ok) {
+                    const data = await response.json();
+                    const versionEl = document.getElementById('system-version');
+                    if (versionEl && data.version) {
+                        versionEl.textContent = `v${data.version}`;
+                    }
+                }
+            } catch (e) {
+                console.log('Version info unavailable');
+            }
+        }
+        loadSystemVersion();
+
         const params = new URLSearchParams(window.location.search);
         const projectId = params.get('id');
 
