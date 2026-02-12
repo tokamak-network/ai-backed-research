@@ -274,8 +274,8 @@
         async function loadArticle(id) {
             try {
                 const [metaRes, manuscriptsRes] = await Promise.all([
-                    fetch(`data/${id}.json`),
-                    fetch(`data/${id}_manuscripts.json`)
+                    fetch(`/api/projects/${id}`),
+                    fetch(`/api/projects/${id}/manuscripts`)
                 ]);
 
                 if (!metaRes.ok) throw new Error('Project not found');
@@ -516,7 +516,7 @@
 
         async function downloadReport(id) {
             try {
-                const res = await fetch(`data/${id}_manuscripts.json`);
+                const res = await fetch(`/api/projects/${id}/manuscripts`);
                 if (!res.ok) throw new Error('Manuscript data not found');
                 const mData = await res.json();
                 const keys = Object.keys(mData).filter(k => k.startsWith('manuscript_'));

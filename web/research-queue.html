@@ -2469,7 +2469,7 @@
             const domId = sanitizeDomId(projectId);
             const timelineElement = document.getElementById(`timeline-${domId}`);
             try {
-                const response = await fetch(`data/${encodeURIComponent(projectId)}.json`);
+                const response = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(projectId)}`);
                 if (!response.ok) throw new Error('Failed to load workflow data');
 
                 const data = await response.json();

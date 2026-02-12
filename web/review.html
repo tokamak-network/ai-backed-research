@@ -1092,7 +1092,7 @@
         async function downloadReport(id) {
             try {
                 // Load manuscript from static JSON
-                const res = await fetch(`data/${id}_manuscripts.json`);
+                const res = await fetch(`/api/projects/${id}/manuscripts`);
                 if (!res.ok) throw new Error('Manuscript data not found');
                 const mData = await res.json();
                 // Find latest version
@@ -1117,8 +1117,8 @@
 
         async function loadProjects() {
             try {
-                const indexRes = await fetch('data/index.json');
-                if (!indexRes.ok) throw new Error('No data found. Run export_to_web.py first.');
+                const indexRes = await fetch('/api/projects');
+                if (!indexRes.ok) throw new Error('Could not load projects from API.');
 
                 const index = await indexRes.json();
                 allProjects = index.projects;
@@ -1177,8 +1177,8 @@
                 }
 
                 const [dataRes, manuscriptsRes] = await Promise.all([
-                    fetch(`data/${projectId}.json`),
-                    fetch(`data/${projectId}_manuscripts.json`)
+                    fetch(`/api/projects/${projectId}`),
+                    fetch(`/api/projects/${projectId}/manuscripts`)
                 ]);
 
                 currentData = await dataRes.json();

@@ -159,7 +159,7 @@
         // Load and display articles dynamically from index.json
         async function loadArticles() {
             try {
-                const response = await fetch('data/index.json');
+                const response = await fetch('/api/projects');
                 if (!response.ok) return;
 
                 const data = await response.json();
