@@ -197,7 +197,13 @@ async def recover_pending_jobs():
 
 
 async def scan_interrupted_workflows():
-    """Scan results directory for interrupted workflows (checkpoint exists but no complete)."""
+    """Scan results directory and restore all workflow states from disk.
+
+    Restores three categories:
+    1. Completed — workflow_complete.json exists
+    2. Interrupted — checkpoint exists but no complete file
+    3. Orphan/Failed — has files but neither checkpoint nor complete
+    """
     results_dir = Path("results")
     if not results_dir.exists():
         return
@@ -205,6 +211,7 @@ async def scan_interrupted_workflows():
     # Skip test/benchmark directories from queue
     SKIP_PATTERNS = ['benchmark-', '-test', 'test-']
 
+    completed_count = 0
     interrupted_count = 0
     for project_dir in results_dir.iterdir():
         if not project_dir.is_dir():
@@ -214,13 +221,72 @@ async def scan_interrupted_workflows():
         if any(pattern in project_dir.name for pattern in SKIP_PATTERNS):
             continue
 
+        project_id = project_dir.name
         checkpoint_file = project_dir / "workflow_checkpoint.json"
         complete_file = project_dir / "workflow_complete.json"
 
-        # Has checkpoint but no complete = interrupted
-        if checkpoint_file.exists() and not complete_file.exists():
-            project_id = project_dir.name
+        # --- Completed workflows ---
+        if complete_file.exists():
+            try:
+                with open(complete_file) as f:
+                    wf_data = json.load(f)
 
+                passed = wf_data.get("passed", False)
+                final_status = "completed" if passed else "rejected"
+                total_rounds = wf_data.get("total_rounds", 0)
+                final_score = wf_data.get("final_score", 0)
+                perf = wf_data.get("performance", {})
+                topic = wf_data.get("topic", "")
+
+                # Build expert_status from expert_team
+                expert_team = wf_data.get("expert_team", [])
+                expert_status = [
+                    {
+                        "expert_id": exp.get("id", f"expert-{i+1}"),
+                        "expert_name": exp.get("name", f"Expert {i+1}"),
+                        "status": "completed",
+                        "progress": 100,
+                        "message": "Review complete",
+                        "score": final_score
+                    }
+                    for i, exp in enumerate(expert_team)
+                ]
+
+                # Build cost_estimate from performance data
+                cost_estimate = None
+                if perf:
+                    cost_estimate = {
+                        "total_tokens": perf.get("total_tokens", 0),
+                        "estimated_cost_usd": perf.get("estimated_cost", 0),
+                        "tokens_by_model": perf.get("tokens_by_model", {}),
+                    }
+
+                generated_at = wf_data.get("generated_at") or wf_data.get("timestamp", _utcnow().isoformat())
+
+                workflow_status[project_id] = {
+                    "topic": topic,
+                    "status": final_status,
+                    "current_round": total_rounds,
+                    "total_rounds": total_rounds,
+                    "progress_percentage": 100,
+                    "message": f"Score {final_score:.1f}/10 — {'Accepted' if passed else 'Rejected'} after {total_rounds} round(s)",
+                    "error": None,
+                    "expert_status": expert_status,
+                    "cost_estimate": cost_estimate,
+                    "start_time": generated_at,
+                    "elapsed_time_seconds": int(perf.get("total_duration", 0)),
+                    "estimated_time_remaining_seconds": 0,
+                    "research_type": wf_data.get("research_type", "survey"),
+                }
+
+                completed_count += 1
+
+            except Exception as e:
+                print(f"  Error loading completed workflow {project_id}: {e}")
+            continue
+
+        # --- Interrupted: has checkpoint but no complete ---
+        if checkpoint_file.exists() and not complete_file.exists():
             try:
                 with open(checkpoint_file) as f:
                     checkpoint = json.load(f)
@@ -265,37 +331,37 @@ async def scan_interrupted_workflows():
 
             except Exception as e:
                 print(f"  Error loading checkpoint for {project_id}: {e}")
+            continue
 
-        # Orphan directory: has files but no checkpoint and no complete marker
-        # (e.g., crashed during team formation or early research phase)
-        elif not checkpoint_file.exists() and not complete_file.exists():
-            has_files = any(project_dir.iterdir())
-            if has_files:
-                project_id = project_dir.name
-                workflow_status[project_id] = {
-                    "topic": project_id.rsplit("-", 2)[0].replace("-", " ") if "-" in project_id else project_id,
-                    "status": "failed",
-                    "current_round": 0,
-                    "total_rounds": 0,
-                    "progress_percentage": 0,
-                    "message": "Failed during early phase (no checkpoint). Retry to start fresh.",
-                    "error": "Workflow crashed before checkpoint was created",
-                    "expert_status": [],
-                    "cost_estimate": None,
-                    "start_time": _utcnow().isoformat(),
-                    "elapsed_time_seconds": 0,
-                    "estimated_time_remaining_seconds": None,
-                    "can_resume": True
-                }
-                activity_logs[project_id] = [{
-                    "timestamp": _utcnow().isoformat(),
-                    "level": "error",
-                    "message": "Workflow failed before checkpoint was saved. Click Retry to start fresh.",
-                    "details": {"orphan_files": [f.name for f in project_dir.iterdir()]}
-                }]
-                interrupted_count += 1
-                print(f"  Found orphan workflow: {project_id} (no checkpoint, has files)")
+        # --- Orphan: has files but neither checkpoint nor complete ---
+        has_files = any(project_dir.iterdir())
+        if has_files:
+            workflow_status[project_id] = {
+                "topic": project_id.rsplit("-", 2)[0].replace("-", " ") if "-" in project_id else project_id,
+                "status": "failed",
+                "current_round": 0,
+                "total_rounds": 0,
+                "progress_percentage": 0,
+                "message": "Failed during early phase (no checkpoint). Retry to start fresh.",
+                "error": "Workflow crashed before checkpoint was created",
+                "expert_status": [],
+                "cost_estimate": None,
+                "start_time": _utcnow().isoformat(),
+                "elapsed_time_seconds": 0,
+                "estimated_time_remaining_seconds": None,
+                "can_resume": True
+            }
+            activity_logs[project_id] = [{
+                "timestamp": _utcnow().isoformat(),
+                "level": "error",
+                "message": "Workflow failed before checkpoint was saved. Click Retry to start fresh.",
+                "details": {"orphan_files": [f.name for f in project_dir.iterdir()]}
+            }]
+            interrupted_count += 1
+            print(f"  Found orphan workflow: {project_id} (no checkpoint, has files)")
 
+    if completed_count > 0:
+        print(f"✓ Restored {completed_count} completed workflow(s) from disk")
     if interrupted_count > 0:
         print(f"✓ Found {interrupted_count} interrupted/orphan workflow(s) - available for resume")
 
