@@ -108,6 +108,48 @@ class TestConfig:
             assert "input" in prices, f"Pricing for '{model_name}' missing 'input'"
             assert "output" in prices, f"Pricing for '{model_name}' missing 'output'"
 
+    def test_all_providers_have_env_key_config(self, config):
+        """Every provider used in tiers/roles must have a provider_config entry with env_key."""
+        provider_config = config.get("provider_config", {})
+        providers_used = set()
+        for tier in config.get("tiers", {}).values():
+            if tier.get("primary", {}).get("provider"):
+                providers_used.add(tier["primary"]["provider"])
+            for fb in tier.get("fallback", []):
+                if fb.get("provider"):
+                    providers_used.add(fb["provider"])
+        for entry in config.get("roles", {}).get("reviewer_rotation", []):
+            if entry.get("provider"):
+                providers_used.add(entry["provider"])
+
+        for provider in providers_used:
+            assert provider in provider_config or "llm" in provider_config, (
+                f"Provider '{provider}' used in models.json but has no provider_config entry"
+            )
+            pcfg = provider_config.get(provider, provider_config.get("llm", {}))
+            assert pcfg.get("env_key"), (
+                f"Provider '{provider}' has no env_key configured in provider_config"
+            )
+
+    def test_all_models_have_pricing(self, config):
+        """Every model referenced in tiers/reviewer_rotation must have a pricing entry."""
+        pricing = config.get("pricing", {})
+        models_used = set()
+        for tier in config.get("tiers", {}).values():
+            if tier.get("primary", {}).get("model"):
+                models_used.add(tier["primary"]["model"])
+            for fb in tier.get("fallback", []):
+                if fb.get("model"):
+                    models_used.add(fb["model"])
+        for entry in config.get("roles", {}).get("reviewer_rotation", []):
+            if entry.get("model"):
+                models_used.add(entry["model"])
+
+        missing = models_used - set(pricing.keys())
+        assert missing == set(), (
+            f"Models used but missing from pricing: {missing}"
+        )
+
 
 # ── 1-3. API Endpoint Integrity ─────────────────────────────────────────────
 

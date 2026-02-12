@@ -139,10 +139,60 @@ async def check_rate_limit(api_key: str):
     rate_limit_store[api_key] = now
 
 
+def _check_provider_api_keys():
+    """Check that all providers used in models.json have valid API keys.
+
+    Logs warnings at startup so missing keys are caught immediately,
+    not silently causing reviewer on_leave during workflow execution.
+    """
+    try:
+        config = json.loads((Path("config") / "models.json").read_text())
+    except Exception:
+        return
+
+    provider_config = config.get("provider_config", {})
+
+    # Collect all providers referenced in tiers and reviewer_rotation
+    required_providers = set()
+    for tier in config.get("tiers", {}).values():
+        primary = tier.get("primary", {})
+        if primary.get("provider"):
+            required_providers.add(primary["provider"])
+        for fb in tier.get("fallback", []):
+            if fb.get("provider"):
+                required_providers.add(fb["provider"])
+    for entry in config.get("roles", {}).get("reviewer_rotation", []):
+        if entry.get("provider"):
+            required_providers.add(entry["provider"])
+
+    missing = []
+    for provider in sorted(required_providers):
+        pcfg = provider_config.get(provider, {})
+        env_key = pcfg.get("env_key", "")
+        env_key_alt = pcfg.get("env_key_alt", "")
+        # Check provider-specific key, alt key, then shared LLM key
+        has_key = bool(
+            (env_key and os.environ.get(env_key))
+            or (env_key_alt and os.environ.get(env_key_alt))
+            or os.environ.get(provider_config.get("llm", {}).get("env_key", ""))
+        )
+        if not has_key:
+            missing.append((provider, env_key or "?"))
+
+    if missing:
+        print("⚠ MISSING API KEYS — these providers will fail at runtime:")
+        for provider, env_key in missing:
+            print(f"  ✗ {provider} ({env_key} not set)")
+        print("  Set the environment variables or workflows using these providers will fail.")
+    else:
+        print(f"✓ API keys verified for {len(required_providers)} provider(s): {', '.join(sorted(required_providers))}")
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize DB, scan for interrupted workflows, recover pending jobs, start workers."""
     appdb.init_db()
+    _check_provider_api_keys()
     await scan_interrupted_workflows()
     await recover_pending_jobs()
     for i in range(MAX_CONCURRENT_WORKERS):
