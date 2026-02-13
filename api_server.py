@@ -3,6 +3,7 @@
 
 import asyncio
 import json
+import logging
 import os
 import re
 import time
@@ -16,6 +17,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 from research_cli.agents.team_composer import TeamComposerAgent
 from research_cli.categories import suggest_category_from_topic, suggest_category_llm, get_expert_pool, get_category_name
@@ -180,13 +183,11 @@ def _check_provider_api_keys():
             missing.append((provider, env_key or "?"))
 
     if missing:
-        print("✗ MISSING REQUIRED API KEYS — server cannot start:")
         for provider, env_key in missing:
-            print(f"  ✗ {provider} ({env_key} not set)")
-        print("  Set the environment variables and redeploy.")
+            logger.error("MISSING REQUIRED API KEY: %s (%s not set)", provider, env_key)
         raise SystemExit(1)
     else:
-        print(f"✓ API keys verified for {len(required_providers)} provider(s): {', '.join(sorted(required_providers))}")
+        logger.info("API keys verified for %d provider(s): %s", len(required_providers), ", ".join(sorted(required_providers)))
 
 
 @app.on_event("startup")
