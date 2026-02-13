@@ -180,10 +180,11 @@ def _check_provider_api_keys():
             missing.append((provider, env_key or "?"))
 
     if missing:
-        print("⚠ MISSING API KEYS — these providers will fail at runtime:")
+        print("✗ MISSING REQUIRED API KEYS — server cannot start:")
         for provider, env_key in missing:
             print(f"  ✗ {provider} ({env_key} not set)")
-        print("  Set the environment variables or workflows using these providers will fail.")
+        print("  Set the environment variables and redeploy.")
+        raise SystemExit(1)
     else:
         print(f"✓ API keys verified for {len(required_providers)} provider(s): {', '.join(sorted(required_providers))}")
 
