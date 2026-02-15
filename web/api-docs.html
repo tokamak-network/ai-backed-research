@@ -36,6 +36,7 @@
             border-radius: 2px;
             padding: 2rem;
             margin-bottom: 2rem;
+            box-shadow: var(--shadow-sharp);
         }
         .docs-section h2 {
             margin: 0 0 1rem 0;
@@ -53,6 +54,7 @@
             border-radius: 2px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sharp);
         }
         .endpoint-header {
             display: flex;
@@ -170,6 +172,19 @@
             border-radius: 0;
             margin: 1rem 0;
             font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .docs-container { padding: 1.5rem 1rem; }
+            .docs-container h1 { font-size: 1.5rem; }
+            .endpoint-header { flex-wrap: wrap; }
+            .endpoint { padding: 1rem; }
+            .docs-section { padding: 1.25rem; }
+        }
+
+        @media (max-width: 480px) {
+            .docs-container { padding: 1rem 0.75rem; }
+            .endpoint-path { font-size: 0.875rem; word-break: break-all; }
         }
     </style>
 </head>

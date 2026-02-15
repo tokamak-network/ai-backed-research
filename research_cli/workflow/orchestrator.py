@@ -1163,7 +1163,9 @@ class WorkflowOrchestrator:
         # Generate academic title from manuscript content
         console.print("\n[cyan]Generating academic title...[/cyan]")
         from ..utils.title_generator import generate_title_from_manuscript
-        self.generated_title = await generate_title_from_manuscript(manuscript, self.topic)
+        self.generated_title = await generate_title_from_manuscript(
+            manuscript, self.topic, audience_level=self.audience_level
+        )
         console.print(f"[green]✓ Title: {self.generated_title}[/green]")
 
         # Add metadata header to manuscript
@@ -1294,6 +1296,7 @@ Research Type: {self.research_type}
             "category": self.category,
             "audience_level": self.audience_level,
             "research_type": self.research_type,
+            "generated_title": getattr(self, 'generated_title', None),
             "checkpoint_time": datetime.now().isoformat(),
             "status": "in_progress"
         }
@@ -1349,6 +1352,11 @@ Research Type: {self.research_type}
         current_round = checkpoint["current_round"]
         current_manuscript = checkpoint["current_manuscript"]
         all_rounds = checkpoint["all_rounds"]
+
+        # Restore generated title if available
+        saved_title = checkpoint.get("generated_title")
+        if saved_title:
+            orchestrator.generated_title = saved_title
 
         console.print(f"[green]✓ Loaded checkpoint from Round {current_round}[/green]")
         console.print(f"[cyan]Continuing from Round {current_round + 1}...[/cyan]\n")

@@ -59,6 +59,7 @@
             border-radius: 2px;
             padding: 1.5rem;
             text-align: center;
+            box-shadow: var(--shadow-sharp);
         }
 
         .stat-label {
@@ -96,11 +97,14 @@
             border: 1px solid var(--border);
             border-radius: 2px;
             padding: 1.5rem;
-            transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+            transition: all var(--duration-moderate) var(--easing);
+            box-shadow: var(--shadow-sharp);
+            position: relative;
         }
 
         .workflow-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-sharp-hover);
+            border-color: var(--accent-border);
         }
 
         .workflow-card.highlighted {

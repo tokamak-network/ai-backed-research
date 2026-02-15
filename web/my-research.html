@@ -20,111 +20,144 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/article.css">
     <style>
-        .dashboard-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-
-        .page-title {
-            font-size: 1.75rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .page-subtitle {
-            color: var(--text-secondary);
-            font-size: 0.9375rem;
-            margin-bottom: 2rem;
-        }
-
-        .auth-section {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 2px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .auth-section h2 {
-            margin: 0 0 1rem 0;
-            font-size: 1.125rem;
-        }
-
-        .auth-row {
-            display: flex;
-            gap: 0.75rem;
+        /* Mobile header (hidden on desktop) */
+        .dashboard-mobile-header {
+            display: none;
             align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-03);
+            border-bottom: 1px solid var(--border-subtle);
+            background: var(--layer-01);
         }
 
-        .auth-row input {
-            flex: 1;
-            padding: 0.625rem 0.75rem;
-            border: 1px solid var(--border);
+        .dashboard-mobile-header .site-title {
+            font-size: var(--type-scale-03);
+        }
+
+        /* Dashboard top bar */
+        .dashboard-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-04) var(--spacing-05);
+            border-bottom: 1px solid var(--border-subtle);
+            background: var(--layer-01);
+        }
+
+        .topbar-welcome h1 {
+            font-size: var(--type-scale-05);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .topbar-welcome p {
+            font-size: var(--type-scale-01);
+            color: var(--text-tertiary);
+        }
+
+        /* Dashboard content area */
+        .dashboard-content {
+            padding: var(--spacing-05);
+            max-width: 960px;
+        }
+
+        /* Auth section in sidebar footer */
+        .sidebar-auth {
+            padding: var(--spacing-03);
+        }
+
+        .sidebar-auth label {
+            display: block;
+            font-size: var(--type-scale-01);
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-auth input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid var(--border-subtle);
             border-radius: 2px;
             background: var(--background);
-            color: var(--text);
-            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-size: var(--type-scale-01);
             font-family: var(--font-mono);
+            margin-bottom: 8px;
         }
 
-        .btn {
-            padding: 0.625rem 1.25rem;
-            border: none;
-            border-radius: 0;
-            font-weight: 600;
-            font-size: 0.875rem;
-            cursor: pointer;
-            font-family: var(--font-sans, inherit);
-            transition: background 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
-        }
-
-        .btn-primary {
-            background: var(--primary-600);
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            filter: brightness(1.1);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .sidebar-auth .btn {
+            width: 100%;
+            font-size: var(--type-scale-01);
+            padding: 6px 12px;
         }
 
         #auth-status {
-            font-size: 0.8125rem;
-            margin-top: 0.5rem;
+            font-size: var(--type-scale-01);
+            margin-top: 4px;
         }
 
         .status-ok { color: var(--green-60); }
         .status-err { color: var(--red-60); }
 
-        /* Dashboard content */
-        #dashboard {
-            display: none;
-        }
+        /* Dashboard sections */
+        #dashboard { display: none; }
 
         .dashboard-section {
-            background: var(--surface);
-            border: 1px solid var(--border);
+            background: var(--layer-01);
+            border: 1px solid var(--border-subtle);
             border-radius: 2px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            padding: var(--spacing-04);
+            margin-bottom: var(--spacing-04);
+            box-shadow: var(--shadow-sharp);
         }
 
         .dashboard-section h2 {
-            margin: 0 0 1.25rem 0;
-            font-size: 1.125rem;
+            margin: 0 0 var(--spacing-03) 0;
+            font-size: var(--type-scale-04);
+            font-weight: 600;
+        }
+
+        /* Stats row */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-03);
+            margin-bottom: var(--spacing-04);
+        }
+
+        .dash-stat-card {
+            background: var(--layer-01);
+            border: 1px solid var(--border-subtle);
+            border-radius: 2px;
+            padding: var(--spacing-03);
+            text-align: center;
+            box-shadow: var(--shadow-sharp);
+        }
+
+        .dash-stat-value {
+            font-family: var(--font-serif);
+            font-size: var(--type-scale-07);
+            font-weight: 700;
+            color: var(--link-primary);
+        }
+
+        .dash-stat-label {
+            font-family: var(--font-mono);
+            font-size: var(--type-scale-01);
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            letter-spacing: 0.05em;
+            margin-top: 4px;
         }
 
         /* Quota display */
         .quota-card {
             display: flex;
-            gap: 2rem;
+            gap: var(--spacing-04);
             align-items: center;
         }
 
@@ -132,6 +165,7 @@
             position: relative;
             width: 80px;
             height: 80px;
+            flex-shrink: 0;
         }
 
         .quota-circle svg {
@@ -140,107 +174,77 @@
             height: 80px;
         }
 
-        .quota-circle .track {
-            fill: none;
-            stroke: var(--border);
-            stroke-width: 6;
-        }
-
-        .quota-circle .fill {
-            fill: none;
-            stroke: var(--primary-600);
-            stroke-width: 6;
-            stroke-linecap: butt;
-            transition: stroke-dashoffset 0.3s;
-        }
+        .quota-circle .track { fill: none; stroke: var(--border-subtle); stroke-width: 6; }
+        .quota-circle .fill { fill: none; stroke: var(--link-primary); stroke-width: 6; stroke-linecap: butt; transition: stroke-dashoffset 0.3s; }
 
         .quota-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.125rem;
+            font-size: var(--type-scale-04);
             font-weight: 700;
-            color: var(--text);
+            color: var(--text-primary);
         }
 
-        .quota-info p {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin: 0.25rem 0;
-        }
+        .quota-info p { font-size: var(--type-scale-02); color: var(--text-secondary); margin: 2px 0; }
+        .quota-info .quota-label { font-weight: 600; color: var(--text-primary); font-size: var(--type-scale-03); }
 
-        .quota-info .quota-label {
-            font-weight: 600;
-            color: var(--text);
-            font-size: 1rem;
-        }
-
-        /* Profile summary */
+        /* Profile grid */
         .profile-grid {
             display: grid;
             grid-template-columns: 100px 1fr;
-            gap: 0.5rem 1rem;
-            font-size: 0.875rem;
+            gap: 4px var(--spacing-03);
+            font-size: var(--type-scale-02);
         }
 
-        .profile-label {
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
+        .profile-label { font-weight: 600; color: var(--text-secondary); }
 
         /* Workflow list */
         .workflow-list {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: var(--spacing-02);
         }
 
         .workflow-card {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 1.25rem;
-            border: 1px solid var(--border);
+            padding: var(--spacing-03) var(--spacing-03);
+            border: 1px solid var(--border-subtle);
             border-radius: 2px;
             background: var(--background);
-            transition: border-color 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+            transition: border-color var(--duration-fast) var(--easing);
         }
 
         .workflow-card:hover {
-            border-color: var(--border-strong, var(--border));
+            border-color: var(--accent-border);
         }
 
-        .workflow-info {
-            flex: 1;
-        }
+        .workflow-info { flex: 1; }
 
         .workflow-title {
             font-weight: 600;
-            font-size: 0.9375rem;
-            margin-bottom: 0.25rem;
+            font-size: var(--type-scale-02);
+            margin-bottom: 2px;
         }
 
-        .workflow-title a {
-            color: var(--text);
-            text-decoration: none;
-        }
-
-        .workflow-title a:hover {
-            color: var(--primary-600);
-        }
+        .workflow-title a { color: var(--text-primary); text-decoration: none; }
+        .workflow-title a:hover { color: var(--link-primary); }
 
         .workflow-meta {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
+            font-size: var(--type-scale-01);
+            font-family: var(--font-mono);
+            color: var(--text-tertiary);
             display: flex;
-            gap: 1rem;
+            gap: var(--spacing-03);
         }
 
         .workflow-status {
             display: inline-block;
-            padding: 0.1875rem 0.5rem;
-            font-size: 0.6875rem;
+            padding: 3px 8px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -255,118 +259,242 @@
 
         .empty-state {
             text-align: center;
-            padding: 2rem;
+            padding: var(--spacing-05);
             color: var(--text-secondary);
-            font-size: 0.875rem;
+            font-size: var(--type-scale-02);
         }
 
-        .empty-state a {
-            color: var(--primary-600);
+        .empty-state a { color: var(--link-primary); }
+
+        /* Decision notifications */
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-02);
+        }
+
+        .decision-notification .notif-title {
+            font-weight: 600;
+            font-size: var(--type-scale-02);
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .decision-notification .notif-meta {
+            font-size: var(--type-scale-01);
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-content { padding: var(--spacing-03); }
+            .dashboard-stats { grid-template-columns: 1fr; }
+            .topbar-welcome h1 { font-size: var(--type-scale-04); }
+            .dashboard-topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-02);
+                padding: var(--spacing-03);
+            }
+            .workflow-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-02);
+            }
+            .workflow-meta {
+                flex-wrap: wrap;
+            }
+            .quota-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <header class="site-header">
-        <div class="container">
-            <div class="header-nav">
-                <a href="index.html" class="back-link">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
-                    </svg>
-                    Back to Research
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-logo">
+                <h2>Scholarly.</h2>
+                <p>Research Dashboard</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="my-research.html" class="sidebar-nav-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    My Submissions
                 </a>
-                <div class="header-content">
-                    <h1 class="site-title">Autonomous Research Press</h1>
-                    <p class="site-subtitle">My Research Dashboard</p>
+                <a href="research-queue.html" class="sidebar-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                    Queue
+                </a>
+                <a href="ask-topic.html" class="sidebar-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+                    New Research
+                </a>
+                <a href="index.html" class="sidebar-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Home
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-auth">
+                    <label for="api-key-input">API Key</label>
+                    <input type="password" id="api-key-input" placeholder="Paste your API key">
+                    <button class="btn btn-primary" onclick="loadDashboard()">Load Dashboard</button>
+                    <div id="auth-status"></div>
                 </div>
-                <button class="theme-toggle" aria-label="Toggle dark mode">
-                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main class="dashboard-container">
-        <h1 class="page-title">My Research</h1>
-        <p class="page-subtitle">View your research submissions and API quota.</p>
-
-        <!-- Auth -->
-        <div class="auth-section">
-            <h2>Enter API Key</h2>
-            <div class="auth-row">
-                <input type="password" id="api-key-input" placeholder="Paste your API key">
-                <button class="btn btn-primary" onclick="loadDashboard()">Load Dashboard</button>
-            </div>
-            <div id="auth-status"></div>
-        </div>
-
-        <!-- Dashboard (shown after auth) -->
-        <div id="dashboard">
-            <!-- Quota -->
-            <div class="dashboard-section">
-                <h2>Daily Quota</h2>
-                <div class="quota-card">
-                    <div class="quota-circle">
-                        <svg viewBox="0 0 36 36">
-                            <circle class="track" cx="18" cy="18" r="15.91"></circle>
-                            <circle class="fill" id="quota-arc" cx="18" cy="18" r="15.91"
-                                stroke-dasharray="100 100" stroke-dashoffset="100"></circle>
+                <div style="padding: 8px 0 0 0;">
+                    <button class="theme-toggle" aria-label="Toggle dark mode" style="width: 100%; justify-content: flex-start; gap: 8px; padding: 8px;">
+                        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                         </svg>
-                        <span class="quota-text" id="quota-text">-</span>
-                    </div>
-                    <div class="quota-info">
-                        <p class="quota-label" id="quota-label">Loading...</p>
-                        <p id="quota-detail"></p>
-                    </div>
+                        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
+        </aside>
 
-            <!-- Profile -->
-            <div class="dashboard-section" id="profile-section" style="display: none;">
-                <h2>Profile</h2>
-                <div id="profile-content" class="profile-grid"></div>
-            </div>
-
-            <!-- Workflows -->
-            <div class="dashboard-section">
-                <h2>My Workflows</h2>
-                <div id="workflows-list" class="workflow-list">
-                    <div class="empty-state">Loading...</div>
-                </div>
-            </div>
-
-            <!-- Submissions -->
-            <div class="dashboard-section">
-                <h2>My Submissions</h2>
-                <div id="submissions-list" class="workflow-list">
-                    <div class="empty-state">Loading...</div>
-                </div>
-            </div>
+        <!-- Mobile Header -->
+        <div class="dashboard-mobile-header" style="flex-wrap: wrap; gap: 8px;">
+            <h1 class="site-title">My Research</h1>
+            <button class="theme-toggle" aria-label="Toggle dark mode">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+            <nav style="width: 100%; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 4px;">
+                <a href="index.html" style="font-size: var(--type-scale-01); color: var(--text-secondary); text-decoration: none;">Home</a>
+                <a href="research-queue.html" style="font-size: var(--type-scale-01); color: var(--text-secondary); text-decoration: none;">Queue</a>
+                <a href="ask-topic.html" style="font-size: var(--type-scale-01); color: var(--text-secondary); text-decoration: none;">New Research</a>
+            </nav>
         </div>
-    </main>
 
-    <footer class="site-footer">
-        <div class="container">
-            <p><strong>Platform:</strong> Autonomous Research Press</p>
-            <p class="copyright">2026 Autonomous Research Press. All rights reserved.</p>
-        </div>
-    </footer>
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Top Bar -->
+            <div class="dashboard-topbar">
+                <div class="topbar-welcome">
+                    <h1>My Research</h1>
+                    <p>View your research submissions and API quota</p>
+                </div>
+                <a href="ask-topic.html" class="btn btn-primary btn-sharp">New Research</a>
+            </div>
+
+            <div class="dashboard-content">
+                <!-- Mobile Auth (shown on mobile where sidebar is hidden) -->
+                <div class="auth-section" style="display:none;" id="mobile-auth">
+                    <h2 style="margin:0 0 12px 0; font-size: var(--type-scale-03);">Enter API Key</h2>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="password" id="api-key-input-mobile" placeholder="Paste your API key" style="flex:1;padding:8px;border:1px solid var(--border-subtle);border-radius:2px;background:var(--background);color:var(--text-primary);font-family:var(--font-mono);font-size:var(--type-scale-01);">
+                        <button class="btn btn-primary" onclick="loadDashboardMobile()">Load</button>
+                    </div>
+                    <div id="auth-status-mobile" style="font-size:var(--type-scale-01);margin-top:4px;"></div>
+                </div>
+
+                <!-- Dashboard (shown after auth) -->
+                <div id="dashboard">
+                    <!-- Stats Row -->
+                    <div class="dashboard-stats" id="dashboard-stats">
+                        <div class="dash-stat-card">
+                            <div class="dash-stat-value" id="stat-total">--</div>
+                            <div class="dash-stat-label">Total Workflows</div>
+                        </div>
+                        <div class="dash-stat-card">
+                            <div class="dash-stat-value" id="stat-success-rate">--</div>
+                            <div class="dash-stat-label">Success Rate</div>
+                        </div>
+                        <div class="dash-stat-card">
+                            <div class="dash-stat-value" id="stat-avg-score">--</div>
+                            <div class="dash-stat-label">Avg. Score</div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="dashboard-section" id="notifications-section" style="display:none;">
+                        <h2>Recent Decisions</h2>
+                        <div id="notifications-list" class="notifications-list"></div>
+                    </div>
+
+                    <!-- Quota -->
+                    <div class="dashboard-section">
+                        <h2>Daily Quota</h2>
+                        <div class="quota-card">
+                            <div class="quota-circle">
+                                <svg viewBox="0 0 36 36">
+                                    <circle class="track" cx="18" cy="18" r="15.91"></circle>
+                                    <circle class="fill" id="quota-arc" cx="18" cy="18" r="15.91"
+                                        stroke-dasharray="100 100" stroke-dashoffset="100"></circle>
+                                </svg>
+                                <span class="quota-text" id="quota-text">-</span>
+                            </div>
+                            <div class="quota-info">
+                                <p class="quota-label" id="quota-label">Loading...</p>
+                                <p id="quota-detail"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile -->
+                    <div class="dashboard-section" id="profile-section" style="display: none;">
+                        <h2>Profile</h2>
+                        <div id="profile-content" class="profile-grid"></div>
+                    </div>
+
+                    <!-- Workflows -->
+                    <div class="dashboard-section">
+                        <h2>My Workflows</h2>
+                        <div id="workflows-list" class="workflow-list">
+                            <div class="empty-state">Loading...</div>
+                        </div>
+                    </div>
+
+                    <!-- Submissions -->
+                    <div class="dashboard-section">
+                        <h2>My Submissions</h2>
+                        <div id="submissions-list" class="workflow-list">
+                            <div class="empty-state">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script src="js/main.js"></script>
     <script>
         let apiKey = '';
 
+        // Show mobile auth on small screens
+        if (window.innerWidth <= 768) {
+            const mobileAuth = document.getElementById('mobile-auth');
+            if (mobileAuth) mobileAuth.style.display = 'block';
+        }
+
         function getHeaders() {
             return { 'Content-Type': 'application/json', 'X-API-Key': apiKey };
+        }
+
+        function loadDashboardMobile() {
+            apiKey = document.getElementById('api-key-input-mobile').value.trim();
+            document.getElementById('api-key-input').value = apiKey;
+            loadDashboard();
         }
 
         async function loadDashboard() {
@@ -383,7 +511,6 @@
             statusEl.className = '';
 
             try {
-                // Verify key by loading quota
                 const quotaResp = await fetch('/api/my-quota', { headers: getHeaders() });
                 if (quotaResp.status === 403) {
                     statusEl.className = 'status-err';
@@ -396,7 +523,6 @@
                 statusEl.textContent = 'Authenticated.';
                 document.getElementById('dashboard').style.display = 'block';
 
-                // Load all sections in parallel
                 const [quota, profile, workflows, submissions] = await Promise.allSettled([
                     quotaResp.json(),
                     fetch('/api/my-profile', { headers: getHeaders() }).then(r => r.ok ? r.json() : null),
@@ -406,13 +532,65 @@
 
                 if (quota.status === 'fulfilled') renderQuota(quota.value);
                 if (profile.status === 'fulfilled' && profile.value) renderProfile(profile.value);
-                if (workflows.status === 'fulfilled') renderWorkflows(workflows.value.workflows || []);
+                if (workflows.status === 'fulfilled') {
+                    const wfs = workflows.value.workflows || [];
+                    renderWorkflows(wfs);
+                    renderDashboardStats(wfs);
+                    renderNotifications(wfs);
+                }
                 if (submissions.status === 'fulfilled') renderSubmissions(submissions.value.submissions || []);
 
             } catch (e) {
                 statusEl.className = 'status-err';
                 statusEl.textContent = 'Error: ' + e.message;
             }
+        }
+
+        function renderDashboardStats(workflows) {
+            const total = workflows.length;
+            const completed = workflows.filter(wf => {
+                const s = wf.summary;
+                return s && (s.status === 'completed' && s.passed);
+            }).length;
+            const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const scores = workflows.filter(wf => wf.summary && wf.summary.final_score).map(wf => wf.summary.final_score);
+            const avgScore = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : '--';
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-success-rate').textContent = total > 0 ? `${successRate}%` : '--';
+            document.getElementById('stat-avg-score').textContent = avgScore;
+        }
+
+        function renderNotifications(workflows) {
+            const recent = workflows
+                .filter(wf => {
+                    const s = wf.summary;
+                    return s && (s.status === 'completed' || s.status === 'rejected');
+                })
+                .slice(0, 3);
+
+            if (recent.length === 0) return;
+
+            const section = document.getElementById('notifications-section');
+            section.style.display = 'block';
+
+            const list = document.getElementById('notifications-list');
+            list.innerHTML = recent.map(wf => {
+                const s = wf.summary;
+                const title = s.title || s.topic || wf.project_id;
+                const passed = s.passed;
+                const score = s.final_score;
+                const cls = passed ? 'accept' : 'reject';
+                const label = passed ? 'Accepted' : 'Rejected';
+                const date = wf.created_at ? new Date(wf.created_at).toLocaleDateString() : '';
+
+                return `
+                    <div class="decision-notification ${cls}">
+                        <div class="notif-title">${escapeHtml(title)}</div>
+                        <div class="notif-meta">${label} ${score ? `&middot; Score: ${score}/10` : ''} ${date ? `&middot; ${date}` : ''}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderQuota(data) {
@@ -425,13 +603,11 @@
             document.getElementById('quota-label').textContent = `${remaining} of ${limit} remaining`;
             document.getElementById('quota-detail').textContent = `${used} used today`;
 
-            // Update SVG arc
             const circumference = 100;
             const offset = circumference - (pct / 100) * circumference;
             const arc = document.getElementById('quota-arc');
             arc.style.strokeDashoffset = offset;
 
-            // Color: green if plenty, yellow if low, red if exhausted
             if (remaining <= 0) arc.style.stroke = 'var(--red-60)';
             else if (remaining <= 3) arc.style.stroke = 'var(--link-primary)';
             else arc.style.stroke = 'var(--green-60)';

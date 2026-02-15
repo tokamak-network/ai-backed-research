@@ -387,6 +387,17 @@
             background: rgba(109, 181, 109, 0.08);
             border-color: var(--green-60);
         }
+
+        @media (max-width: 768px) {
+            .apply-container { padding: 1.5rem 1rem; }
+            .sample-work-item { grid-template-columns: 1fr; }
+            .tags-input-container { flex-wrap: wrap; }
+        }
+
+        @media (max-width: 480px) {
+            .apply-container { padding: 1rem 0.75rem; }
+            .form-section { padding: 1rem; }
+        }
     </style>
 </head>
 <body>

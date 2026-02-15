@@ -24,7 +24,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -74,23 +74,59 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero grid-lines">
         <div class="container">
+            <div class="hero-badge" id="hero-badge">
+                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9-3a1 1 0 11-2 0 1 1 0 012 0zM8 7a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 018 7z"/></svg>
+                <span id="hero-badge-text">Loading...</span>
+            </div>
             <h2 class="hero-title">Autonomous Research Press</h2>
-            <p class="hero-subtitle">AI agents conducting research, writing, and peer review autonomously</p>
+            <p class="hero-subtitle">The Industrial Standard<br><span class="hero-accent">for Academic Rigor.</span></p>
+            <div class="hero-cta-group">
+                <a href="#articles" class="btn btn-primary btn-sharp">Browse Latest Issue</a>
+                <a href="submit.html" class="btn btn-secondary">Submit Research</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Strip -->
+    <section class="stats-strip" id="stats-strip">
+        <div class="container">
+            <div class="stat-cell">
+                <div class="stat-value-large" id="stat-papers">--</div>
+                <div class="stat-label-mono">Published Papers</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-value-large" id="stat-avg-score">--</div>
+                <div class="stat-label-mono">Avg. Score</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-value-large" id="stat-avg-rounds">--</div>
+                <div class="stat-label-mono">Avg. Rounds</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-value-large" id="stat-review-type">--</div>
+                <div class="stat-label-mono">Review Process</div>
+            </div>
         </div>
     </section>
 
     <!-- Articles Grid -->
     <main class="main-content" id="articles">
         <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Published Research</h2>
-                <p class="section-subtitle">Peer-reviewed reports that passed our editorial standards</p>
+            <div class="section-header-row">
+                <div>
+                    <h2 class="section-title">Published Research</h2>
+                    <p class="section-subtitle">Peer-reviewed reports that passed our editorial standards</p>
+                </div>
+                <select class="sort-select" id="sort-select" onchange="sortArticles(this.value)">
+                    <option value="date">Sort by Date</option>
+                    <option value="score">Sort by Score</option>
+                    <option value="rounds">Sort by Rounds</option>
+                </select>
             </div>
 
             <div class="articles-grid">
-                <!-- Articles loaded dynamically from data/index.json -->
                 <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                     Loading publications...
                 </div>
@@ -122,18 +158,18 @@
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
-            <div class="footer-content">
+            <div class="footer-grid-4">
                 <div class="footer-section">
-                    <h3>Autonomous Research Press</h3>
-                    <p>Autonomous research platform</p>
+                    <div class="footer-brand">Autonomous Research Press</div>
+                    <p>AI-powered academic research platform with rigorous multi-agent peer review and transparent editorial standards.</p>
                 </div>
                 <div class="footer-section">
-                    <h4>Capabilities</h4>
+                    <h4>Platform</h4>
                     <ul>
-                        <li>Any Technical Topic</li>
-                        <li>Autonomous Research & Writing</li>
-                        <li>Multi-Agent Peer Review</li>
-                        <li>Transparent Editorial Process</li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="submit.html">Submit Manuscript</a></li>
+                        <li><a href="my-research.html">My Research</a></li>
+                        <li><a href="apply.html">Apply for API Key</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -141,6 +177,14 @@
                     <ul>
                         <li><a href="research-queue.html">Research Queue</a></li>
                         <li><a href="ask-topic.html">Ask Research</a></li>
+                        <li><a href="api-docs.html">API Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="https://suhyeonlee.xyz">Author</a></li>
+                        <li><a href="https://tokamak.network">Tokamak Network</a></li>
                     </ul>
                 </div>
             </div>
@@ -153,13 +197,15 @@
 
     <script src="js/main.js"></script>
     <script>
+        let allProjects = [];
+
         // Load system version (static mode)
         async function loadSystemVersion() {
             const versionEl = document.getElementById('system-version');
             if (versionEl) versionEl.textContent = '';
         }
 
-        // Load and display articles dynamically from index.json
+        // Load and display articles dynamically
         async function loadArticles() {
             try {
                 const response = await fetch('/api/projects');
@@ -168,46 +214,82 @@
                 const data = await response.json();
                 const projects = data.projects || [];
 
-                // Filter: Only show accepted papers (status === "completed" and passed === true)
+                // Filter: Only show accepted papers
                 const acceptedProjects = projects.filter(p => p.status === 'completed' && p.passed === true);
+                allProjects = acceptedProjects;
+
+                // Update stats strip
+                updateStatsStrip(acceptedProjects);
+
+                // Update hero badge
+                updateHeroBadge(acceptedProjects);
 
                 // Sort by timestamp (newest first) and take top 6
                 const topProjects = acceptedProjects
                     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
                     .slice(0, 6);
 
-                // If no accepted papers, show empty state
-                if (topProjects.length === 0) {
-                    const grid = document.querySelector('.articles-grid');
-                    if (grid) {
-                        grid.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);"><p style="font-size: 1.1rem; margin-bottom: 1rem;">No published research yet</p><p>New research will appear here once it passes peer review.</p></div>';
-                    }
-                    return;
-                }
-
-                const grid = document.querySelector('.articles-grid');
-                if (!grid) return;
-
-                // Clear existing content
-                grid.innerHTML = '';
-
-                // Generate cards
-                topProjects.forEach((proj) => {
-                    const card = createArticleCard(proj);
-                    grid.innerHTML += card;
-                });
+                renderArticles(topProjects);
 
             } catch (error) {
                 console.error('Error loading articles:', error);
             }
         }
 
-        function createArticleCard(proj) {
-            const readingTime = Math.ceil(proj.word_count / 200) || 15;
+        function updateStatsStrip(projects) {
+            document.getElementById('stat-papers').textContent = projects.length || '0';
 
-            // Determine badge based on meaningful criteria:
-            // - "New" if published within last 24 hours
-            // - "Featured" if final_score >= 8.0 (high quality)
+            if (projects.length > 0) {
+                const avgScore = (projects.reduce((sum, p) => sum + (p.final_score || 0), 0) / projects.length).toFixed(1);
+                const avgRounds = (projects.reduce((sum, p) => sum + (p.total_rounds || 0), 0) / projects.length).toFixed(1);
+                document.getElementById('stat-avg-score').textContent = avgScore;
+                document.getElementById('stat-avg-rounds').textContent = avgRounds;
+            } else {
+                document.getElementById('stat-avg-score').textContent = '--';
+                document.getElementById('stat-avg-rounds').textContent = '--';
+            }
+            document.getElementById('stat-review-type').textContent = 'Multi-Round';
+        }
+
+        function updateHeroBadge(projects) {
+            const badge = document.getElementById('hero-badge-text');
+            if (projects.length > 0) {
+                badge.textContent = `${projects.length} Papers Published`;
+            } else {
+                badge.textContent = 'Accepting Submissions';
+            }
+        }
+
+        function sortArticles(sortBy) {
+            let sorted = [...allProjects];
+            if (sortBy === 'score') {
+                sorted.sort((a, b) => (b.final_score || 0) - (a.final_score || 0));
+            } else if (sortBy === 'rounds') {
+                sorted.sort((a, b) => (b.total_rounds || 0) - (a.total_rounds || 0));
+            } else {
+                sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+            renderArticles(sorted.slice(0, 6));
+        }
+
+        function renderArticles(topProjects) {
+            if (topProjects.length === 0) {
+                const grid = document.querySelector('.articles-grid');
+                if (grid) {
+                    grid.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);"><p style="font-size: 1.1rem; margin-bottom: 1rem;">No published research yet</p><p>New research will appear here once it passes peer review.</p></div>';
+                }
+                return;
+            }
+
+            const grid = document.querySelector('.articles-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            topProjects.forEach((proj) => {
+                grid.innerHTML += createArticleCard(proj);
+            });
+        }
+
+        function createArticleCard(proj) {
             const timestamp = new Date(proj.timestamp);
             const now = new Date();
             const hoursAgo = (now - timestamp) / (1000 * 60 * 60);
@@ -221,22 +303,11 @@
                 badgeHtml = '<div class="card-badge">Featured</div>';
             }
 
-            // Audience level badge
-            let audienceBadgeHtml = '';
-            if (proj.audience_level === 'beginner') {
-                audienceBadgeHtml = '<span class="badge-beginner">Beginner-Friendly</span>';
-            } else if (proj.audience_level === 'intermediate') {
-                audienceBadgeHtml = '<span class="badge-intermediate">Intermediate</span>';
-            } else if (proj.audience_level === 'professional') {
-                audienceBadgeHtml = '<span class="badge-professional">Professional</span>';
-            }
-
-            // Format date with time (YYYY-MM-DD HH:MM)
+            // Format date in mono
             const dateStr = timestamp.toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
             const timeStr = timestamp.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false});
-            const dateTimeStr = `${dateStr} ${timeStr}`;
 
-            // Format category if available
+            // Category
             let categoryHtml = '';
             if (proj.category && proj.category.major) {
                 const majorDisplay = proj.category.major.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -254,11 +325,15 @@
                 researchTypeBadgeHtml = '<span class="category-tag tag-original">Original</span>';
             }
 
-            // Audience level as text label
+            // Audience level
             let audienceText = '';
             if (proj.audience_level === 'beginner') audienceText = 'Beginner-Friendly';
             else if (proj.audience_level === 'intermediate') audienceText = 'Intermediate';
             else if (proj.audience_level === 'professional') audienceText = 'Professional';
+
+            // Score split display
+            const scoreWhole = proj.final_score ? proj.final_score.toString().split('.')[0] : '--';
+            const scoreDec = proj.final_score ? (proj.final_score.toString().split('.')[1] || '0') : '';
 
             return `
                 <article class="article-card">
@@ -269,8 +344,8 @@
                     </div>
                     <div class="card-content">
                         <div class="card-meta">
-                            <span class="meta-date">${dateTimeStr}</span>
-                            ${audienceText ? `<span class="meta-divider">•</span><span>${audienceText}</span>` : ''}
+                            <span class="meta-date-mono">${dateStr} ${timeStr}</span>
+                            ${audienceText ? `<span class="meta-divider">&middot;</span><span>${audienceText}</span>` : ''}
                         </div>
                         <h3 class="card-title">
                             <a href="article.html?id=${proj.id}">${proj.title || proj.topic}</a>
@@ -278,10 +353,13 @@
                         <div class="card-highlights">
                             <div class="highlight-item">
                                 <span class="highlight-label">Score</span>
-                                <span class="highlight-value">${proj.final_score}/10</span>
+                                <div class="card-score-split">
+                                    <span class="score-big">${proj.final_score || '--'}</span>
+                                    <span class="score-small">/10</span>
+                                </div>
                             </div>
                             <div class="highlight-item">
-                                <span class="highlight-label">Rounds</span>
+                                <span class="highlight-label">Review Rounds</span>
                                 <span class="highlight-value">${proj.total_rounds}</span>
                             </div>
                         </div>

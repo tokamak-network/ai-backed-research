@@ -162,10 +162,12 @@
             cursor: pointer;
             border-radius: 2px;
             transition: all var(--duration-fast) var(--easing);
+            box-shadow: var(--shadow-sharp);
         }
 
         .project-item:hover {
-            border-color: var(--text-primary);
+            border-color: var(--accent-border);
+            box-shadow: var(--shadow-sharp-hover);
             transform: translateX(2px);
         }
 
@@ -202,6 +204,7 @@
             padding: 1.75rem;
             margin-bottom: 1.5rem;
             overflow: hidden;
+            box-shadow: var(--shadow-sharp);
         }
 
         .section-title {
@@ -355,6 +358,7 @@
             max-height: 600px;
             overflow-y: auto;
             text-align: left;
+            box-shadow: var(--shadow-sharp);
         }
 
         .manuscript-viewer h1 {
@@ -436,6 +440,7 @@
             border-radius: 2px;
             padding: 1.5rem;
             border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-sharp);
         }
 
         .project-header {
@@ -498,7 +503,8 @@
 
         .round-score {
             font-weight: 700;
-            font-size: 1.125rem;
+            font-size: 1.25rem;
+            color: var(--link-primary);
         }
 
         /* Moderator Panel */
@@ -509,6 +515,7 @@
             text-align: left;
             overflow-wrap: break-word;
             word-break: break-word;
+            box-shadow: var(--shadow-sharp);
         }
 
         .moderator-panel.decision-accept {
@@ -676,6 +683,7 @@
             overflow-wrap: break-word;
             word-break: break-word;
             min-width: 0;
+            box-shadow: var(--shadow-sharp);
         }
 
         .review-card.on-leave {

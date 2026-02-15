@@ -543,3 +543,94 @@ pending → desk_review → reviewing → accepted (publish)
 - [ ] E2E: Reviewer failure → "On Leave" card in review.html → score excludes failed
 - [ ] E2E: Interrupt during review → resume from checkpoint (round 0) → continues from round 1
 - [ ] E2E: Truncated JSON from LLM → `repair_json()` recovers → no crash
+
+---
+
+## Stitch Design System Site-Wide Application
+
+### Phase 1: Design System (`web/styles/main.css`) — Done
+- [x] Added `--shadow-sharp` / `--shadow-sharp-hover` CSS variables (light + dark)
+- [x] `.grid-lines` background pattern (light + dark)
+- [x] Custom scrollbar styling
+- [x] `.article-card` sharp shadow + hover amber left bar (`::before`)
+- [x] `.nav-link` underline hover effect
+- [x] `.card-quote` serif italic class
+- [x] `.stats-strip` / `.stat-cell` / `.stat-value-large` / `.stat-label-mono` components
+- [x] `.content-section`, `.form-section`, `.auth-section` auto sharp shadow
+- [x] Dashboard sidebar layout (`.dashboard-layout`, `.dashboard-sidebar`, `.sidebar-nav-link`)
+- [x] `.decision-notification` border-l-4 variants (accept/major/minor/reject)
+- [x] `.score-display` / `.score-number` / `.score-total` components
+- [x] `.hero-accent`, `.hero-badge`, `.hero-cta-group`, `.btn-sharp`
+- [x] `.section-header-row`, `.sort-select`, `.card-score-split`
+- [x] `.footer-grid-4`, `.footer-brand` — 4-column footer layout
+- [x] Responsive breakpoints for stats strip, hero CTA, footer
+
+### Phase 2: Homepage (`web/index.html`) — Done
+- [x] Hero: grid-lines background, volume badge (dynamic), serif italic accent subtitle
+- [x] Hero: dual CTA buttons (Browse Latest Issue + Submit Research)
+- [x] Stats strip: 4 metrics (Published Papers, Avg Score, Avg Rounds, Review Process)
+- [x] Section header with Sort By dropdown (Date/Score/Rounds)
+- [x] Card: mono date, score-split display, sharp shadow + hover bar
+- [x] Footer: 4-column grid (Brand + Platform + Resources + Connect)
+- [x] Dynamic stats from API data
+
+### Phase 3: Dashboard (`web/my-research.html`) — Done
+- [x] Full Stitch-2 sidebar layout (`dashboard-layout`)
+- [x] Sidebar: Scholarly. logo, nav links (My Submissions, Queue, New Research, Home)
+- [x] Sidebar footer: API key input + theme toggle
+- [x] Mobile responsive: sidebar hidden, mobile header shown
+- [x] Top bar with welcome message + New Research CTA
+- [x] 3-column stats row (Total Workflows, Success Rate, Avg Score)
+- [x] Decision notifications (border-left-4 colored)
+- [x] Quota circle SVG display
+- [x] Profile grid
+- [x] Workflow cards with status badges + hover effects
+- [x] Submissions list with deadline countdown
+
+### Phase 4: Content Pages — Done
+- [x] `about.html`: grid-lines hero section with serif title
+- [x] `ask-topic.html`: step-badge → mono font, border-radius 0
+- [x] `submit.html`: step-badge → mono font, border-radius 0
+- [x] `apply.html`: form-section sharp shadow auto-applied via main.css
+
+### Phase 5: Data Pages — Done
+- [x] `research-queue.html`: stat-card + workflow-card sharp shadow, hover effects
+- [x] `review.html`: review-card + chart-container sharp shadow
+- [x] `admin.html`: admin-section sharp shadow
+- [x] `api-docs.html`: docs-section + endpoint sharp shadow
+
+### Phase 6: Final Pages — Done
+- [x] `article.html`: minimal changes (own design preserved)
+- [x] `blog-reader.html`: minimal changes (already uses main.css)
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `web/styles/main.css` | +200 lines: design tokens, component classes, responsive |
+| `web/index.html` | Hero redesign, stats strip, sort controls, card/footer improvements |
+| `web/my-research.html` | Full rewrite → Stitch-2 sidebar dashboard layout |
+| `web/about.html` | Grid-lines hero section |
+| `web/ask-topic.html` | Step-badge mono font |
+| `web/submit.html` | Step-badge mono font |
+| `web/research-queue.html` | Stat/workflow card sharp shadow |
+| `web/review.html` | Review card + chart sharp shadow |
+| `web/admin.html` | Admin section sharp shadow |
+| `web/api-docs.html` | Docs section + endpoint sharp shadow |
+
+### Not Changed (per plan)
+- Tailwind: no conversion (plain CSS maintained)
+- Newsletter section: excluded
+- Card images/thumbnails: excluded
+- `web/articles/` static files: untouched
+- `stitch/` reference files: untouched
+- API server code: untouched
+- Existing JS logic: preserved
+
+### Verification
+- [x] `pytest tests/test_integrity.py -v` — 74 passed, 9 skipped
+- [x] `--shadow-sharp` present in main.css (light + dark themes)
+- [x] `grid-lines` applied to index.html + about.html heroes
+- [x] All 12 pages have Stitch design elements
+- [ ] Visual: dark/light toggle on all pages
+- [ ] Visual: mobile responsive (sidebar collapse, stats strip reflow)
+- [ ] Visual: card hover effects (amber left bar + shadow escalation)

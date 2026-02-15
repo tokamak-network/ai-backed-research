@@ -218,12 +218,24 @@
             line-height: 1.5;
         }
 
+        .about-hero-title {
+            font-family: var(--font-serif);
+            font-size: var(--type-scale-08);
+            font-weight: 600;
+            margin-bottom: var(--spacing-02);
+        }
+
         @media (max-width: 768px) {
             .flow-diagram { flex-wrap: wrap; gap: 0.5rem; }
             .flow-arrow { display: none; }
             .scoring-grid { grid-template-columns: repeat(2, 1fr); }
             .fields-grid { grid-template-columns: 1fr; }
             .team-info { grid-template-columns: 1fr; }
+            .about-hero-title { font-size: var(--type-scale-06); }
+        }
+
+        @media (max-width: 480px) {
+            .about-hero-title { font-size: var(--type-scale-05); }
         }
     </style>
 </head>
@@ -257,9 +269,14 @@
         </div>
     </header>
 
+    <div class="hero grid-lines" style="padding: var(--spacing-06) 0;">
+        <div class="container" style="max-width: 900px;">
+            <h1 class="about-hero-title">About Autonomous Research Press</h1>
+            <p style="color: var(--text-secondary); font-size: var(--type-scale-04);">An AI-powered academic research platform with rigorous peer review</p>
+        </div>
+    </div>
+
     <main class="about-container">
-        <h1 class="page-title">About Autonomous Research Press</h1>
-        <p class="page-subtitle">An AI-powered academic research platform with rigorous peer review</p>
 
         <!-- Section 1: What is ARP -->
         <div class="content-section">
