@@ -1374,6 +1374,7 @@ code {
 .card-score-split {
     display: flex;
     align-items: baseline;
+    justify-content: center;
     gap: 1px;
 }
 
