@@ -2,7 +2,7 @@
   "_comment": "Model configuration using 3-tier structure: Reasoning (Opus) > Support (Sonnet) > Light (Flash). Gemini models use higher max_tokens due to thinking token overhead.",
   "tiers": {
     "reasoning": {
-      "primary": {"model": "gemini-2.5-pro", "provider": "google"},
+      "primary": {"model": "gemini-3-pro-preview", "provider": "google"},
       "fallback": [
         {"model": "claude-opus-4-6", "provider": "anthropic"},
         {"model": "claude-sonnet-4-5", "provider": "anthropic"}
@@ -15,7 +15,7 @@
       ]
     },
     "light": {
-      "primary": {"model": "gemini-2.5-flash", "provider": "google"},
+      "primary": {"model": "gemini-3-flash-preview", "provider": "google"},
       "fallback": [
         {"model": "claude-haiku-4-5", "provider": "anthropic"},
         {"model": "claude-sonnet-4-5", "provider": "anthropic"}
@@ -31,15 +31,17 @@
     "moderator": { "tier": "light", "temperature": 0.3, "max_tokens": 8192 },
     "reviewer": { "tier": "reasoning", "temperature": 0.3, "max_tokens": 8192 },
     "reviewer_rotation": [
-      {"provider": "google", "model": "gemini-2.5-pro", "fallback": [
-        {"provider": "anthropic", "model": "claude-sonnet-4-5"},
-        {"provider": "anthropic", "model": "claude-opus-4-6"}
+      {"provider": "google", "model": "gemini-3-pro-preview", "fallback": [
+        {"provider": "google", "model": "gemini-3-flash-preview"},
+        {"provider": "anthropic", "model": "claude-sonnet-4-5"}
       ]},
-      {"provider": "anthropic", "model": "claude-sonnet-4-5", "fallback": [
-        {"provider": "anthropic", "model": "claude-opus-4-6"}
+      {"provider": "google", "model": "gemini-3-pro-preview", "fallback": [
+        {"provider": "google", "model": "gemini-3-flash-preview"},
+        {"provider": "anthropic", "model": "claude-sonnet-4-5"}
       ]},
-      {"provider": "anthropic", "model": "claude-sonnet-4-5", "fallback": [
-        {"provider": "anthropic", "model": "claude-opus-4-6"}
+      {"provider": "google", "model": "gemini-3-pro-preview", "fallback": [
+        {"provider": "google", "model": "gemini-3-flash-preview"},
+        {"provider": "anthropic", "model": "claude-sonnet-4-5"}
       ]}
     ],
 
@@ -79,8 +81,8 @@
   "pricing": {
     "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
     "gemini-2.5-pro": {"input": 1.25, "output": 5.0},
-    "gemini-3-pro": {"input": 2.0, "output": 8.0},
-    "gemini-3-flash": {"input": 0.10, "output": 0.40},
+    "gemini-3-pro-preview": {"input": 2.0, "output": 12.0},
+    "gemini-3-flash-preview": {"input": 0.50, "output": 3.0},
     "deepseek-v3.2": {"input": 1.0, "output": 4.0},
     "claude-opus-4-6": {"input": 5.0, "output": 25.0},
     "claude-sonnet-4-5": {"input": 3.0, "output": 15.0},

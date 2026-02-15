@@ -206,9 +206,9 @@ Models are configured in `config/models.json` with a 3-tier system:
 
 | Tier | Role | Default Model |
 |------|------|---------------|
-| **Reasoning** | Writer, Lead Author, Paper Writer | `gemini-2.5-pro` |
+| **Reasoning** | Writer, Lead Author, Paper Writer | `gemini-3-pro-preview` |
 | **Support** | Reviewer, Moderator, Desk Editor | `claude-sonnet-4-5` |
-| **Light** | Categorizer, Planner, Team Composer | `gemini-2.5-flash` |
+| **Light** | Categorizer, Planner, Team Composer | `gemini-3-flash-preview` |
 
 Each tier has primary + fallback models. Roles map to tiers with per-role temperature and token limits.
 

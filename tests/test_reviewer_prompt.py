@@ -304,8 +304,8 @@ async def run_test():
     print(f"\nLoaded {len(cases)} test cases from production data\n")
 
     test_models = [
-        ("gemini-2.5-pro", "google"),
-        ("gemini-2.5-flash", "google"),
+        ("gemini-3-pro-preview", "google"),
+        ("gemini-3-flash-preview", "google"),
     ]
 
     all_results = []

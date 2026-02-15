@@ -14,16 +14,16 @@ from .base import BaseLLM, LLMResponse, retry_llm_call
 class GeminiLLM(BaseLLM):
     """Google Gemini provider.
 
-    Supports Gemini 2.0 Pro and other Gemini models.
+    Supports Gemini 3.x and 2.x models.
     Uses the official Google Generative AI Python SDK.
     """
 
-    def __init__(self, api_key: str, model: str = "gemini-3-flash"):
+    def __init__(self, api_key: str, model: str = "gemini-3-flash-preview"):
         """Initialize Gemini client.
 
         Args:
             api_key: Google API key
-            model: Gemini model ID (default: Gemini 2.0 Flash)
+            model: Gemini model ID (default: Gemini 3 Flash)
         """
         super().__init__(api_key, model)
         genai.configure(api_key=api_key)
@@ -54,10 +54,10 @@ class GeminiLLM(BaseLLM):
         if system:
             full_prompt = f"{system}\n\n{prompt}"
 
-        # Gemini 2.5 thinking models consume thinking tokens from max_output_tokens
+        # Gemini thinking models consume thinking tokens from max_output_tokens
         # Use higher limit to avoid truncation (thinking tokens typically 8x output)
         effective_max_tokens = max_tokens
-        if "2.5" in self.model:
+        if any(v in self.model for v in ("2.5", "3-pro", "3-flash")):
             effective_max_tokens = max(max_tokens * 8, 8192)
 
         generation_config = genai.GenerationConfig(

@@ -51,15 +51,15 @@ MODELS = {
     "claude-opus-4-6":    {"provider": "anthropic", "model": "claude-opus-4-6",    "short": "Opus"},
     "claude-sonnet-4-5":  {"provider": "anthropic", "model": "claude-sonnet-4-5",  "short": "Sonnet"},
     "claude-haiku-4-5":   {"provider": "anthropic", "model": "claude-haiku-4-5",   "short": "Haiku"},
-    "gemini-2.5-flash":   {"provider": "google",    "model": "gemini-2.5-flash",   "short": "Flash"},
-    "gemini-2.5-pro":     {"provider": "google",    "model": "gemini-2.5-pro",     "short": "Pro"},
+    "gemini-3-flash-preview":   {"provider": "google",    "model": "gemini-3-flash-preview",   "short": "Flash"},
+    "gemini-3-pro-preview":     {"provider": "google",    "model": "gemini-3-pro-preview",     "short": "Pro"},
 }
 
 # Support tier test models (exclude Opus — it's the reasoning baseline)
-SUPPORT_MODELS = ["claude-sonnet-4-5", "gemini-2.5-flash", "claude-haiku-4-5", "gemini-2.5-pro"]
+SUPPORT_MODELS = ["claude-sonnet-4-5", "gemini-3-flash-preview", "claude-haiku-4-5", "gemini-3-pro-preview"]
 
 # Reasoning tier test models
-REASONING_MODELS = ["claude-opus-4-6", "gemini-2.5-pro"]
+REASONING_MODELS = ["claude-opus-4-6", "gemini-3-pro-preview"]
 
 
 # ---------------------------------------------------------------------------
@@ -169,9 +169,9 @@ async def call_llm(provider: str, model: str, prompt: str, system: str,
     """Call LLM and return output + token/cost info."""
     llm = _create_llm(provider=provider, model=model)
 
-    # Gemini 2.5 thinking model: thinking tokens consume max_output_tokens
+    # Gemini thinking models: thinking tokens consume max_output_tokens
     effective_max = max_tokens
-    if provider == "google" and "2.5" in model:
+    if provider == "google" and any(v in model for v in ("2.5", "3-pro", "3-flash")):
         effective_max = max(max_tokens * 8, 2048)
 
     try:

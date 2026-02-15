@@ -71,3 +71,6 @@ model_comparison_results_full.json
 
 # Stitch design reference files
 stitch/
+
+# Temporary files
+tmp/

@@ -654,7 +654,7 @@ class ComprehensiveRoleTester:
     # Models
     CLAUDE_HAIKU = {"provider": "anthropic", "model": "claude-haiku-4-5"}
     CLAUDE_SONNET = {"provider": "anthropic", "model": "claude-sonnet-4-5"}
-    GEMINI_FLASH = {"provider": "google", "model": "gemini-2.5-flash"}
+    GEMINI_FLASH = {"provider": "google", "model": "gemini-3-flash-preview"}
 
     def __init__(self):
         self.results: List[Dict] = []

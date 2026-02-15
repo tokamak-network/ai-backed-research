@@ -21,8 +21,8 @@ from research_cli.llm.base import LLMResponse
 
 
 MODELS_TO_TEST = [
-    ("google", "gemini-2.5-flash"),
-    ("google", "gemini-2.5-pro"),
+    ("google", "gemini-3-flash-preview"),
+    ("google", "gemini-3-pro-preview"),
 ]
 
 PROMPT = "Explain what a blockchain is in exactly 3 sentences."
