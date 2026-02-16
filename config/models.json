@@ -15,8 +15,9 @@
       ]
     },
     "light": {
-      "primary": {"model": "gemini-3-flash-preview", "provider": "google"},
+      "primary": {"model": "gemini-2.5-flash", "provider": "google"},
       "fallback": [
+        {"model": "gemini-3-flash-preview", "provider": "google"},
         {"model": "claude-haiku-4-5", "provider": "anthropic"},
         {"model": "claude-sonnet-4-5", "provider": "anthropic"}
       ]
@@ -32,15 +33,15 @@
     "reviewer": { "tier": "reasoning", "temperature": 0.3, "max_tokens": 8192 },
     "reviewer_rotation": [
       {"provider": "google", "model": "gemini-3-pro-preview", "fallback": [
-        {"provider": "google", "model": "gemini-3-flash-preview"},
+        {"provider": "google", "model": "gemini-2.5-flash"},
         {"provider": "anthropic", "model": "claude-sonnet-4-5"}
       ]},
       {"provider": "google", "model": "gemini-3-pro-preview", "fallback": [
-        {"provider": "google", "model": "gemini-3-flash-preview"},
+        {"provider": "google", "model": "gemini-2.5-flash"},
         {"provider": "anthropic", "model": "claude-sonnet-4-5"}
       ]},
       {"provider": "google", "model": "gemini-3-pro-preview", "fallback": [
-        {"provider": "google", "model": "gemini-3-flash-preview"},
+        {"provider": "google", "model": "gemini-2.5-flash"},
         {"provider": "anthropic", "model": "claude-sonnet-4-5"}
       ]}
     ],
