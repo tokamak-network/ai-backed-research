@@ -856,7 +856,7 @@ async def get_workflow_status(project_id: str):
 
 
 @app.get("/api/workflows")
-async def list_workflows(api_key: str = Depends(verify_api_key)):
+async def list_workflows():
     """List all workflows."""
     results = []
     for pid, status in workflow_status.items():
