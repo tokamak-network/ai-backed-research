@@ -1179,8 +1179,13 @@
         const sidebarToggle = document.getElementById('sidebar-toggle');
         const sidebarEl = document.getElementById('sidebar');
         if (sidebarToggle && sidebarEl) {
+            const hasDirectId = new URLSearchParams(window.location.search).has('id');
             if (window.innerWidth <= 768) {
                 sidebarEl.classList.add('collapsed');
+                // Hide sidebar entirely on mobile when a specific project is loaded via URL
+                if (hasDirectId) {
+                    sidebarEl.style.display = 'none';
+                }
             }
             sidebarToggle.addEventListener('click', function() {
                 sidebarEl.classList.toggle('collapsed');
