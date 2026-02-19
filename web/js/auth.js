@@ -53,8 +53,7 @@ function renderAuthState() {
             '<button onclick="logout()" class="nav-link" style="cursor:pointer;background:none;border:none;font-size:0.8125rem;color:var(--text-secondary);padding:0;font-family:inherit;">Logout</button>';
     } else {
         container.innerHTML =
-            '<a href="login.html" class="nav-link">Login</a>' +
-            '<a href="apply.html" class="nav-link">Sign Up</a>';
+            '<a href="login.html" class="nav-link">Login</a>';
     }
 }
 

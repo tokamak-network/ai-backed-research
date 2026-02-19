@@ -108,6 +108,7 @@ class OpenAILLM(BaseLLM):
                 temperature=api_temp,
                 max_tokens=max_tokens,
                 stream=True,
+                stream_options={"include_usage": True},
                 **kwargs
             )
 

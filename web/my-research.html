@@ -421,7 +421,7 @@
 
                     <!-- Quota -->
                     <div class="dashboard-section">
-                        <h2>Daily Quota</h2>
+                        <h2>Research Quota</h2>
                         <div class="quota-card">
                             <div class="quota-circle">
                                 <svg viewBox="0 0 36 36">
@@ -575,7 +575,7 @@
 
             document.getElementById('quota-text').textContent = remaining;
             document.getElementById('quota-label').textContent = `${remaining} of ${limit} remaining`;
-            document.getElementById('quota-detail').textContent = `${used} used today`;
+            document.getElementById('quota-detail').textContent = `${used} papers submitted`;
 
             const circumference = 100;
             const offset = circumference - (pct / 100) * circumference;

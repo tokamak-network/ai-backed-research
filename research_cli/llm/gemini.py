@@ -122,7 +122,7 @@ class GeminiLLM(BaseLLM):
             full_prompt = f"{system}\n\n{prompt}"
 
         effective_max_tokens = max_tokens
-        if "2.5" in self.model:
+        if any(v in self.model for v in ("2.5", "3-pro", "3-flash")):
             effective_max_tokens = max(max_tokens * 8, 8192)
 
         generation_config = genai.GenerationConfig(
@@ -200,7 +200,7 @@ class GeminiLLM(BaseLLM):
 
         # Gemini 2.5 thinking models consume thinking tokens from max_output_tokens
         effective_max_tokens = max_tokens
-        if "2.5" in self.model:
+        if any(v in self.model for v in ("2.5", "3-pro", "3-flash")):
             effective_max_tokens = max(max_tokens * 8, 8192)
 
         generation_config = genai.GenerationConfig(

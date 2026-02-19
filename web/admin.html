@@ -469,6 +469,7 @@
             <div class="admin-tabs">
                 <button class="admin-tab active" onclick="switchTab('keys')">API Keys</button>
                 <button class="admin-tab" onclick="switchTab('applications')">Applications</button>
+                <button class="admin-tab" onclick="switchTab('articles')">Articles</button>
             </div>
 
             <!-- API Keys Tab -->
@@ -494,12 +495,13 @@
                             <tr>
                                 <th>Prefix</th>
                                 <th>Label</th>
+                                <th>Quota</th>
                                 <th>Created</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody id="key-list">
-                            <tr><td colspan="4" class="empty-row">Loading...</td></tr>
+                            <tr><td colspan="5" class="empty-row">Loading...</td></tr>
                         </tbody>
                     </table>
 
@@ -534,6 +536,18 @@
                     <div id="app-error" class="error-box"></div>
                 </div>
             </div>
+
+            <!-- Articles Tab -->
+            <div id="tab-articles" class="tab-content">
+                <div class="admin-section">
+                    <h2>Published Articles</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="loadArticles()" style="margin-bottom: 1rem;">Refresh</button>
+
+                    <div id="articles-list"></div>
+
+                    <div id="article-error" class="error-box"></div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -563,11 +577,12 @@
             document.getElementById(`tab-${tabName}`).classList.add('active');
 
             if (tabName === 'applications') loadApplications();
+            if (tabName === 'articles') loadArticles();
         }
 
         // --- Auth ---
-        async function authenticate() {
-            adminKey = document.getElementById('admin-key').value.trim();
+        async function authenticate(key) {
+            adminKey = key || document.getElementById('admin-key').value.trim();
             const statusEl = document.getElementById('auth-status');
 
             if (!adminKey) {
@@ -581,11 +596,14 @@
                 if (resp.status === 403) {
                     statusEl.className = 'status-err';
                     statusEl.textContent = 'Invalid admin key.';
+                    adminKey = '';
+                    sessionStorage.removeItem('admin_key');
                     document.getElementById('admin-panel').style.display = 'none';
                     return;
                 }
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
+                sessionStorage.setItem('admin_key', adminKey);
                 statusEl.className = 'status-ok';
                 statusEl.textContent = 'Authenticated.';
                 document.getElementById('admin-panel').style.display = 'block';
@@ -595,6 +613,15 @@
                 statusEl.textContent = 'Connection error: ' + e.message;
             }
         }
+
+        // Auto-authenticate from sessionStorage
+        (function() {
+            const saved = sessionStorage.getItem('admin_key');
+            if (saved) {
+                document.getElementById('admin-key').value = saved;
+                authenticate(saved);
+            }
+        })();
 
         // --- API Keys ---
         async function loadKeys() {
@@ -609,18 +636,27 @@
                 const tbody = document.getElementById('key-list');
 
                 if (!data.keys || data.keys.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="empty-row">No keys yet. Generate one above.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-row">No keys yet. Generate one above.</td></tr>';
                     return;
                 }
 
-                tbody.innerHTML = data.keys.map(k => `
+                tbody.innerHTML = data.keys.map(k => {
+                    const prefix = escapeHtml(k.key_prefix.replace('...', ''));
+                    return `
                     <tr>
                         <td class="key-mono">${escapeHtml(k.key_prefix)}</td>
-                        <td>${escapeHtml(k.label || '-')}</td>
+                        <td>${escapeHtml(k.label || '-')}${k.researcher_name ? '<br><span style="font-size:0.6875rem;color:var(--text-secondary);">' + escapeHtml(k.researcher_name) + '</span>' : ''}</td>
+                        <td>
+                            <div class="quota-row">
+                                <span style="font-size:0.8125rem;">${k.total_used ?? 0}/${k.total_quota ?? 3}</span>
+                                <input type="number" min="0" max="1000" value="${k.total_quota ?? 3}" id="quota-${prefix}" style="width:50px;">
+                                <button class="btn btn-secondary btn-sm" onclick="updateQuota('${prefix}')">Set</button>
+                            </div>
+                        </td>
                         <td>${k.created ? new Date(k.created).toLocaleDateString() : '-'}</td>
-                        <td><button class="btn btn-danger btn-sm" onclick="deleteKey('${escapeHtml(k.key_prefix.replace('...', ''))}')">Delete</button></td>
-                    </tr>
-                `).join('');
+                        <td><button class="btn btn-danger btn-sm" onclick="deleteKey('${prefix}')">Delete</button></td>
+                    </tr>`;
+                }).join('');
             } catch (e) {
                 errorEl.textContent = 'Failed to load keys: ' + e.message;
                 errorEl.style.display = 'block';
@@ -806,6 +842,113 @@
                 btn.textContent = 'Copied';
                 setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
             });
+        }
+
+        // --- Quota ---
+        async function updateQuota(prefix) {
+            const input = document.getElementById(`quota-${prefix}`);
+            if (!input) return;
+            const totalQuota = parseInt(input.value, 10);
+            if (isNaN(totalQuota) || totalQuota < 0 || totalQuota > 1000) {
+                alert('Quota must be between 0 and 1000');
+                return;
+            }
+            const errorEl = document.getElementById('key-error');
+            errorEl.style.display = 'none';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/keys/${encodeURIComponent(prefix)}/quota`, {
+                    method: 'PUT',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({ total_quota: totalQuota })
+                });
+                if (!resp.ok) {
+                    const data = await resp.json();
+                    throw new Error(data.detail || `HTTP ${resp.status}`);
+                }
+                await loadKeys();
+            } catch (e) {
+                errorEl.textContent = 'Failed to update quota: ' + e.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // --- Articles ---
+        async function loadArticles() {
+            const errorEl = document.getElementById('article-error');
+            errorEl.style.display = 'none';
+            const listEl = document.getElementById('articles-list');
+            listEl.innerHTML = '<p style="color: var(--text-secondary); padding: 1rem;">Loading...</p>';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/articles`, { headers: apiHeaders() });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+                const data = await resp.json();
+                const articles = data.articles || [];
+
+                if (articles.length === 0) {
+                    listEl.innerHTML = '<p style="color: var(--text-secondary); padding: 1rem; text-align: center;">No articles published yet.</p>';
+                    return;
+                }
+
+                listEl.innerHTML = `
+                    <table class="key-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Score</th>
+                                <th>Decision</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${articles.map(a => `
+                                <tr>
+                                    <td>${escapeHtml(a.topic || a.id)}</td>
+                                    <td>${a.final_score != null ? Number(a.final_score).toFixed(1) : '-'}</td>
+                                    <td><span class="app-status ${a.passed ? 'approved' : 'rejected'}">${escapeHtml(a.final_decision || a.status || '-')}</span></td>
+                                    <td>${a.timestamp ? new Date(a.timestamp).toLocaleDateString() : '-'}</td>
+                                    <td style="white-space: nowrap;">
+                                        <button class="btn btn-secondary btn-sm" onclick="editArticle('${escapeHtml(a.id).replace(/'/g, "\\'")}', '${escapeHtml((a.topic || '').replace(/'/g, "\\'"))}')">Edit</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteArticle('${escapeHtml(a.id).replace(/'/g, "\\'")}')">Delete</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (e) {
+                errorEl.textContent = 'Failed to load articles: ' + e.message;
+                errorEl.style.display = 'block';
+                listEl.innerHTML = '';
+            }
+        }
+
+        function editArticle(projectId, title) {
+            window.location.href = `admin-edit.html?id=${encodeURIComponent(projectId)}&title=${encodeURIComponent(title || '')}`;
+        }
+
+        async function deleteArticle(projectId) {
+            if (!confirm(`Delete article "${projectId}"? This cannot be undone.`)) return;
+            const errorEl = document.getElementById('article-error');
+            errorEl.style.display = 'none';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/workflows/${encodeURIComponent(projectId)}`, {
+                    method: 'DELETE',
+                    headers: apiHeaders()
+                });
+                if (!resp.ok) {
+                    const data = await resp.json();
+                    throw new Error(data.detail || `HTTP ${resp.status}`);
+                }
+                await loadArticles();
+            } catch (e) {
+                errorEl.textContent = 'Failed to delete article: ' + e.message;
+                errorEl.style.display = 'block';
+            }
         }
 
         function escapeHtml(text) {

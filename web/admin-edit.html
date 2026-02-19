@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Article | Admin</title>
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.svg">
+    <link rel="mask-icon" href="favicon.svg" color="#96760E">
+
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+
+    <style>
+        /* Full-height editor layout.
+           Uses position:fixed on .app-shell to avoid any body/html height conflicts. */
+
+        /* ── App Shell: covers full viewport, flex column ── */
+        .app-shell {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--background);
+        }
+
+        /* ── Loading overlay ── */
+        #load-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--background);
+            z-index: 200;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* ── Editor Header ── */
+        .edit-header {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0 1rem;
+            height: 48px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            z-index: 10;
+        }
+
+        .edit-header-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            white-space: nowrap;
+            transition: color 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .edit-header-back:hover { color: var(--text); }
+        .edit-header-back svg { width: 14px; height: 14px; }
+
+        .edit-header-sep {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .edit-header-title {
+            flex: 1;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .edit-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .save-status {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-width: 110px;
+            text-align: right;
+        }
+
+        .save-status.unsaved { color: var(--link-primary); }
+        .save-status.saved   { color: var(--green-60); }
+        .save-status.error   { color: var(--red-60); }
+
+        .btn {
+            padding: 0.4375rem 1rem;
+            border: none;
+            border-radius: 0;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            font-family: inherit;
+            line-height: 1;
+            transition: background 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        .btn-primary { background: var(--primary-600); color: #fff; }
+        .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-secondary:hover { background: var(--background); color: var(--text); }
+
+        .theme-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            transition: color 70ms;
+        }
+
+        .theme-btn:hover { color: var(--text); }
+        .theme-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+
+        /* ── 2-Pane Workspace ── */
+        .edit-workspace {
+            flex: 1;
+            display: flex;
+            min-height: 0; /* critical: allows flex children to shrink below content size */
+            overflow: hidden;
+        }
+
+        .edit-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .edit-pane-editor {
+            border-right: 1px solid var(--border);
+        }
+
+        .pane-label {
+            flex-shrink: 0;
+            padding: 0.3125rem 1rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── Editor Fields ── */
+        .editor-fields {
+            flex-shrink: 0;
+            padding: 0.625rem 1rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .title-input {
+            width: 100%;
+            padding: 0.5rem 0.625rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        .title-input:focus {
+            outline: none;
+            border-color: var(--primary-600);
+            box-shadow: 0 0 0 1px var(--primary-600);
+        }
+
+        .textarea-wrap {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #content-textarea {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            background: var(--background);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        /* ── Preview Pane ── */
+        .preview-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 2rem;
+            background: var(--background);
+        }
+
+        .preview-inner {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        /* Scoped preview typography (replaces article.css in this context) */
+        .preview-inner h1,
+        .preview-inner h2,
+        .preview-inner h3,
+        .preview-inner h4,
+        .preview-inner h5,
+        .preview-inner h6 {
+            color: var(--text);
+            font-weight: 600;
+            line-height: 1.25;
+            margin: 1.75rem 0 0.75rem;
+        }
+
+        .preview-inner h1 { font-size: 2rem; }
+        .preview-inner h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.375rem; }
+        .preview-inner h3 { font-size: 1.25rem; }
+        .preview-inner h4 { font-size: 1.0625rem; }
+
+        .preview-inner p {
+            color: var(--text);
+            line-height: 1.75;
+            margin: 0.875rem 0;
+        }
+
+        .preview-inner ul,
+        .preview-inner ol {
+            padding-left: 1.5rem;
+            margin: 0.875rem 0;
+        }
+
+        .preview-inner li {
+            color: var(--text);
+            line-height: 1.75;
+            margin: 0.25rem 0;
+        }
+
+        .preview-inner code {
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            background: var(--layer-02);
+            border: 1px solid var(--border);
+            padding: 0.1em 0.4em;
+            border-radius: 2px;
+        }
+
+        .preview-inner pre {
+            background: var(--layer-02);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .preview-inner pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 0.8125rem;
+        }
+
+        .preview-inner blockquote {
+            border-left: 3px solid var(--primary-600);
+            margin: 1rem 0;
+            padding: 0.5rem 1rem;
+            background: var(--layer-01);
+            color: var(--text-secondary);
+        }
+
+        .preview-inner hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1.5rem 0;
+        }
+
+        .preview-inner a {
+            color: var(--link-primary);
+            text-decoration: underline;
+        }
+
+        .preview-inner strong { color: var(--text); font-weight: 600; }
+        .preview-inner em { font-style: italic; }
+
+        .preview-inner table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+        }
+
+        .preview-inner th,
+        .preview-inner td {
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+        }
+
+        .preview-inner th {
+            background: var(--layer-01);
+            font-weight: 600;
+        }
+
+        #preview-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            .edit-workspace { flex-direction: column; }
+            .edit-pane-editor { flex: none; height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
+            .edit-pane-preview { flex: none; height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading overlay (fixed, shown until article loads) -->
+    <div id="load-overlay">Loading article...</div>
+
+    <div class="app-shell">
+
+    <!-- Header -->
+    <header class="edit-header">
+        <a href="admin.html" class="edit-header-back">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+            </svg>
+            Back to Admin
+        </a>
+        <div class="edit-header-sep"></div>
+        <div class="edit-header-title" id="header-title">Loading...</div>
+        <div class="edit-header-actions">
+            <span class="save-status" id="save-status"></span>
+            <button class="btn btn-primary" id="save-btn" onclick="saveArticle()" disabled>Save</button>
+            <a href="admin.html" class="btn btn-secondary">Cancel</a>
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- 2-Pane Workspace -->
+    <div class="edit-workspace">
+        <!-- Left: Editor -->
+        <div class="edit-pane edit-pane-editor">
+            <div class="pane-label">Editor</div>
+            <div class="editor-fields">
+                <input type="text" id="title-input" class="title-input" placeholder="Article title" oninput="onEditorChange()">
+            </div>
+            <div class="textarea-wrap">
+                <textarea id="content-textarea" placeholder="Markdown content..." oninput="onEditorChange()" spellcheck="false"></textarea>
+            </div>
+        </div>
+
+        <!-- Right: Preview -->
+        <div class="edit-pane edit-pane-preview">
+            <div class="pane-label">Preview</div>
+            <div class="preview-scroll">
+                <div class="preview-inner">
+                    <div id="preview-title"></div>
+                    <div id="preview-body"></div>
+                </div>
+            </div>
+        </div>
+    </div><!-- .edit-workspace -->
+
+    </div><!-- .app-shell -->
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js" onload="onKatexReady()"></script>
+    <script src="js/main.js"></script>
+    <script>
+        const params = new URLSearchParams(location.search);
+        const projectId = params.get('id');
+        const adminKey  = sessionStorage.getItem('admin_key') || '';
+        const urlTitle  = params.get('title') || '';
+
+        let originalTitle   = '';
+        let originalContent = '';
+        let isDirty         = false;
+        let debounceTimer   = null;
+        let katexReady      = false;
+
+        function apiHeaders() {
+            return { 'Content-Type': 'application/json', 'X-API-Key': adminKey || '' };
+        }
+
+        // ── KaTeX ──
+        function onKatexReady() {
+            katexReady = true;
+            renderPreview();
+        }
+
+        function renderMath(el) {
+            if (!katexReady || typeof renderMathInElement === 'undefined') return;
+            try {
+                renderMathInElement(el, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$',  right: '$',  display: false },
+                        { left: '\\[', right: '\\]', display: true },
+                        { left: '\\(', right: '\\)', display: false }
+                    ],
+                    throwOnError: false
+                });
+            } catch (_) {}
+        }
+
+        // ── Preview ──
+        function renderPreview() {
+            const title = document.getElementById('title-input').value;
+            const md    = document.getElementById('content-textarea').value;
+
+            document.getElementById('preview-title').textContent = title;
+
+            const bodyEl = document.getElementById('preview-body');
+            if (!md.trim()) {
+                bodyEl.innerHTML = '<p style="color:var(--text-secondary);font-style:italic;">Start typing to see preview…</p>';
+                return;
+            }
+            try {
+                bodyEl.innerHTML = marked.parse(md);
+                renderMath(bodyEl);
+            } catch (e) {
+                bodyEl.textContent = 'Preview error: ' + e.message;
+            }
+        }
+
+        // ── Dirty tracking ──
+        function onEditorChange() {
+            const title   = document.getElementById('title-input').value;
+            const content = document.getElementById('content-textarea').value;
+            isDirty = (title !== originalTitle || content !== originalContent);
+            setStatus(isDirty ? 'unsaved' : '');
+            document.getElementById('save-btn').disabled = false;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(renderPreview, 300);
+        }
+
+        function setStatus(state, msg) {
+            const el = document.getElementById('save-status');
+            el.className = 'save-status ' + (state || '');
+            el.textContent = state === 'unsaved' ? 'Unsaved changes'
+                           : state === 'saving'  ? 'Saving…'
+                           : state === 'saved'   ? 'Saved'
+                           : state === 'error'   ? (msg || 'Error')
+                           : '';
+        }
+
+        // ── Load ──
+        async function loadArticle() {
+            if (!projectId) {
+                showError('Missing article ID.');
+                return;
+            }
+            if (!adminKey) {
+                showError('Not authenticated. Please log in via the admin panel first.');
+                return;
+            }
+
+            // Pre-populate title from URL so header isn't blank while loading
+            document.getElementById('header-title').textContent = urlTitle || projectId;
+            document.getElementById('title-input').value = urlTitle;
+
+            try {
+                const resp = await fetch(`/api/admin/articles/${encodeURIComponent(projectId)}`, {
+                    headers: apiHeaders()
+                });
+
+                if (resp.status === 403) {
+                    sessionStorage.removeItem('admin_key');
+                    showError('Session expired or invalid. Please re-authenticate via admin panel.');
+                    return;
+                }
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+                const data = await resp.json();
+                const content = data.content || '';
+
+                // Use title from API if available, fall back to URL param
+                const title = data.title || urlTitle;
+                originalTitle   = title;
+                originalContent = content;
+
+                document.getElementById('title-input').value = title;
+                document.getElementById('header-title').textContent = title || projectId;
+                document.getElementById('content-textarea').value = content;
+                document.getElementById('save-btn').disabled = false;
+
+                if (data.format === 'unavailable') {
+                    setStatus('error', 'Warning: content unavailable');
+                }
+
+                document.getElementById('load-overlay').style.display = 'none';
+                renderPreview();
+            } catch (e) {
+                console.error('loadArticle failed:', e);
+                showError('Failed to load article: ' + e.message);
+            }
+        }
+
+        function showError(msg) {
+            const overlay = document.getElementById('load-overlay');
+            overlay.innerHTML = `
+                <div style="text-align:center;max-width:380px;padding:1.5rem;">
+                    <p style="color:var(--red-60);margin-bottom:1rem;">${escapeHtml(msg)}</p>
+                    <a href="admin.html" class="btn btn-secondary">Back to Admin</a>
+                </div>`;
+        }
+
+        // ── Save ──
+        async function saveArticle() {
+            if (!projectId || !adminKey) return;
+            const title   = document.getElementById('title-input').value.trim();
+            const content = document.getElementById('content-textarea').value;
+            const btn     = document.getElementById('save-btn');
+            btn.disabled = true;
+            setStatus('saving');
+
+            try {
+                const resp = await fetch(`/api/admin/articles/${encodeURIComponent(projectId)}`, {
+                    method: 'PUT',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({ title: title || null, content: content })
+                });
+                if (!resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    throw new Error(data.detail || `HTTP ${resp.status}`);
+                }
+                originalTitle   = title;
+                originalContent = content;
+                isDirty = false;
+                setStatus('saved');
+                document.getElementById('header-title').textContent = title || projectId;
+                setTimeout(() => { if (!isDirty) setStatus(''); }, 2000);
+            } catch (e) {
+                setStatus('error', 'Save failed: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Ctrl/Cmd+S
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveArticle();
+            }
+        });
+
+        // Warn on unload
+        window.addEventListener('beforeunload', e => {
+            if (isDirty) { e.preventDefault(); e.returnValue = ''; }
+        });
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t || '';
+            return d.innerHTML;
+        }
+
+        loadArticle();
+    </script>
+</body>
+</html>
