@@ -185,10 +185,12 @@ def create_researcher(
     now = _now()
     pw_hash = _hash_password(password) if password else ""
 
+    api_key = secrets.token_urlsafe(24)
+
     try:
         conn.execute(
             """INSERT INTO researchers (id, email, name, affiliation, research_interests, sample_works, bio, created_at, updated_at, status, password_hash)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)""",
             (
                 researcher_id,
                 email.lower().strip(),
@@ -203,9 +205,14 @@ def create_researcher(
             ),
         )
         conn.execute(
-            """INSERT INTO applications (id, researcher_id, submitted_at, status)
-               VALUES (?, ?, ?, 'pending')""",
-            (application_id, researcher_id, now),
+            """INSERT INTO applications (id, researcher_id, submitted_at, status, reviewed_at, reviewed_by)
+               VALUES (?, ?, ?, 'approved', ?, 'auto')""",
+            (application_id, researcher_id, now, now),
+        )
+        conn.execute(
+            """INSERT INTO api_keys (key, researcher_id, label, created_at, daily_quota, total_quota, is_admin)
+               VALUES (?, ?, ?, ?, 10, 3, FALSE)""",
+            (api_key, researcher_id, f"{name.strip()} - auto", now),
         )
         conn.commit()
     except sqlite3.IntegrityError as e:
@@ -218,7 +225,9 @@ def create_researcher(
         "researcher_id": researcher_id,
         "application_id": application_id,
         "email": email.lower().strip(),
-        "status": "pending",
+        "name": name.strip(),
+        "api_key": api_key,
+        "status": "approved",
     }
 
 

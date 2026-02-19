@@ -1967,7 +1967,7 @@ async def delete_workflow(project_id: str, api_key: str = Depends(verify_admin_k
             ]
             index_data["updated_at"] = datetime.now().isoformat()
             with open(index_path, "w") as f:
-                json.dump(index_data, f, indent=2)
+                json.dump(index_data, f, indent=2, ensure_ascii=False)
         except Exception:
             pass  # Non-critical: index.json update failure shouldn't block deletion
 
@@ -2204,7 +2204,7 @@ async def submit_article(request: SubmitArticleRequest, api_key: str = Depends(v
         index_data["updated_at"] = datetime.now().isoformat()
 
         with open(index_path, "w") as f:
-            json.dump(index_data, f, indent=2)
+            json.dump(index_data, f, indent=2, ensure_ascii=False)
 
         return {
             "project_id": project_id,
@@ -2778,20 +2778,11 @@ async def apply_for_key(request: Request, body: ApplyRequest):
             password=body.password,
         )
 
-        # Auto-approve: immediately generate API key
-        approval = appdb.approve_application(
-            result["application_id"],
-            reviewed_by="auto",
-            admin_notes="Auto-approved on signup",
-        )
-
         return {
             "status": "approved",
-            "message": "Welcome! Your API key has been generated.",
-            "name": body.name.strip(),
+            "api_key": result["api_key"],
+            "name": result["name"],
             "email": result["email"],
-            "api_key": approval["api_key"],
-            "total_quota": 3,
         }
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
@@ -2949,10 +2940,23 @@ async def list_articles(api_key: str = Depends(verify_admin_key)):
 @app.get("/api/admin/articles/{project_id}")
 async def get_article_source(project_id: str, api_key: str = Depends(verify_admin_key)):
     """Get article markdown source (admin only)."""
+    # Look up title from index.json
+    title = ""
+    index_path = Path("web/data/index.json")
+    if index_path.exists():
+        try:
+            with open(index_path) as f:
+                idx = json.load(f)
+            entry = next((p for p in idx.get("projects", []) if p.get("id") == project_id), None)
+            if entry:
+                title = entry.get("topic", "")
+        except (json.JSONDecodeError, IOError):
+            pass
+
     # 1. Check for .md file first
     md_path = Path(f"web/articles/{project_id}.md")
     if md_path.exists():
-        return {"project_id": project_id, "content": md_path.read_text(encoding="utf-8"), "format": "markdown"}
+        return {"project_id": project_id, "title": title, "content": md_path.read_text(encoding="utf-8"), "format": "markdown"}
 
     # 2. Extract from HTML
     html_path = Path(f"web/articles/{project_id}.html")
@@ -2960,12 +2964,14 @@ async def get_article_source(project_id: str, api_key: str = Depends(verify_admi
         raise HTTPException(404, "Article not found")
 
     html = html_path.read_text(encoding="utf-8")
-    match = re.search(r'const (?:rawM|m)arkdown = `(.*?)`;', html, re.DOTALL)
+    # Match any of: rawMarkdown, markdown, markdownContent, manuscriptText, etc.
+    match = re.search(r'const \w*[Mm]arkdown\w* = `(.*?)`;', html, re.DOTALL) or \
+            re.search(r'const manuscriptText = `(.*?)`;', html, re.DOTALL)
     if match:
         content = match.group(1).replace('\\\\', '\\').replace('\\`', '`').replace('\\${', '${')
-        return {"project_id": project_id, "content": content, "format": "extracted"}
+        return {"project_id": project_id, "title": title, "content": content, "format": "extracted"}
 
-    return {"project_id": project_id, "content": "", "format": "unavailable"}
+    return {"project_id": project_id, "title": title, "content": "", "format": "unavailable"}
 
 
 class UpdateArticleRequest(BaseModel):
@@ -2989,16 +2995,38 @@ async def update_article(project_id: str, body: UpdateArticleRequest, api_key: s
     if not entry:
         raise HTTPException(404, "Article not found in index")
 
+    # Resolve effective values for regeneration
+    effective_title = body.title or entry.get("topic", project_id)
+    effective_author = body.author or entry.get("author", "Anonymous")
+
     # Update content if provided
     if body.content is not None:
         md_path = Path(f"web/articles/{project_id}.md")
         md_path.write_text(body.content, encoding="utf-8")
         _regenerate_article_html(
             project_id,
-            title=body.title or entry.get("topic", project_id),
+            title=effective_title,
             content=body.content,
-            author=body.author or entry.get("author", "Anonymous"),
+            author=effective_author,
         )
+
+        # Update the latest manuscript in results/ (source for article.html viewer)
+        results_dir = Path(f"results/{project_id}")
+        if results_dir.exists():
+            versioned = sorted(results_dir.glob("manuscript_v*.md"))
+            target = versioned[-1] if versioned else results_dir / "manuscript_final.md"
+            target.write_text(body.content, encoding="utf-8")
+    elif body.title or body.author:
+        # Title/author-only change: regenerate static HTML with existing content
+        md_path = Path(f"web/articles/{project_id}.md")
+        if md_path.exists():
+            existing_content = md_path.read_text(encoding="utf-8")
+            _regenerate_article_html(
+                project_id,
+                title=effective_title,
+                content=existing_content,
+                author=effective_author,
+            )
 
     # Update index.json metadata
     if body.title:
@@ -3008,13 +3036,38 @@ async def update_article(project_id: str, body: UpdateArticleRequest, api_key: s
     index_data["updated_at"] = datetime.now().isoformat()
 
     with open(index_path, "w") as f:
-        json.dump(index_data, f, indent=2)
+        json.dump(index_data, f, indent=2, ensure_ascii=False)
+
+    # Update workflow_complete.json (source of truth for article.html viewer)
+    workflow_path = Path(f"results/{project_id}/workflow_complete.json")
+    if workflow_path.exists() and (body.title or body.author):
+        try:
+            with open(workflow_path) as f:
+                wf_data = json.load(f)
+            if body.title:
+                wf_data["title"] = body.title
+                wf_data["topic"] = body.title
+            if body.author:
+                wf_data["author"] = body.author
+            with open(workflow_path, "w") as f:
+                json.dump(wf_data, f, indent=2, ensure_ascii=False)
+        except (json.JSONDecodeError, IOError):
+            pass  # Non-critical — index.json and article HTML are already updated
 
     return {"status": "updated", "project_id": project_id}
 
 
+def _html_escape(s: str) -> str:
+    """Escape string for safe embedding in HTML."""
+    return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+
+
 def _regenerate_article_html(project_id: str, title: str, content: str, author: str = "Anonymous"):
     """Regenerate article HTML from markdown content."""
+    # Escape title/author for HTML embedding
+    safe_title = _html_escape(title)
+    safe_author = _html_escape(author)
+
     # Escape markdown for JS embedding
     escaped_markdown = (
         content
@@ -3033,7 +3086,7 @@ def _regenerate_article_html(project_id: str, title: str, content: str, author: 
             headings.append({"title": heading_title, "slug": slug})
 
     toc_items = '\n'.join([
-        f'                        <li><a href="#{h["slug"]}">{h["title"]}</a></li>'
+        f'                        <li><a href="#{h["slug"]}">{_html_escape(h["title"])}</a></li>'
         for h in headings[:10]
     ])
 
@@ -3042,8 +3095,8 @@ def _regenerate_article_html(project_id: str, title: str, content: str, author: 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} | Autonomous Research Press</title>
-    <meta name="description" content="{title}">
+    <title>{safe_title} | Autonomous Research Press</title>
+    <meta name="description" content="{safe_title}">
     <link rel="icon" type="image/svg+xml" href="../favicon.svg">
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/article.css">
@@ -3091,9 +3144,9 @@ def _regenerate_article_html(project_id: str, title: str, content: str, author: 
         </aside>
         <article class="research-report">
             <header class="article-header">
-                <h1 class="article-title">{title}</h1>
+                <h1 class="article-title">{safe_title}</h1>
                 <div class="article-meta">
-                    <span class="meta-item"><strong>Author:</strong> {author}</span>
+                    <span class="meta-item"><strong>Author:</strong> {safe_author}</span>
                     <span class="meta-item"><strong>Date:</strong> {datetime.now().strftime("%Y-%m-%d")}</span>
                 </div>
             </header>
