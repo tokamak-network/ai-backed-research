@@ -2924,6 +2924,53 @@ async def revoke_key(key_prefix: str, api_key: str = Depends(verify_admin_key)):
     return {"message": "Key revoked", "revoked": revoked}
 
 
+# --- Public: Site Settings (read-only) ---
+
+@app.get("/api/site-settings")
+async def get_site_settings_public():
+    """Get public site settings (min_date filter). No auth required."""
+    index_path = Path("web/data/index.json")
+    if not index_path.exists():
+        return {"min_date": None}
+    with open(index_path) as f:
+        data = json.load(f)
+    return {"min_date": data.get("min_date", None)}
+
+
+# --- Admin: Site Settings ---
+
+@app.get("/api/admin/site-settings")
+async def get_site_settings(api_key: str = Depends(verify_admin_key)):
+    """Get site-level settings (min_date filter, etc.). Admin only."""
+    index_path = Path("web/data/index.json")
+    if not index_path.exists():
+        return {"min_date": None}
+    with open(index_path) as f:
+        data = json.load(f)
+    return {"min_date": data.get("min_date", None)}
+
+
+class SiteSettingsRequest(BaseModel):
+    min_date: Optional[str] = None
+
+
+@app.put("/api/admin/site-settings")
+async def update_site_settings(body: SiteSettingsRequest, api_key: str = Depends(verify_admin_key)):
+    """Update site-level settings (min_date filter, etc.)."""
+    index_path = Path("web/data/index.json")
+    data = {}
+    if index_path.exists():
+        with open(index_path) as f:
+            data = json.load(f)
+    if body.min_date:
+        data["min_date"] = body.min_date
+    else:
+        data.pop("min_date", None)
+    with open(index_path, "w") as f:
+        json.dump(data, f, indent=2)
+    return {"min_date": data.get("min_date", None)}
+
+
 # --- Admin: Article Management ---
 
 @app.get("/api/admin/articles")

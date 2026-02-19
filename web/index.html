@@ -221,7 +221,18 @@
                 const data = await response.json();
                 const projects = data.projects || [];
 
-                const acceptedProjects = projects.filter(p => p.status === 'completed' && p.passed === true);
+                let minDate = null;
+                try {
+                    const settingsResp = await fetch('/api/site-settings');
+                    if (settingsResp.ok) {
+                        const settings = await settingsResp.json();
+                        minDate = settings.min_date || null;
+                    }
+                } catch (e) {}
+
+                const acceptedProjects = projects
+                    .filter(p => p.status === 'completed' && p.passed === true)
+                    .filter(p => !minDate || p.timestamp >= minDate);
                 allProjects = acceptedProjects;
 
                 updateStatsStrip(acceptedProjects);

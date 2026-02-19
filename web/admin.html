@@ -539,6 +539,16 @@
 
             <!-- Articles Tab -->
             <div id="tab-articles" class="tab-content">
+                <div class="admin-section" style="margin-bottom: 1rem;">
+                    <h2>Public Visibility Filter</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">Only articles published after this date will be shown on the public index page.</p>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <input type="date" id="min-date-input" style="padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 2px; background: var(--background); color: var(--text); font-size: 0.875rem;">
+                        <button class="btn btn-primary btn-sm" onclick="applyMinDate()">Apply</button>
+                        <button class="btn btn-secondary btn-sm" onclick="clearMinDate()">Clear</button>
+                        <span id="min-date-status" style="color: var(--text-secondary); font-size: 0.85rem;"></span>
+                    </div>
+                </div>
                 <div class="admin-section">
                     <h2>Published Articles</h2>
                     <button class="btn btn-secondary btn-sm" onclick="loadArticles()" style="margin-bottom: 1rem;">Refresh</button>
@@ -577,7 +587,7 @@
             document.getElementById(`tab-${tabName}`).classList.add('active');
 
             if (tabName === 'applications') loadApplications();
-            if (tabName === 'articles') loadArticles();
+            if (tabName === 'articles') { loadArticles(); loadMinDate(); }
         }
 
         // --- Auth ---
@@ -948,6 +958,64 @@
             } catch (e) {
                 errorEl.textContent = 'Failed to delete article: ' + e.message;
                 errorEl.style.display = 'block';
+            }
+        }
+
+        // --- Site Settings (min_date filter) ---
+        async function loadMinDate() {
+            const statusEl = document.getElementById('min-date-status');
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/site-settings`, { headers: apiHeaders() });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const input = document.getElementById('min-date-input');
+                if (data.min_date) {
+                    input.value = data.min_date;
+                    statusEl.textContent = `Showing articles after ${data.min_date}`;
+                } else {
+                    input.value = '';
+                    statusEl.textContent = 'No filter — all articles visible';
+                }
+            } catch (e) {
+                statusEl.textContent = 'Failed to load setting';
+            }
+        }
+
+        async function applyMinDate() {
+            const input = document.getElementById('min-date-input');
+            const statusEl = document.getElementById('min-date-status');
+            const minDate = input.value || null;
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/site-settings`, {
+                    method: 'PUT',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({ min_date: minDate })
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                if (data.min_date) {
+                    statusEl.textContent = `Showing articles after ${data.min_date}`;
+                } else {
+                    statusEl.textContent = 'No filter — all articles visible';
+                }
+            } catch (e) {
+                statusEl.textContent = 'Failed to save: ' + e.message;
+            }
+        }
+
+        async function clearMinDate() {
+            document.getElementById('min-date-input').value = '';
+            const statusEl = document.getElementById('min-date-status');
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/site-settings`, {
+                    method: 'PUT',
+                    headers: apiHeaders(),
+                    body: JSON.stringify({ min_date: null })
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                statusEl.textContent = 'No filter — all articles visible';
+            } catch (e) {
+                statusEl.textContent = 'Failed to clear: ' + e.message;
             }
         }
 
