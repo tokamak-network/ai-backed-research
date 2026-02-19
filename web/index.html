@@ -119,17 +119,31 @@
                     <h2 class="section-title">Published Research</h2>
                     <p class="section-subtitle">Peer-reviewed reports that passed our editorial standards</p>
                 </div>
-                <select class="sort-select" id="sort-select" onchange="sortArticles(this.value)">
+            </div>
+            <div class="articles-controls">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+                        <circle cx="6.5" cy="6.5" r="5.5"/>
+                        <line x1="10.5" y1="10.5" x2="15" y2="15"/>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search articles..." oninput="onSearchInput()">
+                </div>
+                <select class="sort-select" id="sort-select" onchange="applyFilters()">
                     <option value="date">Sort by Date</option>
                     <option value="score">Sort by Score</option>
                     <option value="rounds">Sort by Rounds</option>
                 </select>
             </div>
 
-            <div class="articles-grid">
+            <div class="articles-grid" id="articles-grid">
                 <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                     Loading publications...
                 </div>
+            </div>
+
+            <div class="pagination-bar" id="pagination-bar" style="display:none;">
+                <span class="pagination-info" id="pagination-info"></span>
+                <div class="pagination-controls" id="pagination-controls"></div>
             </div>
         </div>
     </main>
@@ -199,14 +213,16 @@
     <script src="js/auth.js"></script>
     <script>
         let allProjects = [];
+        let filteredProjects = [];
+        let currentPage = 1;
+        const PER_PAGE = 12;
+        let searchTimer = null;
 
-        // Load system version (static mode)
         async function loadSystemVersion() {
             const versionEl = document.getElementById('system-version');
             if (versionEl) versionEl.textContent = '';
         }
 
-        // Load and display articles dynamically
         async function loadArticles() {
             try {
                 const response = await fetch('/api/projects');
@@ -215,23 +231,12 @@
                 const data = await response.json();
                 const projects = data.projects || [];
 
-                // Filter: Only show accepted papers
                 const acceptedProjects = projects.filter(p => p.status === 'completed' && p.passed === true);
                 allProjects = acceptedProjects;
 
-                // Update stats strip
                 updateStatsStrip(acceptedProjects);
-
-                // Update hero badge
                 updateHeroBadge(acceptedProjects);
-
-                // Sort by timestamp (newest first) and take top 6
-                const topProjects = acceptedProjects
-                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                    .slice(0, 6);
-
-                renderArticles(topProjects);
-
+                applyFilters();
             } catch (error) {
                 console.error('Error loading articles:', error);
             }
@@ -239,7 +244,6 @@
 
         function updateStatsStrip(projects) {
             document.getElementById('stat-papers').textContent = projects.length || '0';
-
             if (projects.length > 0) {
                 const avgScore = (projects.reduce((sum, p) => sum + (p.final_score || 0), 0) / projects.length).toFixed(1);
                 const avgRounds = (projects.reduce((sum, p) => sum + (p.total_rounds || 0), 0) / projects.length).toFixed(1);
@@ -261,33 +265,114 @@
             }
         }
 
-        function sortArticles(sortBy) {
-            let sorted = [...allProjects];
-            if (sortBy === 'score') {
-                sorted.sort((a, b) => (b.final_score || 0) - (a.final_score || 0));
-            } else if (sortBy === 'rounds') {
-                sorted.sort((a, b) => (b.total_rounds || 0) - (a.total_rounds || 0));
-            } else {
-                sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            }
-            renderArticles(sorted.slice(0, 6));
+        function onSearchInput() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => applyFilters(), 200);
         }
 
-        function renderArticles(topProjects) {
-            if (topProjects.length === 0) {
-                const grid = document.querySelector('.articles-grid');
-                if (grid) {
-                    grid.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);"><p style="font-size: 1.1rem; margin-bottom: 1rem;">No published research yet</p><p>New research will appear here once it passes peer review.</p></div>';
-                }
+        function applyFilters() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            const sortBy = document.getElementById('sort-select').value;
+
+            let filtered = query
+                ? allProjects.filter(p => {
+                    const text = ((p.title || '') + ' ' + (p.topic || '') + ' ' + (p.id || '')).toLowerCase();
+                    return text.includes(query);
+                })
+                : [...allProjects];
+
+            if (sortBy === 'score') {
+                filtered.sort((a, b) => (b.final_score || 0) - (a.final_score || 0));
+            } else if (sortBy === 'rounds') {
+                filtered.sort((a, b) => (b.total_rounds || 0) - (a.total_rounds || 0));
+            } else {
+                filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+
+            filteredProjects = filtered;
+            currentPage = 1;
+            renderPage();
+        }
+
+        function renderPage() {
+            const total = filteredProjects.length;
+            const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * PER_PAGE;
+            const end = Math.min(start + PER_PAGE, total);
+            const pageItems = filteredProjects.slice(start, end);
+
+            const grid = document.getElementById('articles-grid');
+            if (!grid) return;
+
+            if (total === 0) {
+                const query = document.getElementById('search-input').value.trim();
+                grid.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text-secondary);grid-column:1/-1;">
+                    <p style="font-size:1.1rem;margin-bottom:1rem;">${query ? `No articles found for "${query}"` : 'No published research yet'}</p>
+                    <p>${query ? 'Try a different search term.' : 'New research will appear here once it passes peer review.'}</p>
+                </div>`;
+                document.getElementById('pagination-bar').style.display = 'none';
                 return;
             }
 
-            const grid = document.querySelector('.articles-grid');
-            if (!grid) return;
             grid.innerHTML = '';
-            topProjects.forEach((proj) => {
-                grid.innerHTML += createArticleCard(proj);
+            pageItems.forEach(proj => { grid.innerHTML += createArticleCard(proj); });
+
+            renderPagination(total, totalPages, start + 1, end);
+        }
+
+        function renderPagination(total, totalPages, rangeStart, rangeEnd) {
+            const bar = document.getElementById('pagination-bar');
+            const info = document.getElementById('pagination-info');
+            const controls = document.getElementById('pagination-controls');
+
+            if (totalPages <= 1) {
+                bar.style.display = 'none';
+                return;
+            }
+
+            bar.style.display = '';
+            info.textContent = `Showing ${rangeStart}\u2013${rangeEnd} of ${total} articles`;
+
+            let html = '';
+            html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})" aria-label="Previous page">&lsaquo;</button>`;
+
+            const pages = getPaginationPages(currentPage, totalPages);
+            pages.forEach(p => {
+                if (p === '...') {
+                    html += `<span class="page-ellipsis">&hellip;</span>`;
+                } else {
+                    html += `<button class="page-btn${p === currentPage ? ' active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+                }
             });
+
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})" aria-label="Next page">&rsaquo;</button>`;
+
+            controls.innerHTML = html;
+        }
+
+        function getPaginationPages(current, total) {
+            if (total <= 7) {
+                return Array.from({length: total}, (_, i) => i + 1);
+            }
+            const pages = [];
+            pages.push(1);
+            if (current > 3) pages.push('...');
+            for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+                pages.push(i);
+            }
+            if (current < total - 2) pages.push('...');
+            pages.push(total);
+            return pages;
+        }
+
+        function goToPage(n) {
+            const totalPages = Math.max(1, Math.ceil(filteredProjects.length / PER_PAGE));
+            if (n < 1 || n > totalPages) return;
+            currentPage = n;
+            renderPage();
+            document.getElementById('articles').scrollIntoView({behavior: 'smooth', block: 'start'});
         }
 
         function createArticleCard(proj) {
@@ -304,11 +389,9 @@
                 badgeHtml = '<div class="card-badge">Featured</div>';
             }
 
-            // Format date in mono
             const dateStr = timestamp.toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
             const timeStr = timestamp.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false});
 
-            // Category
             let categoryHtml = '';
             if (proj.category && proj.category.major) {
                 const majorDisplay = proj.category.major.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -316,7 +399,6 @@
                 categoryHtml = `<span class="category-tag">${majorDisplay}${subfieldDisplay ? ' / ' + subfieldDisplay : ''}</span>`;
             }
 
-            // Research type badge
             let researchTypeBadgeHtml = '';
             if (proj.research_type === 'survey') {
                 researchTypeBadgeHtml = '<span class="category-tag tag-survey">Survey</span>';
@@ -326,15 +408,10 @@
                 researchTypeBadgeHtml = '<span class="category-tag tag-original">Original</span>';
             }
 
-            // Audience level
             let audienceText = '';
             if (proj.audience_level === 'beginner') audienceText = 'Beginner-Friendly';
             else if (proj.audience_level === 'intermediate') audienceText = 'Intermediate';
             else if (proj.audience_level === 'professional') audienceText = 'Professional';
-
-            // Score split display
-            const scoreWhole = proj.final_score ? proj.final_score.toString().split('.')[0] : '--';
-            const scoreDec = proj.final_score ? (proj.final_score.toString().split('.')[1] || '0') : '';
 
             return `
                 <article class="article-card">
@@ -378,7 +455,6 @@
             `;
         }
 
-        // Load articles and version on page load
         loadArticles();
         loadSystemVersion();
     </script>
