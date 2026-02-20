@@ -323,7 +323,7 @@ class ManuscriptWritingPhase:
         if self.audience_level == "beginner":
             summary_heading = "## TL;DR"
         elif self.audience_level == "intermediate":
-            summary_heading = "## TL;DR"
+            summary_heading = "## Executive Summary"
         else:
             summary_heading = "## Abstract"
 

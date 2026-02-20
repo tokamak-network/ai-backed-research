@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
+from ..utils.normalize_ref import normalize_title, clean_doi
+
 
 @dataclass
 class Reference:
@@ -163,10 +165,32 @@ class CollaborativeResearchNotes:
         self.findings.append(finding)
         self.last_updated = datetime.now().isoformat()
 
-    def add_reference(self, reference: Reference):
-        """Add a reference to notes."""
+    def add_reference(self, reference: Reference) -> Reference:
+        """Add a reference to notes, deduplicating by DOI or title.
+
+        Returns:
+            The existing Reference if duplicate, otherwise the newly added one.
+        """
+        # Clean bogus DOIs before comparison
+        reference.doi = clean_doi(reference.doi)
+
+        # DOI-based dedup
+        if reference.doi:
+            doi_key = reference.doi.lower().strip()
+            for existing in self.references:
+                if existing.doi and existing.doi.lower().strip() == doi_key:
+                    return existing
+
+        # Title-based dedup
+        norm = normalize_title(reference.title)
+        if norm and norm != "untitled":
+            for existing in self.references:
+                if normalize_title(existing.title) == norm:
+                    return existing
+
         self.references.append(reference)
         self.last_updated = datetime.now().isoformat()
+        return reference
 
     def get_next_reference_id(self) -> int:
         """Get next available reference ID."""

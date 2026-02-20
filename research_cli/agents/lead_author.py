@@ -238,11 +238,11 @@ Your role: Create a detailed section-by-section plan that will guide the writing
 - Conclusion (key takeaways)"""
             elif audience_level == "intermediate":
                 structure_guidance = """Recommended structure for INTERMEDIATE SURVEY:
-- TL;DR / Key Takeaways (bullet points)
-- Introduction (motivation, scope)
-- Background & Key Concepts (explain advanced concepts, assume basics)
-- Analysis by Theme (organize surveyed works by theme)
-- Comparative Discussion (trade-offs, strengths, weaknesses)
+- Executive Summary (1 concise paragraph, no bullets)
+- Introduction (motivation, scope, why this matters now)
+- Background & Key Concepts (assume basics, unpack only specialist terms in context)
+- Analysis by Theme (organize surveyed works by theme, with concrete examples)
+- Comparative Discussion (trade-offs, strengths, weaknesses — use prose, not lists)
 - Future Directions
 - Conclusion"""
             else:
@@ -269,16 +269,16 @@ CRITICAL: The "Building Blocks" section must come BEFORE any technical explanati
 Every difficult concept gets: (1) analogy/everyday comparison → (2) simple definition → (3) why it matters for this topic."""
             elif audience_level == "intermediate":
                 structure_guidance = """Recommended structure for INTERMEDIATE EXPLAINER:
-- TL;DR / Key Takeaways (bullet points)
-- Introduction (what is this topic, and why should you care?)
-- Key Concepts Explained (dedicated section for prerequisite/difficult concepts — explain each one clearly before using it later)
-- How It Works (technical explanation building on the concepts above)
-- Trade-offs and Considerations (practical analysis)
+- Executive Summary (1 concise paragraph, no bullets — state the core argument)
+- Introduction (what is this topic, why it matters now, what's at stake)
+- Key Concepts in Context (weave specialist terms into the narrative — explain them where they naturally arise, not in a glossary)
+- How It Works (technical explanation grounded in concrete examples)
+- Trade-offs and Considerations (analytical prose, not pro/con lists)
 - Applications / Real-World Impact
 - Conclusion
 
-CRITICAL: The "Key Concepts" section must define and explain every non-obvious term BEFORE it appears in later sections.
-Use the pattern: intuitive explanation first → precise definition second."""
+CRITICAL: Do NOT create a separate definitions/glossary section. Instead, unpack specialist terms naturally within the prose where they first appear.
+Use the pattern: concrete example or context first → then introduce the term as a label for what was just described."""
             else:
                 structure_guidance = """Recommended structure for PROFESSIONAL EXPLAINER:
 - Abstract (concise overview)
@@ -329,10 +329,10 @@ EXAMPLE (do NOT copy — write your own based on the topic):
             )
         elif audience_level == "intermediate":
             audience_note = (
-                "\nAUDIENCE: Readers who read tech blogs but are NOT researchers. Think Wired/Ars Technica level."
-                "\nAssume basic familiarity with the field but explain specialized concepts."
-                "\nUse clear, engaging prose. Minimize academic tone. Short paragraphs."
-                f"\n{tldr_format}"
+                "\nAUDIENCE: Educated readers with basic domain knowledge — think The Economist's science/technology coverage."
+                "\nAssume familiarity with common terms in the field. Unpack specialist jargon naturally within the prose, not as separate definitions."
+                "\nWrite in clear, analytical prose. No bullet-point analysis. Favor concrete examples over abstract statements."
+                "\nSUMMARY FORMAT: The abstract_outline MUST be a single concise paragraph (3-5 sentences). NO bullets. State the core argument and key findings in flowing prose."
             )
 
         # Section count guidance based on target length
@@ -635,20 +635,20 @@ RULES:
 - Never use "..." or ellipsis to abbreviate content
 - Write at a reading level that a high-school student could follow"""
         elif audience_level == "intermediate":
-            system_prompt = f"""You are a senior tech journalist writing for Wired or Ars Technica, specializing in {self.expertise}.
+            system_prompt = f"""You are an expert analyst writing in the style of The Economist's science and technology coverage, specializing in {self.expertise}.
 
 Your specializations: {', '.join(self.focus_areas)}
 
-You are writing for readers who follow tech news but are NOT researchers or engineers.
+You are writing for educated readers who have basic domain knowledge but are not specialists in this particular area.
 
 RULES:
-- Assume the reader knows what "blockchain" or "machine learning" is, but NOT specialist details
-- Explain technical mechanisms with clear analogies before diving into specifics
-- Short paragraphs (4-5 sentences max), conversational but informed tone
-- Bullet-point lists are great for comparisons, trade-offs, or key points
-- Numbered citations [1], [2] for key claims, but keep prose flowing — not every sentence needs a citation
-- Avoid dense academic language: "demonstrates" → "shows", "utilizes" → "uses"
-- Include concrete real-world examples (companies, products, events)
+- Assume the reader knows common terms in the field — do NOT define basics like "machine learning" or "peer review"
+- When introducing specialist terms, unpack them naturally in context (e.g., "the process of X — known as Y — works by...")
+- Write in clear, analytical prose with well-developed paragraphs (4-6 sentences)
+- Do NOT use bullet-point lists for analysis or discussion — use flowing prose
+- Ground abstract claims in concrete examples: name specific studies, tools, institutions, or events
+- Numbered citations [1], [2] for key claims — aim for moderate density (more than beginner, less than academic)
+- Use precise but accessible language — avoid both oversimplification and unnecessary jargon
 - Never use "..." or ellipsis to abbreviate content"""
         else:
             system_prompt = f"""You are an expert academic writer in {self.expertise}.
@@ -793,8 +793,8 @@ Write the complete section in Markdown format. Start with the section title as #
         elif plan.abstract_outline:
             abstract = plan.abstract_outline
 
-        # For non-professional audiences, ensure abstract/TL;DR is bullet-point format
-        if audience_level != "professional" and abstract:
+        # For beginner audience, ensure TL;DR is bullet-point format
+        if audience_level == "beginner" and abstract:
             abstract = await self._ensure_bullet_format(abstract)
 
         manuscript = Manuscript(
@@ -860,14 +860,14 @@ Write the complete section in Markdown format. Start with the section title as #
 9. Never use "..." to abbreviate content
 10. Do NOT repeat information already covered in previous sections"""
         elif audience_level == "intermediate":
-            return f"""1. Write like a Wired/Ars Technica feature article — informed but accessible
-2. Assume the reader knows the basics but NOT the specialist details
-3. Use concrete real-world examples (companies, products, events) to ground abstract concepts
-4. Short paragraphs (4-5 sentences), conversational tone, active voice
+            return f"""1. Write in the analytical style of The Economist — authoritative, precise, and readable
+2. Assume the reader has basic domain knowledge — skip elementary definitions
+3. Unpack specialist terms naturally in context, not as glossary entries
+4. Well-developed paragraphs (4-6 sentences), analytical tone, active voice
 5. Target exactly {target_length} words (±10%)
-6. Bullet-point lists are great for comparisons and trade-offs
-7. Explain mechanism before using jargon: "a process called X, which works by..."
-8. Citations [1], [2] for key claims, but keep prose flowing
+6. Do NOT use bullet-point lists for analysis — use flowing prose throughout
+7. Ground every major claim in a concrete example: name the study, tool, or institution
+8. Citations [1], [2] at moderate density — more than beginner, less than academic
 9. Never use "..." to abbreviate content
 10. Do NOT repeat information already covered in previous sections"""
         else:
