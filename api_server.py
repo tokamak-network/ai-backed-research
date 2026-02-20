@@ -3042,25 +3042,42 @@ class UpdateArticleRequest(BaseModel):
 @app.put("/api/admin/articles/{project_id}")
 async def update_article(project_id: str, body: UpdateArticleRequest, api_key: str = Depends(verify_admin_key)):
     """Update article content and/or metadata (admin only)."""
+    # Look up existing metadata from index.json or workflow_complete.json
     index_path = Path("web/data/index.json")
-    if not index_path.exists():
-        raise HTTPException(404, "No articles index found")
+    index_data = {"projects": []}
+    entry = None
+    if index_path.exists():
+        try:
+            with open(index_path) as f:
+                index_data = json.load(f)
+            entry = next((p for p in index_data.get("projects", []) if p.get("id") == project_id), None)
+        except (json.JSONDecodeError, IOError):
+            pass
 
-    with open(index_path) as f:
-        index_data = json.load(f)
+    # Fall back to results/ if not in index.json
+    results_dir = Path(f"results/{project_id}")
+    workflow_path = results_dir / "workflow_complete.json"
+    wf_data = None
+    if workflow_path.exists():
+        try:
+            with open(workflow_path) as f:
+                wf_data = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            pass
 
-    # Find existing entry
-    entry = next((p for p in index_data.get("projects", []) if p.get("id") == project_id), None)
-    if not entry:
-        raise HTTPException(404, "Article not found in index")
+    if not entry and not wf_data:
+        raise HTTPException(404, "Article not found")
 
     # Resolve effective values for regeneration
-    effective_title = body.title or entry.get("topic", project_id)
-    effective_author = body.author or entry.get("author", "Anonymous")
+    effective_title = body.title or (entry.get("topic") if entry else None) or (wf_data.get("topic") if wf_data else None) or project_id
+    effective_author = body.author or (entry.get("author") if entry else None) or "Anonymous"
 
     # Update content if provided
     if body.content is not None:
-        md_path = Path(f"web/articles/{project_id}.md")
+        # Save to web/articles/ (exported form)
+        articles_dir = Path("web/articles")
+        articles_dir.mkdir(parents=True, exist_ok=True)
+        md_path = articles_dir / f"{project_id}.md"
         md_path.write_text(body.content, encoding="utf-8")
         _regenerate_article_html(
             project_id,
@@ -3070,7 +3087,6 @@ async def update_article(project_id: str, body: UpdateArticleRequest, api_key: s
         )
 
         # Update the latest manuscript in results/ (source for article.html viewer)
-        results_dir = Path(f"results/{project_id}")
         if results_dir.exists():
             versioned = sorted(results_dir.glob("manuscript_v*.md"))
             target = versioned[-1] if versioned else results_dir / "manuscript_final.md"
@@ -3087,22 +3103,19 @@ async def update_article(project_id: str, body: UpdateArticleRequest, api_key: s
                 author=effective_author,
             )
 
-    # Update index.json metadata
-    if body.title:
-        entry["topic"] = body.title
-    if body.author:
-        entry["author"] = body.author
-    index_data["updated_at"] = datetime.now().isoformat()
-
-    with open(index_path, "w") as f:
-        json.dump(index_data, f, indent=2, ensure_ascii=False)
+    # Update index.json metadata (create entry if needed)
+    if entry:
+        if body.title:
+            entry["topic"] = body.title
+        if body.author:
+            entry["author"] = body.author
+        index_data["updated_at"] = datetime.now().isoformat()
+        with open(index_path, "w") as f:
+            json.dump(index_data, f, indent=2, ensure_ascii=False)
 
     # Update workflow_complete.json (source of truth for article.html viewer)
-    workflow_path = Path(f"results/{project_id}/workflow_complete.json")
-    if workflow_path.exists() and (body.title or body.author):
+    if wf_data and (body.title or body.author):
         try:
-            with open(workflow_path) as f:
-                wf_data = json.load(f)
             if body.title:
                 wf_data["title"] = body.title
                 wf_data["topic"] = body.title
@@ -3111,7 +3124,7 @@ async def update_article(project_id: str, body: UpdateArticleRequest, api_key: s
             with open(workflow_path, "w") as f:
                 json.dump(wf_data, f, indent=2, ensure_ascii=False)
         except (json.JSONDecodeError, IOError):
-            pass  # Non-critical — index.json and article HTML are already updated
+            pass
 
     return {"status": "updated", "project_id": project_id}
 
