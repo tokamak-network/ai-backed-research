@@ -47,3 +47,14 @@ The platform supports 9 major academic fields defined in `research_cli/categorie
 
 When adding new pages or modifying category-related code, ensure all 9 fields are represented.
 The JS `ACADEMIC_CATEGORIES` in `ask-topic.html` must mirror `categories.py`.
+
+## E2E Testing
+
+기본 e2e 테스트는 collaborative 모드, 라운드 2로 실행:
+
+```bash
+.venv/bin/python3 -m research_cli.cli run "<topic>" --article-length short --audience-level professional --research-type explainer --num-experts 2 --max-rounds 2
+```
+
+- API 연결 테스트: `python scripts/test_api_connections.py`
+- SDK 마이그레이션이나 모델 변경 후 반드시 e2e 실행하여 실제 API 응답 검증
