@@ -2996,38 +2996,41 @@ async def list_articles(api_key: str = Depends(verify_admin_key)):
 @app.get("/api/admin/articles/{project_id}")
 async def get_article_source(project_id: str, api_key: str = Depends(verify_admin_key)):
     """Get article markdown source (admin only)."""
-    # Look up title from index.json
+    # Look up title from results/ (primary) or index.json (fallback)
     title = ""
-    index_path = Path("web/data/index.json")
-    if index_path.exists():
-        try:
-            with open(index_path) as f:
-                idx = json.load(f)
-            entry = next((p for p in idx.get("projects", []) if p.get("id") == project_id), None)
-            if entry:
-                title = entry.get("topic", "")
-        except (json.JSONDecodeError, IOError):
-            pass
+    project_dir = Path(f"results/{project_id}")
+    if project_dir.exists():
+        wf_file = project_dir / "workflow_complete.json"
+        if wf_file.exists():
+            try:
+                with open(wf_file) as f:
+                    wf_data = json.load(f)
+                title = wf_data.get("topic", "")
+            except (json.JSONDecodeError, IOError):
+                pass
 
-    # 1. Check for .md file first
+    # 1. Check for exported .md file first
     md_path = Path(f"web/articles/{project_id}.md")
     if md_path.exists():
         return {"project_id": project_id, "title": title, "content": md_path.read_text(encoding="utf-8"), "format": "markdown"}
 
-    # 2. Extract from HTML
+    # 2. Extract from exported HTML
     html_path = Path(f"web/articles/{project_id}.html")
-    if not html_path.exists():
-        raise HTTPException(404, "Article not found")
+    if html_path.exists():
+        html = html_path.read_text(encoding="utf-8")
+        match = re.search(r'const \w*[Mm]arkdown\w* = `(.*?)`;', html, re.DOTALL) or \
+                re.search(r'const manuscriptText = `(.*?)`;', html, re.DOTALL)
+        if match:
+            content = match.group(1).replace('\\\\', '\\').replace('\\`', '`').replace('\\${', '${')
+            return {"project_id": project_id, "title": title, "content": content, "format": "extracted"}
 
-    html = html_path.read_text(encoding="utf-8")
-    # Match any of: rawMarkdown, markdown, markdownContent, manuscriptText, etc.
-    match = re.search(r'const \w*[Mm]arkdown\w* = `(.*?)`;', html, re.DOTALL) or \
-            re.search(r'const manuscriptText = `(.*?)`;', html, re.DOTALL)
-    if match:
-        content = match.group(1).replace('\\\\', '\\').replace('\\`', '`').replace('\\${', '${')
-        return {"project_id": project_id, "title": title, "content": content, "format": "extracted"}
+    # 3. Fall back to manuscript in results/ directory
+    if project_dir.exists():
+        manuscript_text, version_key = _get_latest_manuscript(project_dir)
+        if manuscript_text:
+            return {"project_id": project_id, "title": title, "content": manuscript_text, "format": "manuscript"}
 
-    return {"project_id": project_id, "title": title, "content": "", "format": "unavailable"}
+    raise HTTPException(404, "Article not found")
 
 
 class UpdateArticleRequest(BaseModel):
